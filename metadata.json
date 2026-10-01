@@ -1,0 +1,6 @@
+{
+  "name": "Warwick Hotel Baha - Lost & Found Management Portal",
+  "description": "Comprehensive hotel lost and found management system with multi-database replication (MongoDB, PostgreSQL, Firestore, Redis, IndexedDB, JSON), real-time SSE synchronization, public guest website & claim tracking portal, Service Worker offline caching, staff management, and authentic Certificate Generation & History records for Admin and Supervisor.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

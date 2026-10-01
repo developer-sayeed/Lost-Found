@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      // Disable verbose Workbox dev logs
+      try {
+        window.__WB_DISABLE_DEV_LOGS = true;
+        self.__WB_DISABLE_DEV_LOGS = true;
+      } catch (e) {}
+
+      // Provide a calm, resilient WebSocket shim for Vite HMR in cloud preview environments
+      (function() {
+        var OriginalWebSocket = window.WebSocket;
+        if (OriginalWebSocket) {
+          function MockViteWebSocket(url, protocols) {
+            var isViteHmr = false;
+            if (typeof protocols === 'string' && protocols.indexOf('vite-hmr') !== -1) isViteHmr = true;
+            if (Array.isArray(protocols) && protocols.indexOf('vite-hmr') !== -1) isViteHmr = true;
+            if (typeof url === 'string' && (url.indexOf('token=') !== -1 || url.indexOf('vite-hmr') !== -1)) isViteHmr = true;
+
+            if (!isViteHmr) {
+              return new OriginalWebSocket(url, protocols);
+            }
+
+            var target = new EventTarget();
+            target.readyState = 1; // WebSocket.OPEN
+            target.OPEN = 1;
+            target.CLOSED = 3;
+            target.send = function() {};
+            target.close = function() {
+              target.readyState = 3;
+              target.dispatchEvent(new Event('close'));
+            };
+            return target;
+          }
+
+          MockViteWebSocket.prototype = OriginalWebSocket.prototype;
+          MockViteWebSocket.CONNECTING = 0;
+          MockViteWebSocket.OPEN = 1;
+          MockViteWebSocket.CLOSING = 2;
+          MockViteWebSocket.CLOSED = 3;
+
+          window.WebSocket = MockViteWebSocket;
+        }
+
+        // Suppress benign Vite websocket and noisy Workbox logs in console
+        var isNoisy = function(val) {
+          if (!val) return false;
+          var str = typeof val === 'string' ? val : (val.message || val.stack || '');
+          if (typeof str !== 'string') return false;
+          var lower = str.toLowerCase();
+          return lower.indexOf('[vite] failed to connect to websocket') !== -1 ||
+                 lower.indexOf('[vite] connecting...') !== -1 ||
+                 lower.indexOf('[vite]') !== -1 ||
+                 lower.indexOf('workbox') !== -1 ||
+                 lower.indexOf('[workbox]') !== -1;
+        };
+
+        ['log', 'debug', 'info', 'warn', 'error', 'group', 'groupCollapsed'].forEach(function(method) {
+          var orig = console[method];
+          if (!orig) return;
+          console[method] = function() {
+            for (var i = 0; i < arguments.length; i++) {
+              if (isNoisy(arguments[i])) {
+                return;
+              }
+            }
+            orig.apply(console, arguments);
+          };
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+          if (event && isNoisy(event.reason)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        });
+
+        window.addEventListener('error', function(event) {
+          if (event && (isNoisy(event.message) || isNoisy(event.error))) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        });
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Warwick Hotel Baha - Lost & Found Management Portal</title>
+    <meta name="description" content="Comprehensive hotel lost and found management system with multi-database replication (MongoDB, PostgreSQL, Firestore, Redis, IndexedDB, JSON), real-time SSE synchronization, public guest website & claim tracking portal, Service Worker offline caching, staff management, and authentic Certificate Generation & History records for Admin and Supervisor." />
+    <meta name="theme-color" content="#2d1222" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Warwick LF" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta property="og:title" content="Warwick Hotel Baha - Lost &amp; Found Management Portal" />
+    <meta property="og:description" content="Comprehensive hotel lost and found management system with Service Worker offline caching, spotty Wi-Fi sync, OAuth and email authentication, cross-device settings sync, item lifecycle tracking, dispatch workflow, and staff management." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
