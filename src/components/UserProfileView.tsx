@@ -164,37 +164,64 @@ export const UserProfileView: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
-  // Filter items submitted / found / recorded / handed over by this staff member
+  // Filter items submitted by this staff member (strictly their OWN submitted/found items)
   const userSubmittedItems = useMemo(() => {
     const targetName = displayName.toLowerCase().trim();
     const targetEmail = displayEmail.toLowerCase().trim();
     const targetStaffId = displayStaffId.toLowerCase().trim();
+    const targetUserId = (currentStaffMatch?.userId || user?.id || '').toLowerCase().trim();
 
     return items.filter(item => {
+      // 1. Strict ID Match if submittedByStaffId or employeeId is available
+      const subId = (item.submittedByStaffId || (item as any).employeeId || '').toLowerCase().trim();
+      if (subId) {
+        if (targetStaffId && subId === targetStaffId) return true;
+        if (targetUserId && subId === targetUserId) return true;
+      }
+
+      // 2. Identify the actual original submitter / finder
+      // Priority: employeeName -> submittedByStaffName -> foundBy
       const empName = (item.employeeName || '').toLowerCase().trim();
-      const recBy = (item.recordedBy || '').toLowerCase().trim();
       const subName = (item.submittedByStaffName || '').toLowerCase().trim();
-      const subId = (item.submittedByStaffId || '').toLowerCase().trim();
-      const legacyFound = ((item as any).foundBy || '').toLowerCase().trim();
-      const legacyLogged = ((item as any).loggedBy || '').toLowerCase().trim();
-      const handedBy = (item.handoverDetails?.handedOverBy || '').toLowerCase().trim();
+      const foundBy = ((item as any).foundBy || '').toLowerCase().trim();
+      const approvedBy = (item.approvedBy || '').toLowerCase().trim();
 
-      const matchName = targetName && (
-        empName.includes(targetName) ||
-        targetName.includes(empName && empName.length > 3 ? empName : '_____none_____') ||
-        recBy.includes(targetName) ||
-        targetName.includes(recBy && recBy.length > 3 ? recBy : '_____none_____') ||
-        subName.includes(targetName) ||
-        legacyFound.includes(targetName) ||
-        legacyLogged.includes(targetName) ||
-        handedBy.includes(targetName)
-      );
+      const isExactOrCloseNameMatch = (nameToCheck: string) => {
+        if (!nameToCheck || !targetName) return false;
+        if (nameToCheck === targetName) return true;
+        if (nameToCheck.length >= 4 && targetName.includes(nameToCheck)) return true;
+        if (targetName.length >= 4 && nameToCheck.includes(targetName)) return true;
+        return false;
+      };
 
-      const matchId = targetStaffId && subId === targetStaffId;
+      // Check if this staff member is the original finder / submitter
+      const matchesEmp = isExactOrCloseNameMatch(empName);
+      const matchesSub = isExactOrCloseNameMatch(subName);
+      const matchesFound = isExactOrCloseNameMatch(foundBy);
 
-      return matchName || matchId;
+      // If any explicit finder/submitter field is present
+      if (empName || subName || foundBy) {
+        // If the current profile user was ONLY the approver and someone else found it, exclude!
+        if (!matchesEmp && !matchesSub && !matchesFound) {
+          return false;
+        }
+        return matchesEmp || matchesSub || matchesFound;
+      }
+
+      // 3. Fallback to recordedBy ONLY IF item has no other submitter/finder name,
+      // and it was not merely an approval stamp
+      const recBy = (item.recordedBy || '').toLowerCase().trim();
+      if (recBy && recBy !== 'pending approval') {
+        // If recordedBy matches approver and there was an approval, do not match approver's profile
+        if (approvedBy && recBy === approvedBy && isExactOrCloseNameMatch(approvedBy)) {
+          return false;
+        }
+        return isExactOrCloseNameMatch(recBy);
+      }
+
+      return false;
     });
-  }, [items, displayName, displayEmail, displayStaffId]);
+  }, [items, displayName, displayEmail, displayStaffId, currentStaffMatch, user]);
 
   // Dynamic Statistics per staff member
   const { totalItemsAdded, itemsPending, successfulHandovers, storedItemsCount, dispatchedItemsCount, successRate } = useMemo(() => {

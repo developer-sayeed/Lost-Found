@@ -9,6 +9,7 @@ import {
   ItemCategory,
   MongoStatus,
   DeviceSession,
+  BlockedDevice,
   CategoryConfig,
   ActiveTab,
   AppNotification,
@@ -50,6 +51,22 @@ interface AppContextType {
   isLoadingSessions: boolean;
   fetchSessions: () => Promise<void>;
   deleteSession: (deviceId: string) => Promise<void>;
+  blockedDevices: BlockedDevice[];
+  isLoadingBlockedDevices: boolean;
+  fetchBlockedDevices: () => Promise<void>;
+  blockDevice: (params: {
+    deviceId?: string;
+    ip?: string;
+    userName?: string;
+    userEmail?: string;
+    deviceType?: string;
+    browser?: string;
+    os?: string;
+    blockType: 'temporary' | 'permanent';
+    durationHours?: number;
+    reason?: string;
+  }) => Promise<boolean>;
+  unblockDevice: (params: { deviceId?: string; ip?: string }) => Promise<boolean>;
   filters: FilterState;
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
   isLoading: boolean;
@@ -333,6 +350,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [sessions, setSessions] = useState<DeviceSession[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState<boolean>(false);
+  const [blockedDevices, setBlockedDevices] = useState<BlockedDevice[]>([]);
+  const [isLoadingBlockedDevices, setIsLoadingBlockedDevices] = useState<boolean>(false);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -533,9 +552,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         }
 
-        serverNotifs.forEach(n => knownNotifIdsRef.current.add(n.id));
+        // Clean deduplication: remove any duplicate notifications that have identical item/event or identical title within 60s
+        const uniqueNotifs: AppNotification[] = [];
+        const seenKeys = new Set<string>();
+
+        serverNotifs.forEach(n => {
+          const itemKey = n.itemCode || n.itemId || '';
+          const normTitle = (n.title || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+          const timeBucket = Math.floor(new Date(n.createdAt).getTime() / 60000); // 1-minute bucket
+          const dedupKey = itemKey
+            ? `${n.type || 'gen'}_${itemKey}_${timeBucket}`
+            : `${normTitle}_${timeBucket}`;
+
+          if (!seenKeys.has(dedupKey)) {
+            seenKeys.add(dedupKey);
+            uniqueNotifs.push(n);
+          }
+        });
+
+        uniqueNotifs.forEach(n => knownNotifIdsRef.current.add(n.id));
         initialNotifSyncDoneRef.current = true;
-        setNotifications(serverNotifs);
+        setNotifications(uniqueNotifs);
       }
     } catch (e) {
       console.warn('Notification fetch warning:', e);
@@ -546,7 +583,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const created = await api.createNotification(notifData, user);
       if (created) {
-        setNotifications(prev => [created, ...prev.filter(n => n.id !== created.id)]);
+        setNotifications(prev => {
+          if (prev.some(n => n.id === created.id)) return prev;
+          return [created, ...prev];
+        });
         soundAlert.playNotificationChime();
         if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
           try {
@@ -929,9 +969,68 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const fetchBlockedDevices = useCallback(async () => {
+    setIsLoadingBlockedDevices(true);
+    try {
+      const res = await api.getBlockedDevices(user);
+      if (res && res.blockedDevices) {
+        setBlockedDevices(res.blockedDevices);
+      }
+    } catch (e) {
+      console.warn('Failed to fetch blocked devices:', e);
+    } finally {
+      setIsLoadingBlockedDevices(false);
+    }
+  }, [user]);
+
+  const blockDevice = async (params: {
+    deviceId?: string;
+    ip?: string;
+    userName?: string;
+    userEmail?: string;
+    deviceType?: string;
+    browser?: string;
+    os?: string;
+    blockType: 'temporary' | 'permanent';
+    durationHours?: number;
+    reason?: string;
+  }): Promise<boolean> => {
+    try {
+      const res = await api.blockDevice(params, user);
+      if (res.success) {
+        if (res.blockedDevices) setBlockedDevices(res.blockedDevices);
+        if (res.sessions) setSessions(res.sessions);
+        setSyncSuccessNotice(res.message);
+        setTimeout(() => setSyncSuccessNotice(null), 4000);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Failed to block device:', e);
+      return false;
+    }
+  };
+
+  const unblockDevice = async (params: { deviceId?: string; ip?: string }): Promise<boolean> => {
+    try {
+      const res = await api.unblockDevice(params, user);
+      if (res.success) {
+        if (res.blockedDevices) setBlockedDevices(res.blockedDevices);
+        setSyncSuccessNotice(res.message);
+        setTimeout(() => setSyncSuccessNotice(null), 4000);
+        await fetchSessions();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Failed to unblock device:', e);
+      return false;
+    }
+  };
+
   const refreshData = async () => {
     try {
-      const [itemsRes, staffRes, settingsRes, mStatus, sessionsRes, multiDbRes, inquiriesRes, publicSetRes] = await Promise.all([
+      const [itemsRes, staffRes, settingsRes, mStatus, sessionsRes, multiDbRes, inquiriesRes, publicSetRes, blockedRes] = await Promise.all([
         api.getItems({ includeDeleted: true }),
         api.getStaff(),
         api.getSettings(),
@@ -939,7 +1038,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         api.getSessions(user),
         api.getMultiDbStatus().catch(() => null),
         api.getInquiries(user).catch(() => null),
-        api.getPublicWebsiteSettings().catch(() => null)
+        api.getPublicWebsiteSettings().catch(() => null),
+        api.getBlockedDevices(user).catch(() => null)
       ]);
       if (itemsRes?.items) {
         setItems(itemsRes.items);
@@ -971,6 +1071,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       if (sessionsRes?.sessions) {
         setSessions(sessionsRes.sessions);
+      }
+      if (blockedRes?.blockedDevices) {
+        setBlockedDevices(blockedRes.blockedDevices);
       }
     } catch (e) {
       console.error('Error fetching data:', e);
@@ -1507,17 +1610,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Play subtle audio alert on new item addition
       soundAlert.playNewItemAlert();
       
-      // Trigger notification for staff submission or pending approval
-      if (newItem.status === 'Pending Approval' || user?.role === 'Employee' || user?.role === 'Housekeeping' || user?.role === 'Security') {
-        addNotification({
-          title: 'New Item Storage Request',
-          message: `Staff member ${newItem.recordedBy || newItem.employeeName || user?.name || 'Staff'} submitted "${newItem.itemName}" (${newItem.code}) for storage verification.`,
-          type: 'store_request',
-          targetRoles: ['Super Admin', 'Admin', 'Manager', 'Supervisor'],
-          itemId: newItem.id,
-          itemCode: newItem.code
-        });
-      }
+      // Sync authoritative notification created by backend route /api/items
+      fetchNotifications().catch(() => {});
 
       setSyncSuccessNotice(`Item ${newItem.code} registered & stored in real-time!`);
       setTimeout(() => setSyncSuccessNotice(null), 4000);
@@ -1633,16 +1727,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedItem(updated);
       }
       
-      // Notify staff member who logged the item
-      const targetStaff = updated.recordedBy || updated.employeeName || (updated as any).submittedByStaffName;
-      addNotification({
-        title: 'Storage Request Approved',
-        message: `Your submitted item "${updated.itemName}" (${updated.code}) has been approved and moved to Storage by ${user?.name || 'Admin'}.`,
-        type: 'item_approved',
-        targetStaffName: targetStaff,
-        itemId: updated.id,
-        itemCode: updated.code
-      });
+      // Sync authoritative notification created by backend route /api/items/:id/approve
+      fetchNotifications().catch(() => {});
 
       setSyncSuccessNotice(`Item ${updated.code} approved & recorded by ${user?.name || 'Admin'}!`);
       setTimeout(() => setSyncSuccessNotice(null), 5000);
@@ -1659,22 +1745,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const rejectItem = async (id: string, reason?: string) => {
     try {
-      const updated = await api.rejectItem(id, reason, user);
+      const cleanReason = (reason && reason.trim()) || 'Submission was rejected during supervisor verification.';
+      const updated = await api.rejectItem(id, cleanReason, user);
       setItems(prev => prev.map(item => (item.id === id || item.code === id ? updated : item)));
       if (selectedItem && (selectedItem.id === id || selectedItem.code === id)) {
         setSelectedItem(updated);
       }
 
-      // Notify staff member who logged the item
-      const targetStaff = updated.recordedBy || updated.employeeName || (updated as any).submittedByStaffName;
-      addNotification({
-        title: 'Storage Request Rejected',
-        message: `Your submitted item "${updated.itemName}" (${updated.code}) was rejected by ${user?.name || 'Admin'}.${reason ? ` Reason: ${reason}` : ''}`,
-        type: 'item_rejected',
-        targetStaffName: targetStaff,
-        itemId: updated.id,
-        itemCode: updated.code
-      });
+      // Sync authoritative notification created by backend route /api/items/:id/reject
+      fetchNotifications().catch(() => {});
 
       setSyncSuccessNotice(`Item ${updated.code} submission rejected.`);
       setTimeout(() => setSyncSuccessNotice(null), 4000);
@@ -1699,16 +1778,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Play subtle handover confirmation audio alert
     soundAlert.playHandoverAlert();
 
-    // Trigger notification to the staff who deposited/recorded the item
-    const originalStaff = updated.recordedBy || updated.employeeName || (updated as any).submittedByStaffName;
-    addNotification({
-      title: 'Item Handed Over to Guest',
-      message: `Item "${updated.itemName}" (${updated.code}) deposited by you has been handed over to ${details.receiverName}.`,
-      type: 'item_handover',
-      targetStaffName: originalStaff,
-      itemId: updated.id,
-      itemCode: updated.code
-    });
+    // Sync authoritative notification created by backend route /api/items/:id/handover
+    fetchNotifications().catch(() => {});
+
     showCustomToast('success', 'itemHandedOver', { code: updated.code, receiver: details.receiverName });
     broadcastItemsUpdated();
   };
@@ -1723,16 +1795,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Play subtle dispatch audio alert
     soundAlert.playDispatchAlert();
 
-    // Trigger notification to the staff who deposited/recorded the item
-    const originalStaff = updated.recordedBy || updated.employeeName || (updated as any).submittedByStaffName;
-    addNotification({
-      title: 'Item Dispatched & Released',
-      message: `Item "${updated.itemName}" (${updated.code}) deposited by you has been dispatched${details.destination ? ` to ${details.destination}` : ''}.`,
-      type: 'item_dispatched',
-      targetStaffName: originalStaff,
-      itemId: updated.id,
-      itemCode: updated.code
-    });
+    // Sync authoritative notification created by backend route /api/items/:id/dispatch
+    fetchNotifications().catch(() => {});
+
     showCustomToast('success', 'itemDispatched', { code: updated.code, courier: details.courierName || 'Courier' });
     broadcastItemsUpdated();
   };
@@ -2428,6 +2493,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isLoadingSessions,
         fetchSessions,
         deleteSession,
+        blockedDevices,
+        isLoadingBlockedDevices,
+        fetchBlockedDevices,
+        blockDevice,
+        unblockDevice,
         filters,
         setFilters,
         isLoading,

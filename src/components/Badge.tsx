@@ -71,6 +71,12 @@ export const Badge: React.FC<BadgeProps> = ({
     styleClasses = 'bg-emerald-50 text-emerald-700 border-emerald-200';
     dotColor = 'bg-emerald-500';
   } else if (
+    normalizedStatus === 'rejected' ||
+    normalizedStatus.includes('reject')
+  ) {
+    styleClasses = 'bg-rose-50 text-rose-700 border-rose-200';
+    dotColor = 'bg-rose-500';
+  } else if (
     variant === 'archived' ||
     normalizedStatus === 'archived' ||
     normalizedStatus === 'donated' ||

@@ -12,13 +12,16 @@ import {
   AlertCircle,
   Trash2,
   HeartHandshake,
-  Truck
+  Truck,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { generateItemQrDataUrl, downloadQrCodeImage } from '../../lib/qrcode';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { ItemActivityTimeline } from './ItemActivityTimeline';
+import { RejectSubmissionModal } from './RejectSubmissionModal';
 
 export const ItemDetailsModal: React.FC = () => {
   const {
@@ -26,11 +29,14 @@ export const ItemDetailsModal: React.FC = () => {
     setIsDetailsModalOpen,
     selectedItem,
     openItemQrModal,
-    settings
+    settings,
+    approveItem,
+    rejectItem
   } = useApp();
   const { user, isAdmin } = useAuth();
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
   const handleClose = () => {
     setIsDetailsModalOpen(false);
@@ -120,18 +126,61 @@ export const ItemDetailsModal: React.FC = () => {
 
         {/* Pending Approval Notice Banner */}
         {isPendingApproval && !selectedItem.isDeleted && (
-          <div className="bg-amber-50 border-b border-amber-200/80 px-6 py-3 flex items-center justify-between text-xs text-amber-900">
+          <div className="bg-amber-50 border-b border-amber-200/80 px-6 py-3 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-900">
             <div className="flex items-center space-x-2">
               <Clock className="w-4 h-4 text-amber-600 shrink-0" />
               <span>
                 Submitted by <strong>{selectedItem.employeeName}</strong>. Awaiting Admin Approval before active inventory placement.
               </span>
             </div>
-            {isAdminTier && (
-              <span className="px-2 py-0.5 bg-amber-200 text-amber-900 text-[10px] font-bold rounded-md uppercase shrink-0 ml-2">
+            {isAdminTier ? (
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  id="btn-details-approve-item"
+                  onClick={async () => {
+                    await approveItem(selectedItem.id);
+                  }}
+                  className="inline-flex items-center space-x-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Approve & Store</span>
+                </button>
+                <button
+                  type="button"
+                  id="btn-details-reject-item"
+                  onClick={() => setIsRejectModalOpen(true)}
+                  className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  <span>Reject Submission</span>
+                </button>
+              </div>
+            ) : (
+              <span className="px-2 py-0.5 bg-amber-200 text-amber-900 text-[10px] font-bold rounded-md uppercase shrink-0">
                 Pending Review
               </span>
             )}
+          </div>
+        )}
+
+        {/* Rejected Submission Notice Banner */}
+        {(selectedItem.approvalStatus === 'rejected' || selectedItem.rejectionReason) && !selectedItem.isDeleted && (
+          <div className="bg-rose-50 border-b border-rose-200/90 px-6 py-3 flex items-start space-x-2.5 text-xs text-rose-900">
+            <XCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <div className="font-bold text-rose-950 flex items-center justify-between">
+                <span>Submission Rejected by Supervisor</span>
+                {selectedItem.rejectedAt && (
+                  <span className="text-[10px] font-normal text-rose-700">
+                    {new Date(selectedItem.rejectedAt).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+              <div className="text-rose-800 mt-1 font-medium bg-rose-100/70 p-2 rounded-lg border border-rose-200/80">
+                <span className="font-bold">Reason:</span> {selectedItem.rejectionReason || 'Item submission was not accepted for storage inventory.'}
+              </div>
+            </div>
           </div>
         )}
 
@@ -398,6 +447,18 @@ export const ItemDetailsModal: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Reject Submission Reason Modal */}
+      <RejectSubmissionModal
+        isOpen={isRejectModalOpen}
+        item={selectedItem}
+        onClose={() => setIsRejectModalOpen(false)}
+        onConfirmReject={async (itemId, reason) => {
+          await rejectItem(itemId, reason);
+          setIsRejectModalOpen(false);
+          setIsDetailsModalOpen(false);
+        }}
+      />
     </div>
   );
 };

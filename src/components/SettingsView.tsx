@@ -51,11 +51,19 @@ import {
   Server,
   Clock,
   Cloud,
+  Ban,
+  Unlock,
+  Wifi,
+  Copy,
+  ShieldAlert,
+  Search,
+  LogOut,
+  AlertTriangle,
   X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { HotelLink, ThemePreset } from '../types';
+import { HotelLink, ThemePreset, DeviceSession, BlockedDevice } from '../types';
 import { MongoDatabaseSettings } from './MongoDatabaseSettings';
 import { MultiDatabaseManager } from './MultiDatabaseManager';
 import { DataImportExportSettings } from './DataImportExportSettings';
@@ -65,6 +73,7 @@ import { AlertsValidationSettings } from './AlertsValidationSettings';
 import { LoginPageCustomizer } from './LoginPageCustomizer';
 import { KeyboardShortcutsSettings } from './KeyboardShortcutsSettings';
 import { CertificateSettingsTab } from './certificates/CertificateSettingsTab';
+import { SecurityActivityTab } from './SecurityActivityTab';
 import {
   DEFAULT_THEME_PRESETS,
   FONT_OPTIONS,
@@ -114,6 +123,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     isLoadingSessions,
     fetchSessions,
     deleteSession,
+    blockedDevices,
+    isLoadingBlockedDevices,
+    fetchBlockedDevices,
+    blockDevice,
+    unblockDevice,
     staff,
     isSyncPaused,
     simulateOfflineToggle
@@ -132,6 +146,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   });
 
   const [databaseSubTab, setDatabaseSubTab] = useState<'cluster' | 'mongodb' | 'gdrive'>('cluster');
+  const [connectedDevicesSubTab, setConnectedDevicesSubTab] = useState<'terminals' | 'blocked_devices' | 'security_activity'>('terminals');
+
+  // Device Filter & Block Modal States
+  const [deviceFilter, setDeviceFilter] = useState<'all' | 'online' | 'recent'>('all');
+  const [deviceSearch, setDeviceSearch] = useState<string>('');
+  const [deviceToBlock, setDeviceToBlock] = useState<DeviceSession | null>(null);
+  const [blockType, setBlockType] = useState<'temporary' | 'permanent'>('temporary');
+  const [blockDurationHours, setBlockDurationHours] = useState<number>(24);
+  const [blockReason, setBlockReason] = useState<string>('');
+  const [isSubmittingBlock, setIsSubmittingBlock] = useState<boolean>(false);
+  const [deviceToUnblock, setDeviceToUnblock] = useState<BlockedDevice | null>(null);
+  const [isUnblocking, setIsUnblocking] = useState<boolean>(false);
+  const [showCustomBlockModal, setShowCustomBlockModal] = useState<boolean>(false);
+  const [customBlockIp, setCustomBlockIp] = useState<string>('');
+  const [customBlockDeviceId, setCustomBlockDeviceId] = useState<string>('');
+  const [customBlockUserName, setCustomBlockUserName] = useState<string>('');
+  const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [deviceNotice, setDeviceNotice] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     if (initialTab) {
@@ -272,12 +304,133 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     setShowDepartmentProcessingShare(Boolean(settings.showDepartmentProcessingShare));
   }, [settings]);
 
-  // Fetch active sessions when entering sync tab
+  // Fetch active sessions and blocked devices when entering sync tab
   useEffect(() => {
     if (activeTab === 'sync') {
       fetchSessions();
+      fetchBlockedDevices();
     }
-  }, [activeTab, fetchSessions]);
+  }, [activeTab, fetchSessions, fetchBlockedDevices]);
+
+  const onlineSessions = React.useMemo(() => {
+    return sessions.filter(s => {
+      const diffSecs = Math.floor((Date.now() - new Date(s.lastSeen).getTime()) / 1000);
+      return diffSecs < 180; // Within 3 minutes
+    });
+  }, [sessions]);
+
+  const idleSessions = React.useMemo(() => {
+    return sessions.filter(s => {
+      const diffSecs = Math.floor((Date.now() - new Date(s.lastSeen).getTime()) / 1000);
+      return diffSecs >= 180;
+    });
+  }, [sessions]);
+
+  const displayedSessions = React.useMemo(() => {
+    let list = sessions;
+    if (deviceFilter === 'online') {
+      list = onlineSessions;
+    } else if (deviceFilter === 'recent') {
+      list = idleSessions;
+    }
+    if (deviceSearch.trim()) {
+      const q = deviceSearch.toLowerCase().trim();
+      list = list.filter(s =>
+        (s.userName || '').toLowerCase().includes(q) ||
+        (s.userEmail || '').toLowerCase().includes(q) ||
+        (s.role || '').toLowerCase().includes(q) ||
+        (s.ip || '').toLowerCase().includes(q) ||
+        (s.os || '').toLowerCase().includes(q) ||
+        (s.browser || '').toLowerCase().includes(q) ||
+        (s.deviceId || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [sessions, onlineSessions, idleSessions, deviceFilter, deviceSearch]);
+
+  const handleOpenBlockModal = (session: DeviceSession) => {
+    setDeviceToBlock(session);
+    setBlockType('temporary');
+    setBlockDurationHours(24);
+    setBlockReason('Suspicious or unauthorized terminal access');
+  };
+
+  const handleConfirmBlockDevice = async () => {
+    if (!deviceToBlock && !customBlockIp && !customBlockDeviceId) return;
+    setIsSubmittingBlock(true);
+    try {
+      const targetDevId = deviceToBlock?.deviceId || customBlockDeviceId || undefined;
+      const targetIp = deviceToBlock?.ip || customBlockIp || undefined;
+      const targetUser = deviceToBlock?.userName || customBlockUserName || 'Unknown User';
+
+      const success = await blockDevice({
+        deviceId: targetDevId,
+        ip: targetIp,
+        userName: targetUser,
+        userEmail: deviceToBlock?.userEmail,
+        deviceType: deviceToBlock?.deviceType,
+        browser: deviceToBlock?.browser,
+        os: deviceToBlock?.os,
+        blockType,
+        durationHours: blockType === 'temporary' ? blockDurationHours : undefined,
+        reason: blockReason || (blockType === 'permanent' ? 'Permanent administrator security block' : `Temporary ${blockDurationHours}h security block`)
+      });
+
+      if (success) {
+        setDeviceNotice({
+          message: `Device successfully blocked (${blockType === 'permanent' ? 'Permanent Block' : `${blockDurationHours}h Temporary Block`}).`,
+          type: 'success'
+        });
+        setDeviceToBlock(null);
+        setShowCustomBlockModal(false);
+        setCustomBlockIp('');
+        setCustomBlockDeviceId('');
+        setCustomBlockUserName('');
+        setBlockReason('');
+        await fetchBlockedDevices();
+        await fetchSessions();
+        setTimeout(() => setDeviceNotice(null), 5000);
+      } else {
+        setDeviceNotice({ message: 'Failed to block device', type: 'error' });
+      }
+    } catch (err: any) {
+      setDeviceNotice({ message: err.message || 'Error blocking device', type: 'error' });
+    } finally {
+      setIsSubmittingBlock(false);
+    }
+  };
+
+  const handleConfirmUnblockDevice = async (blocked: BlockedDevice) => {
+    setIsUnblocking(true);
+    try {
+      const success = await unblockDevice({
+        deviceId: blocked.deviceId,
+        ip: blocked.ip
+      });
+      if (success) {
+        setDeviceNotice({
+          message: `Device (${blocked.userName || blocked.deviceId || blocked.ip}) was unblocked successfully.`,
+          type: 'success'
+        });
+        setDeviceToUnblock(null);
+        await fetchBlockedDevices();
+        await fetchSessions();
+        setTimeout(() => setDeviceNotice(null), 5000);
+      } else {
+        setDeviceNotice({ message: 'Failed to unblock device', type: 'error' });
+      }
+    } catch (err: any) {
+      setDeviceNotice({ message: err.message || 'Error unblocking device', type: 'error' });
+    } finally {
+      setIsUnblocking(false);
+    }
+  };
+
+  const handleCopyClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(text);
+    setTimeout(() => setCopiedText(null), 2000);
+  };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -963,6 +1116,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
             <button
               type="button"
+              id="btn-settings-tab-connected-devices"
               onClick={() => setActiveTab('sync')}
               className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
                 activeTab === 'sync'
@@ -970,8 +1124,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Cross-Device Sync</span>
+              <Laptop className="w-3.5 h-3.5" />
+              <span>Connected Devices</span>
+              {sessions.length > 0 && (
+                <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-bold ${
+                  activeTab === 'sync' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'
+                }`}>
+                  {sessions.length}
+                </span>
+              )}
             </button>
           </>
         )}
@@ -2134,28 +2295,89 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 3: CROSS-DEVICE SYNC & SESSIONS */}
+        {/* TAB: CONNECTED DEVICES & SECURITY ACTIVITY */}
         {/* ========================================================================= */}
         {activeTab === 'sync' && (
           <div className="space-y-6 animate-fade-in">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-bold text-slate-900">
-                    Cross-Device Real-Time Synchronization & Connected Terminals
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Updates to lost & found items and hotel settings are stored and synced in real time across all terminals.
-                  </p>
-                </div>
+            {/* Connected Devices Sub-Tabs Navigation */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  id="btn-subtab-connected-terminals"
+                  onClick={() => setConnectedDevicesSubTab('terminals')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    connectedDevicesSubTab === 'terminals'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Laptop className="w-3.5 h-3.5" />
+                  <span>Active Devices &amp; Terminals</span>
+                  <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                    connectedDevicesSubTab === 'terminals' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {sessions.length || 1}
+                  </span>
+                  {onlineSessions.length > 0 && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1" />
+                      {onlineSessions.length} Online Now
+                    </span>
+                  )}
+                </button>
 
+                <button
+                  type="button"
+                  id="btn-subtab-blocked-devices"
+                  onClick={() => setConnectedDevicesSubTab('blocked_devices')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    connectedDevicesSubTab === 'blocked_devices'
+                      ? 'bg-rose-600 text-white shadow-2xs'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Ban className="w-3.5 h-3.5" />
+                  <span>Blocked Devices</span>
+                  <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                    connectedDevicesSubTab === 'blocked_devices'
+                      ? 'bg-rose-700 text-white'
+                      : blockedDevices.length > 0
+                      ? 'bg-rose-100 text-rose-800'
+                      : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {blockedDevices.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  id="btn-subtab-security-activity"
+                  onClick={() => setConnectedDevicesSubTab('security_activity')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    connectedDevicesSubTab === 'security_activity'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Security Activity</span>
+                  <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                    connectedDevicesSubTab === 'security_activity' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    Live History
+                  </span>
+                </button>
+              </div>
+
+              {connectedDevicesSubTab === 'terminals' && (
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     id="btn-clear-cache-sync-tab"
                     onClick={() => setShowClearCacheModal(true)}
                     disabled={isClearingCache || isSyncing}
-                    className="flex items-center space-x-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-xl border border-amber-200 shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-xl border border-amber-200 shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
                     title="Purge stale application cache and force real-time client synchronization"
                   >
                     <Zap className={`w-3.5 h-3.5 text-amber-600 ${isClearingCache ? 'animate-bounce' : ''}`} />
@@ -2163,19 +2385,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => fetchSessions()}
+                    onClick={() => {
+                      fetchSessions();
+                      fetchBlockedDevices();
+                    }}
                     disabled={isLoadingSessions}
-                    className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs"
                     title="Refresh Connected Devices"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoadingSessions ? 'animate-spin' : ''}`} />
-                    <span>Refresh Devices</span>
+                    <span>Refresh</span>
                   </button>
                   <button
                     type="button"
                     id="btn-simulate-offline-toggle"
                     onClick={simulateOfflineToggle}
-                    className={`flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer border ${
+                    className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer border shadow-2xs ${
                       isSyncPaused
                         ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300'
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
@@ -2190,230 +2415,523 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     id="btn-force-sync"
                     onClick={triggerSettingsSync}
                     disabled={isSyncing || isSyncPaused}
-                    className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                    className="flex items-center space-x-2 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                     <span>Sync Now</span>
                   </button>
                 </div>
+              )}
+            </div>
+
+            {/* Device Notice Toast */}
+            {deviceNotice && (
+              <div
+                className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs font-semibold animate-fade-in shadow-xs ${
+                  deviceNotice.type === 'success'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-rose-50 border-rose-200 text-rose-800'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  {deviceNotice.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-rose-600" />
+                  )}
+                  <span>{deviceNotice.message}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDeviceNotice(null)}
+                  className="text-slate-400 hover:text-slate-700"
+                >
+                  ✕
+                </button>
               </div>
+            )}
 
-              {/* Status Metric Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    Database State
-                  </div>
-                  <div className="text-sm font-bold text-emerald-600 flex items-center space-x-1.5 mt-1.5">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Real-Time Active</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 mt-1">
-                    Persistent Backend JSON Storage
-                  </div>
+            {/* Sub-Tab 1: Connected Terminals (Now Online + Login Device Information + Block Device) */}
+            {connectedDevicesSubTab === 'terminals' && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Active Devices, Live Terminals &amp; Login Information
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Real-time monitoring of all logged-in devices. Track currently online terminals, inspect hardware and IP data, or block suspicious devices.
+                  </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    Connected Terminals
-                  </div>
-                  <div className="text-sm font-bold text-slate-900 mt-1.5">
-                    {sessions.length || settings.syncedDevicesCount || 1} Active Sessions
-                  </div>
-                  <div className="text-[11px] text-slate-500 mt-1">
-                    Real-time login session tracking
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    Sync Version
-                  </div>
-                  <div className="text-sm font-bold text-slate-900 mt-1.5">
-                    Build v{settings.version || 1}
-                  </div>
-                  <div className="text-[11px] text-slate-500 mt-1">
-                    Last sync: {new Date(settings.lastSyncedAt).toLocaleTimeString()}
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/70">
-                  <div className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider flex items-center space-x-1">
-                    <Zap className="w-3 h-3 text-amber-600" />
-                    <span>System Cache</span>
-                  </div>
-                  <div className="text-sm font-bold text-amber-900 mt-1.5">
-                    {settings.lastCachePurgedAt ? 'Purged & Synced' : 'Ready / Active'}
-                  </div>
-                  <div className="text-[11px] text-amber-700/80 mt-1 truncate">
-                    {settings.lastCachePurgedAt ? new Date(settings.lastCachePurgedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'No manual purge recorded'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Cache Management Card */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-50/60 to-orange-50/30 border border-amber-200/80 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <div className="p-1.5 rounded-lg bg-amber-100 text-amber-700">
-                        <Zap className="w-4 h-4" />
+                {/* Status Metric Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Online Now Highlight Card */}
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider flex items-center space-x-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                        <span>Online Right Now</span>
                       </div>
-                      <h3 className="text-sm font-bold text-slate-900">
-                        Clear System Cache & Purge Stale Client Data
-                      </h3>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-200/80 text-amber-900">
-                        ADMIN OVERRIDE
-                      </span>
+                      <Wifi className="w-4 h-4 text-emerald-600" />
                     </div>
-                    <p className="text-xs text-slate-600 max-w-2xl">
-                      Purges stale application data buffers, cleans inactive socket sessions (&gt;48h), resets local storage temporary keys, bumps the global synchronization build version, and broadcasts a real-time sync event to immediately refresh all connected staff screens.
-                    </p>
+                    <div className="text-2xl font-extrabold text-emerald-900 mt-1.5 flex items-baseline space-x-2">
+                      <span>{onlineSessions.length}</span>
+                      <span className="text-xs font-semibold text-emerald-700">active terminal{onlineSessions.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="text-[11px] text-emerald-700 mt-1">
+                      Active heartbeat in the last 3 minutes
+                    </div>
                   </div>
 
-                  <button
-                    type="button"
-                    id="btn-purge-system-cache-action"
-                    onClick={() => setShowClearCacheModal(true)}
-                    disabled={isClearingCache || isSyncing}
-                    className="shrink-0 flex items-center justify-center space-x-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    <Zap className={`w-4 h-4 ${isClearingCache ? 'animate-bounce' : ''}`} />
-                    <span>{isClearingCache ? 'Purging Cache...' : 'Purge Cache & Force Update'}</span>
-                  </button>
+                  {/* Connected Terminals Total */}
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                        Total Sessions
+                      </div>
+                      <Laptop className="w-4 h-4 text-slate-400" />
+                    </div>
+                    <div className="text-2xl font-extrabold text-slate-900 mt-1.5">
+                      {sessions.length || 1}
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-1">
+                      Registered authorized login sessions
+                    </div>
+                  </div>
+
+                  {/* Blocked Devices Counter */}
+                  <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">
+                        Blocked Devices
+                      </div>
+                      <Ban className="w-4 h-4 text-rose-600" />
+                    </div>
+                    <div className="text-2xl font-extrabold text-rose-900 mt-1.5">
+                      {blockedDevices.length}
+                    </div>
+                    <div className="text-[11px] text-rose-700 mt-1">
+                      Prohibited from system access
+                    </div>
+                  </div>
+
+                  {/* System Cache State */}
+                  <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/70">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider flex items-center space-x-1">
+                        <Zap className="w-3 h-3 text-amber-600" />
+                        <span>Build Sync</span>
+                      </div>
+                      <CheckCircle2 className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div className="text-sm font-bold text-amber-900 mt-1.5">
+                      v{settings.version || 1} Live Synced
+                    </div>
+                    <div className="text-[11px] text-amber-700/80 mt-1 truncate">
+                      Last sync: {new Date(settings.lastSyncedAt).toLocaleTimeString()}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-amber-200/60 text-xs">
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-100">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Cached Items</span>
-                    <span className="font-bold text-slate-800 text-sm">{items.length} records</span>
+                {/* Filter Controls & Search */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setDeviceFilter('all')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        deviceFilter === 'all'
+                          ? 'bg-slate-900 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      All Connected Devices ({sessions.length})
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDeviceFilter('online')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        deviceFilter === 'online'
+                          ? 'bg-emerald-600 text-white shadow-2xs'
+                          : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Online Now ({onlineSessions.length})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDeviceFilter('recent')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        deviceFilter === 'recent'
+                          ? 'bg-slate-900 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      Idle / Inactive ({idleSessions.length})
+                    </button>
                   </div>
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-100">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Active Staff</span>
-                    <span className="font-bold text-slate-800 text-sm">{staff.length} staff</span>
-                  </div>
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-100">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Notifications</span>
-                    <span className="font-bold text-slate-800 text-sm">{notifications.length} queued</span>
-                  </div>
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-100">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Last Purge</span>
-                    <span className="font-semibold text-slate-700 text-xs">
-                      {settings.lastCachePurgedAt ? new Date(settings.lastCachePurgedAt).toLocaleTimeString() : 'Never'}
-                    </span>
+
+                  {/* Search box */}
+                  <div className="relative min-w-[220px]">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={deviceSearch}
+                      onChange={e => setDeviceSearch(e.target.value)}
+                      placeholder="Filter device by user, IP, OS..."
+                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    />
+                    {deviceSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setDeviceSearch('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Active Terminal Sessions (Real-Time Live) */}
-              <div className="pt-4 border-t border-slate-100 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-900">
-                    Real-Time Active Login Devices & Sessions
-                  </h3>
-                  <span className="text-[11px] text-slate-400">
-                    {sessions.length} active terminal{sessions.length !== 1 ? 's' : ''} detected
-                  </span>
-                </div>
+                {/* Active Terminal Sessions List */}
+                <div className="space-y-3 pt-1">
+                  {isLoadingSessions ? (
+                    <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200">
+                      <RefreshCw className="w-5 h-5 text-indigo-600 animate-spin mx-auto mb-2" />
+                      <p className="text-xs text-slate-500">Refreshing live connected devices...</p>
+                    </div>
+                  ) : displayedSessions.length === 0 ? (
+                    <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                      <Laptop className="w-8 h-8 text-slate-300 mx-auto" />
+                      <div className="text-sm font-bold text-slate-700">No matching connected devices</div>
+                      <p className="text-xs text-slate-500">
+                        {deviceFilter === 'online'
+                          ? 'No devices currently online in the last 3 minutes.'
+                          : 'No terminal sessions match the current filter or search criteria.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {displayedSessions.map(session => {
+                        const isCurrent = session.isCurrent;
+                        const DeviceIcon =
+                          session.deviceType === 'Mobile'
+                            ? Smartphone
+                            : session.deviceType === 'Tablet'
+                            ? Tablet
+                            : Laptop;
 
-                {isLoadingSessions ? (
-                  <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200">
-                    <RefreshCw className="w-5 h-5 text-indigo-600 animate-spin mx-auto mb-2" />
-                    <p className="text-xs text-slate-500">Checking connected devices...</p>
-                  </div>
-                ) : sessions.length === 0 ? (
-                  <div className="p-6 text-center bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-500">
-                    No active remote sessions detected.
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {sessions.map(session => {
-                      const isCurrent = session.isCurrent;
-                      const DeviceIcon =
-                        session.deviceType === 'Mobile'
-                          ? Smartphone
-                          : session.deviceType === 'Tablet'
-                          ? Tablet
-                          : Laptop;
+                        const timeSinceSeen = Math.floor(
+                          (Date.now() - new Date(session.lastSeen).getTime()) / 1000
+                        );
+                        const isOnlineNow = timeSinceSeen < 180; // Within 3 minutes
 
-                      const timeSinceSeen = Math.floor(
-                        (Date.now() - new Date(session.lastSeen).getTime()) / 1000
-                      );
-                      const isOnlineNow = timeSinceSeen < 180; // Within 3 minutes
+                        return (
+                          <div
+                            key={session.deviceId}
+                            className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                              isCurrent
+                                ? 'bg-indigo-50/40 border-indigo-200 ring-1 ring-indigo-500/20'
+                                : isOnlineNow
+                                ? 'bg-emerald-50/30 border-emerald-200/80 hover:bg-emerald-50/50'
+                                : 'bg-slate-50/80 border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            {/* Top Card Row */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex items-center space-x-3">
+                                <div
+                                  className={`p-2.5 rounded-xl ${
+                                    isCurrent
+                                      ? 'bg-indigo-600 text-white'
+                                      : isOnlineNow
+                                      ? 'bg-emerald-600 text-white'
+                                      : 'bg-slate-200 text-slate-700'
+                                  }`}
+                                >
+                                  <DeviceIcon className="w-5 h-5" />
+                                </div>
 
-                      return (
-                        <div
-                          key={session.deviceId}
-                          className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all gap-3 ${
-                            isCurrent
-                              ? 'bg-indigo-50/40 border-indigo-200 ring-1 ring-indigo-500/20'
-                              : 'bg-slate-50/80 border-slate-200 hover:bg-slate-50'
-                          }`}
-                        >
-                          <div className="flex items-start sm:items-center space-x-3.5">
-                            <div
-                              className={`p-2.5 rounded-xl ${
-                                isCurrent
-                                  ? 'bg-indigo-600 text-white'
-                                  : 'bg-slate-200 text-slate-700'
-                              }`}
-                            >
-                              <DeviceIcon className="w-5 h-5" />
-                            </div>
+                                <div>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="font-bold text-xs text-slate-900">
+                                      {session.os || 'Desktop OS'} • {session.browser || 'Web Browser'}
+                                    </span>
 
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <span className="font-bold text-xs text-slate-900">
-                                  {session.os} • {session.browser}
-                                </span>
-                                {isCurrent && (
-                                  <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-md">
-                                    Current Terminal
+                                    {/* Current Terminal Badge */}
+                                    {isCurrent && (
+                                      <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-md flex items-center space-x-1">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        <span>Current Device (This Terminal)</span>
+                                      </span>
+                                    )}
+
+                                    {/* Real-time Online Indicator */}
+                                    {isOnlineNow ? (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5" />
+                                        Online Now
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                        Idle ({Math.floor(timeSinceSeen / 60)}m ago)
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="text-[11px] text-slate-500 mt-1 flex flex-wrap items-center gap-x-2">
+                                    <span>Session: <code className="font-mono text-slate-700 font-bold">{session.deviceId}</code></span>
+                                    <span>•</span>
+                                    <span>Last Seen: {new Date(session.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Action Buttons: Block Device & Terminate */}
+                              <div className="flex items-center space-x-2 self-end sm:self-center">
+                                {!isCurrent ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenBlockModal(session)}
+                                      className="flex items-center space-x-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 text-xs font-bold rounded-xl border border-rose-200 transition-all shadow-2xs cursor-pointer"
+                                      title="Block this device temporarily or permanently"
+                                    >
+                                      <Ban className="w-3.5 h-3.5 text-rose-600" />
+                                      <span>Block Device</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => deleteSession(session.deviceId)}
+                                      className="flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition-all shadow-2xs cursor-pointer"
+                                      title="Terminate remote session"
+                                    >
+                                      <LogOut className="w-3.5 h-3.5" />
+                                      <span>Terminate</span>
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-200">
+                                    Protected Active Terminal
                                   </span>
                                 )}
                               </div>
-                              <div className="text-[11px] text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-2">
-                                <span className="font-semibold text-slate-700">
-                                  {session.userName}
+                            </div>
+
+                            {/* Full Login Device Information Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 text-xs">
+                              {/* Logged in User */}
+                              <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/80 flex items-center space-x-2">
+                                <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
+                                  {(session.userName || 'S').charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Logged-in User</span>
+                                  <span className="font-bold text-slate-800 truncate block text-xs">
+                                    {session.userName || 'Unknown Staff'}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 capitalize block">
+                                    {session.role || 'Staff'} {session.userEmail ? `• ${session.userEmail}` : ''}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* IP Address */}
+                              <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/80">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 block">IP Address</span>
+                                <div className="flex items-center justify-between mt-0.5">
+                                  <span className="font-mono font-bold text-slate-800 text-xs truncate">
+                                    {session.ip || '192.168.1.45'}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopyClipboard(session.ip || '192.168.1.45')}
+                                    className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100 cursor-pointer"
+                                    title="Copy IP"
+                                  >
+                                    {copiedText === (session.ip || '192.168.1.45') ? (
+                                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                    ) : (
+                                      <Copy className="w-3.5 h-3.5" />
+                                    )}
+                                  </button>
+                                </div>
+                                <span className="text-[10px] text-slate-400 block">Local / Network Terminal</span>
+                              </div>
+
+                              {/* Device Type & Platform */}
+                              <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/80">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Hardware &amp; Platform</span>
+                                <span className="font-bold text-slate-800 truncate block text-xs mt-0.5">
+                                  {session.deviceType || 'Desktop'} ({session.os || 'Windows'})
                                 </span>
-                                <span>•</span>
-                                <span className="capitalize text-slate-600">
-                                  {session.role}
+                                <span className="text-[10px] text-slate-500 truncate block">
+                                  {session.browser || 'Google Chrome'}
                                 </span>
-                                <span>•</span>
-                                <span className="font-mono text-slate-400">
-                                  IP: {session.ip}
+                              </div>
+
+                              {/* Connection & Device ID */}
+                              <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/80">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Device Identifier</span>
+                                <div className="flex items-center justify-between mt-0.5">
+                                  <span className="font-mono text-slate-700 text-xs font-semibold truncate">
+                                    {session.deviceId}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopyClipboard(session.deviceId)}
+                                    className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100 cursor-pointer"
+                                    title="Copy Device ID"
+                                  >
+                                    {copiedText === session.deviceId ? (
+                                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                    ) : (
+                                      <Copy className="w-3.5 h-3.5" />
+                                    )}
+                                  </button>
+                                </div>
+                                <span className="text-[10px] text-slate-400 block">
+                                  {isOnlineNow ? '🟢 Active Heartbeat' : '⚪ Standby'}
                                 </span>
                               </div>
                             </div>
                           </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
-                          <div className="flex items-center justify-between sm:justify-end space-x-3">
-                            <div className="text-right">
-                              {isOnlineNow ? (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5" />
-                                  Online Now
-                                </span>
-                              ) : (
-                                <span className="text-[11px] text-slate-400 font-medium">
-                                  {new Date(session.lastSeen).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              )}
+            {/* Sub-Tab 2: Blocked Devices Management (Temporary & Permanent) */}
+            {connectedDevicesSubTab === 'blocked_devices' && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <div className="p-1.5 rounded-lg bg-rose-50 text-rose-600">
+                        <Ban className="w-5 h-5" />
+                      </div>
+                      <h2 className="text-base font-bold text-slate-900">
+                        Blocked Devices &amp; Terminal Access Control
+                      </h2>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Blacklisted terminals and IP addresses prohibited from authentication or data synchronization.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomBlockModal(true)}
+                      className="flex items-center space-x-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Block Custom IP / Device</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => fetchBlockedDevices()}
+                      disabled={isLoadingBlockedDevices}
+                      className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isLoadingBlockedDevices ? 'animate-spin' : ''}`} />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
+                </div>
+
+                {isLoadingBlockedDevices ? (
+                  <div className="p-12 text-center space-y-3">
+                    <RefreshCw className="w-6 h-6 text-rose-600 animate-spin mx-auto" />
+                    <p className="text-xs text-slate-500 font-medium">Checking blocked devices list...</p>
+                  </div>
+                ) : blockedDevices.length === 0 ? (
+                  <div className="p-12 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <ShieldCheck className="w-10 h-10 text-emerald-500 mx-auto" />
+                    <div className="text-sm font-bold text-slate-800">No Blocked Devices</div>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      All authorized terminals and staff devices are currently granted system access. To prohibit a device, click &quot;Block Device&quot; in the Active Devices tab or add a custom rule above.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {blockedDevices.map(blocked => {
+                      const isPermanent = blocked.blockType === 'permanent';
+                      const remainingMs = blocked.blockedUntil ? Math.max(0, new Date(blocked.blockedUntil).getTime() - Date.now()) : 0;
+                      const remainingHours = Math.ceil(remainingMs / (3600 * 1000));
+                      const remainingMins = Math.ceil(remainingMs / (60 * 1000));
+
+                      return (
+                        <div
+                          key={blocked.deviceId}
+                          className="p-4 rounded-2xl border border-rose-200 bg-rose-50/30 hover:bg-rose-50/50 transition-all space-y-3"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-start space-x-3">
+                              <div className="p-2.5 rounded-xl bg-rose-100 text-rose-700 shrink-0 mt-0.5">
+                                <Ban className="w-5 h-5" />
+                              </div>
+
+                              <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-bold text-xs text-slate-900">
+                                    {blocked.userName || 'Unknown Staff'}
+                                  </span>
+
+                                  {isPermanent ? (
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300 flex items-center space-x-1">
+                                      <Lock className="w-3 h-3" />
+                                      <span>Permanent Block</span>
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 flex items-center space-x-1">
+                                      <Clock className="w-3 h-3" />
+                                      <span>
+                                        Temporary Block ({remainingHours > 1 ? `${remainingHours}h remaining` : `${remainingMins}m remaining`})
+                                      </span>
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="text-[11px] text-slate-600 mt-1 flex flex-wrap items-center gap-x-2">
+                                  <span>Device: <code className="font-mono font-bold text-slate-800">{blocked.deviceId}</code></span>
+                                  <span>•</span>
+                                  <span>IP: <code className="font-mono font-bold text-slate-800">{blocked.ip || 'All IPs'}</code></span>
+                                  <span>•</span>
+                                  <span>Platform: {blocked.deviceType || 'Desktop'} ({blocked.os || 'OS'})</span>
+                                </div>
+
+                                <div className="text-xs text-rose-800 font-medium mt-1">
+                                  Reason: {blocked.reason || 'Security policy enforcement'}
+                                </div>
+                              </div>
                             </div>
 
-                            {!isCurrent && (
+                            <div className="flex items-center space-x-2 self-end sm:self-center">
                               <button
                                 type="button"
-                                onClick={() => deleteSession(session.deviceId)}
-                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 text-xs font-semibold rounded-lg border border-rose-200 transition-all shadow-2xs"
-                                title="Terminate this remote session"
+                                onClick={() => setDeviceToUnblock(blocked)}
+                                className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
                               >
-                                Terminate
+                                <Unlock className="w-3.5 h-3.5" />
+                                <span>Unblock Device</span>
                               </button>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 border-t border-rose-200/60 flex flex-wrap items-center justify-between text-[11px] text-slate-500">
+                            <span>Blocked By: <strong>{blocked.blockedBy}</strong> ({blocked.blockedByRole || 'Super Admin'})</span>
+                            <span>Blocked At: {new Date(blocked.blockedAt).toLocaleString()}</span>
+                            {blocked.blockedUntil && (
+                              <span>Expires: {new Date(blocked.blockedUntil).toLocaleString()}</span>
                             )}
                           </div>
                         </div>
@@ -2422,7 +2940,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                   </div>
                 )}
               </div>
-            </div>
+            )}
+
+            {/* Sub-Tab 3: Security Activity History */}
+            {connectedDevicesSubTab === 'security_activity' && (
+              <SecurityActivityTab />
+            )}
           </div>
         )}
 
@@ -2493,6 +3016,345 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
               >
                 <Zap className={`w-4 h-4 ${isClearingCache ? 'animate-bounce' : ''}`} />
                 <span>{isClearingCache ? 'Purging Cache...' : 'Confirm Cache Purge'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 1: Block Active Device (Temporary & Permanent) */}
+      {deviceToBlock && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-scale-up">
+            <div className="flex items-start space-x-3.5">
+              <div className="p-3 bg-rose-100 text-rose-700 rounded-2xl shrink-0">
+                <Ban className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  Block Device &amp; Terminal Access
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Prohibit this device from logging in or syncing data. Its current active session will be immediately destroyed.
+                </p>
+              </div>
+            </div>
+
+            {/* Device Info Summary */}
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1.5 text-slate-700">
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-semibold">User:</span>
+                <span className="font-bold text-slate-900">{deviceToBlock.userName} ({deviceToBlock.role || 'Staff'})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-semibold">IP Address:</span>
+                <span className="font-mono font-bold text-slate-800">{deviceToBlock.ip || '192.168.1.45'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-semibold">Platform:</span>
+                <span>{deviceToBlock.deviceType || 'Desktop'} • {deviceToBlock.os || 'Windows'} ({deviceToBlock.browser || 'Chrome'})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-semibold">Device ID:</span>
+                <code className="font-mono text-[11px] text-slate-600">{deviceToBlock.deviceId}</code>
+              </div>
+            </div>
+
+            {/* Block Type Selection */}
+            <div className="space-y-2 text-xs">
+              <label className="font-bold text-slate-800 block">Select Block Mode:</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label
+                  className={`flex flex-col p-3 rounded-xl border transition-all cursor-pointer ${
+                    blockType === 'temporary'
+                      ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-500/20 text-amber-950'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="blockTypeRadio"
+                      checked={blockType === 'temporary'}
+                      onChange={() => setBlockType('temporary')}
+                      className="text-amber-600 focus:ring-amber-500"
+                    />
+                    <span className="font-bold">⏱️ Temporary Block</span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 mt-1 pl-5">
+                    Automatically unblocks after specified duration
+                  </span>
+                </label>
+
+                <label
+                  className={`flex flex-col p-3 rounded-xl border transition-all cursor-pointer ${
+                    blockType === 'permanent'
+                      ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-500/20 text-rose-950'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="blockTypeRadio"
+                      checked={blockType === 'permanent'}
+                      onChange={() => setBlockType('permanent')}
+                      className="text-rose-600 focus:ring-rose-500"
+                    />
+                    <span className="font-bold">🚫 Permanent Block</span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 mt-1 pl-5">
+                    Remains blacklisted until admin explicitly unblocks
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Temporary Duration Selector */}
+            {blockType === 'temporary' && (
+              <div className="space-y-2 text-xs">
+                <label className="font-bold text-slate-800 block">Block Duration:</label>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {[
+                    { label: '15 Min', hours: 0.25 },
+                    { label: '1 Hour', hours: 1 },
+                    { label: '6 Hours', hours: 6 },
+                    { label: '24 Hours', hours: 24 },
+                    { label: '3 Days', hours: 72 },
+                    { label: '7 Days', hours: 168 }
+                  ].map(d => (
+                    <button
+                      key={d.label}
+                      type="button"
+                      onClick={() => setBlockDurationHours(d.hours)}
+                      className={`py-2 px-2 text-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        blockDurationHours === d.hours
+                          ? 'bg-amber-600 text-white shadow-2xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Block Reason */}
+            <div className="space-y-2 text-xs">
+              <label className="font-bold text-slate-800 block">Reason for Block:</label>
+              <div className="flex flex-wrap gap-1.5 mb-1.5">
+                {[
+                  'Suspicious login activity',
+                  'Unauthorized staff terminal',
+                  'Security policy audit',
+                  'Lost or stolen device'
+                ].map(r => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setBlockReason(r)}
+                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-medium text-slate-700 transition-all cursor-pointer"
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={blockReason}
+                onChange={e => setBlockReason(e.target.value)}
+                placeholder="Enter block reason or security note..."
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+              />
+            </div>
+
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start space-x-2">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <p>
+                The active session for this terminal will be destroyed immediately and future requests from this device or IP will be rejected with HTTP 403 Forbidden.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeviceToBlock(null)}
+                disabled={isSubmittingBlock}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-block-device"
+                onClick={handleConfirmBlockDevice}
+                disabled={isSubmittingBlock}
+                className="flex items-center space-x-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Ban className={`w-3.5 h-3.5 ${isSubmittingBlock ? 'animate-spin' : ''}`} />
+                <span>{isSubmittingBlock ? 'Blocking Device...' : 'Confirm & Block Device'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Block Custom IP / Device ID */}
+      {showCustomBlockModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-scale-up">
+            <div className="flex items-start space-x-3">
+              <div className="p-2.5 bg-rose-100 text-rose-700 rounded-xl shrink-0">
+                <Ban className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  Block Custom IP or Device Identifier
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Blacklist a specific IP address or terminal hardware ID from accessing the system.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">IP Address to Block:</label>
+                <input
+                  type="text"
+                  value={customBlockIp}
+                  onChange={e => setCustomBlockIp(e.target.value)}
+                  placeholder="e.g. 192.168.1.100 or 46.240.73.235"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Device ID (Optional):</label>
+                <input
+                  type="text"
+                  value={customBlockDeviceId}
+                  onChange={e => setCustomBlockDeviceId(e.target.value)}
+                  placeholder="e.g. dev-suspicious-01"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Staff / Label Description:</label>
+                <input
+                  type="text"
+                  value={customBlockUserName}
+                  onChange={e => setCustomBlockUserName(e.target.value)}
+                  placeholder="e.g. Unknown Remote Terminal"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Block Mode:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBlockType('temporary')}
+                    className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
+                      blockType === 'temporary'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    ⏱️ Temporary (24h)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBlockType('permanent')}
+                    className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
+                      blockType === 'permanent'
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    🚫 Permanent
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Reason:</label>
+                <input
+                  type="text"
+                  value={blockReason}
+                  onChange={e => setBlockReason(e.target.value)}
+                  placeholder="e.g. Rogue terminal security block"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCustomBlockModal(false)}
+                disabled={isSubmittingBlock}
+                className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmBlockDevice}
+                disabled={isSubmittingBlock || (!customBlockIp && !customBlockDeviceId)}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isSubmittingBlock ? 'Adding Block...' : 'Confirm Block'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Unblock Device Confirmation */}
+      {deviceToUnblock && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-scale-up">
+            <div className="flex items-start space-x-3">
+              <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl shrink-0">
+                <Unlock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  Unblock Device?
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Are you sure you want to unblock this terminal? It will regain access to connect and authenticate.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1 text-slate-700">
+              <div className="font-bold text-slate-900">{deviceToUnblock.userName || 'Device'}</div>
+              <div className="font-mono text-[11px] text-slate-500">ID: {deviceToUnblock.deviceId}</div>
+              <div className="font-mono text-[11px] text-slate-500">IP: {deviceToUnblock.ip || 'N/A'}</div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeviceToUnblock(null)}
+                disabled={isUnblocking}
+                className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-unblock-modal"
+                onClick={() => handleConfirmUnblockDevice(deviceToUnblock)}
+                disabled={isUnblocking}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                {isUnblocking ? 'Unblocking...' : 'Confirm Unblock'}
               </button>
             </div>
           </div>

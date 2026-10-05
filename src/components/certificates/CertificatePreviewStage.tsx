@@ -72,7 +72,7 @@ export const CertificatePreviewStage: React.FC<CertificatePreviewStageProps> = (
   }, []);
 
   // Compute auto-fit scale based on container width (certificate native width is 1000px)
-  const autoScale = Math.min(Math.max(containerWidth / 1000, 0.35), 1);
+  const autoScale = Math.min(Math.max(containerWidth / 1000, 0.22), 1);
   const scale = manualZoom !== null ? manualZoom : autoScale;
 
   const handlePrint = async () => {

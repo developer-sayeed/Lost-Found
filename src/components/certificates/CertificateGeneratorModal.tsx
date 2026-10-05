@@ -38,16 +38,19 @@ import {
   RotateCcw,
   Check,
   PenTool,
+  Hand,
   Save,
   Bold,
   Italic,
   Bookmark,
-  Search
+  Search,
+  Clock
 } from 'lucide-react';
 import { AddTemplateModal } from './AddTemplateModal';
 import { ColorPaletteSelector } from './ColorPaletteSelector';
 import { CertificatePreviewStage } from './CertificatePreviewStage';
 import { SignaturePadModal } from './SignaturePadModal';
+import { saveRecentSignature } from './recentSignaturesService';
 import { RichTextControl } from './RichTextControl';
 import { VisualLiveEditorStage } from './VisualLiveEditorStage';
 import { DirectCertificatePrintPortal } from './DirectCertificatePrintPortal';
@@ -339,6 +342,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
   // Digital Signature Pad modal state
   const [signaturePadOpen, setSignaturePadOpen] = useState<boolean>(false);
   const [activeSignatoryTarget, setActiveSignatoryTarget] = useState<1 | 2 | 3 | null>(null);
+  const [signaturePadInitialMode, setSignaturePadInitialMode] = useState<'upload' | 'draw' | 'recent'>('recent');
 
   // -------------------------------------------------------------
   // Seals, Medallions & Watermark
@@ -748,18 +752,37 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
     toast.info('Saved draft removed.');
   };
 
-  const openSignaturePad = (target: 1 | 2 | 3) => {
+  const openSignaturePad = (target: 1 | 2 | 3, mode: 'upload' | 'draw' | 'recent' = 'recent') => {
     setActiveSignatoryTarget(target);
+    setSignaturePadInitialMode(mode);
     setSignaturePadOpen(true);
   };
 
   const handleSaveSignature = (sigDataUrl: string) => {
     if (activeSignatoryTarget === 1) {
       setSignatory1Signature(sigDataUrl);
+      saveRecentSignature({
+        dataUrl: sigDataUrl,
+        title: signatory1Title,
+        name: signatory1Name,
+        type: 'digital'
+      });
     } else if (activeSignatoryTarget === 2) {
       setSignatory2Signature(sigDataUrl);
+      saveRecentSignature({
+        dataUrl: sigDataUrl,
+        title: signatory2Title,
+        name: signatory2Name,
+        type: 'digital'
+      });
     } else if (activeSignatoryTarget === 3) {
       setSignatory3Signature(sigDataUrl);
+      saveRecentSignature({
+        dataUrl: sigDataUrl,
+        title: signatory3Title,
+        name: signatory3Name,
+        type: 'digital'
+      });
     }
     setSignaturePadOpen(false);
     toast.success('Digital signature attached to certificate!');
@@ -843,6 +866,15 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
         const res = await api.updateCertificate(initialCertificate.id, certData, user);
         if (res.success) {
           toast.success('Certificate updated successfully!');
+          if (certData.signatory1Signature) {
+            saveRecentSignature({ dataUrl: certData.signatory1Signature, title: certData.signatory1Title, name: certData.signatory1Name, type: 'digital' });
+          }
+          if (certData.signatory2Signature) {
+            saveRecentSignature({ dataUrl: certData.signatory2Signature, title: certData.signatory2Title, name: certData.signatory2Name, type: 'digital' });
+          }
+          if (showSignatory3 && certData.signatory3Signature) {
+            saveRecentSignature({ dataUrl: certData.signatory3Signature, title: certData.signatory3Title, name: certData.signatory3Name, type: 'digital' });
+          }
           const updatedCert = {
             ...initialCertificate,
             ...certData,
@@ -860,6 +892,15 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
         const res = await api.createCertificate(certData, user);
         if (res.success) {
           toast.success('Certificate generated and added to history!');
+          if (certData.signatory1Signature) {
+            saveRecentSignature({ dataUrl: certData.signatory1Signature, title: certData.signatory1Title, name: certData.signatory1Name, type: 'digital' });
+          }
+          if (certData.signatory2Signature) {
+            saveRecentSignature({ dataUrl: certData.signatory2Signature, title: certData.signatory2Title, name: certData.signatory2Name, type: 'digital' });
+          }
+          if (showSignatory3 && certData.signatory3Signature) {
+            saveRecentSignature({ dataUrl: certData.signatory3Signature, title: certData.signatory3Title, name: certData.signatory3Name, type: 'digital' });
+          }
           const savedCert = {
             ...certData,
             ...res.certificate,
@@ -1022,26 +1063,23 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
   return (
     <div
       id="certificate-generator-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-fadeIn"
     >
-      <div className="relative w-full max-w-7xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[96vh] overflow-hidden">
+      <div className="relative w-full max-w-7xl bg-white dark:bg-slate-900 rounded-none sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 dark:border-slate-800 flex flex-col h-[100dvh] sm:h-auto sm:max-h-[96vh] overflow-hidden">
         {/* ------------------------------------------------------------- */}
         {/* Modal Top Header */}
         {/* ------------------------------------------------------------- */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
-              <Award className="w-5 h-5" />
+        <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 gap-2">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
+              <Award className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                {initialCertificate ? 'Edit Certificate' : '5-Star Certificate Studio'}
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                  Full Element Customizer
-                </span>
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate">
+                {initialCertificate ? 'Edit Certificate' : 'Generate Certificate'}
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Customize hotel logo, 5-star templates, seals, fonts, citations & signatures
+              <p className="text-[10.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                Customize hotel certificates, award templates, citations & signatures
               </p>
             </div>
           </div>
@@ -1653,7 +1691,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
 
               <div className="p-3.5 space-y-3">
                 {/* Hotel Name & Subtitle inputs */}
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
@@ -2104,7 +2142,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                       Designation / Position
@@ -2243,7 +2281,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
               </div>
 
               <div className="p-3.5 space-y-2.5">
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                       Award Period (Month & Year)
@@ -2306,7 +2344,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
               </div>
 
               <div className="p-3.5 space-y-3">
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
                     <span className="text-[10.5px] font-bold text-slate-700 dark:text-slate-300">Left Signatory</span>
                     <input
@@ -2337,16 +2375,26 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => openSignaturePad(1)}
-                            className="p-1 rounded text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition"
-                            title="Redraw / Change Signature"
+                            onClick={() => openSignaturePad(1, 'recent')}
+                            className="px-2 py-0.5 rounded text-[10.5px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 border border-amber-200 dark:border-amber-800 transition flex items-center gap-1 cursor-pointer"
+                            title="Pick from Recent User Signatures"
                           >
-                            <PenTool className="w-3 h-3" />
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            <span>Recent</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openSignaturePad(1, 'upload')}
+                            className="px-2 py-0.5 rounded text-[10.5px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1 cursor-pointer"
+                            title="Resize / Edit Signature"
+                          >
+                            <Sliders className="w-3 h-3" />
+                            <span>Resize</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setSignatory1Signature('')}
-                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
                             title="Remove Signature"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -2354,14 +2402,25 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                         </div>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => openSignaturePad(1)}
-                        className="w-full py-1 px-2 border border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50 rounded-lg text-amber-700 dark:text-amber-300 text-[10px] font-semibold flex items-center justify-center gap-1 transition"
-                      >
-                        <PenTool className="w-2.5 h-2.5" />
-                        <span>Draw / Embed Signature</span>
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openSignaturePad(1, 'draw')}
+                          className="flex-1 py-1.5 px-2 border border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50 rounded-lg text-amber-800 dark:text-amber-300 text-[10px] font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                        >
+                          <Hand className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Draw with Fingers / Upload</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openSignaturePad(1, 'recent')}
+                          className="py-1.5 px-2.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer shrink-0"
+                          title="Pick from Recent User Signatures (রিসেন্ট ইউজার সিগনেচার)"
+                        >
+                          <Clock className="w-3 h-3 text-amber-700" />
+                          <span>Recent</span>
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -2395,16 +2454,26 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => openSignaturePad(2)}
-                            className="p-1 rounded text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition"
-                            title="Redraw / Change Signature"
+                            onClick={() => openSignaturePad(2, 'recent')}
+                            className="px-2 py-0.5 rounded text-[10.5px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 border border-amber-200 dark:border-amber-800 transition flex items-center gap-1 cursor-pointer"
+                            title="Pick from Recent User Signatures"
                           >
-                            <PenTool className="w-3 h-3" />
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            <span>Recent</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openSignaturePad(2, 'upload')}
+                            className="px-2 py-0.5 rounded text-[10.5px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1 cursor-pointer"
+                            title="Resize / Edit Signature"
+                          >
+                            <Sliders className="w-3 h-3" />
+                            <span>Resize</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setSignatory2Signature('')}
-                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
                             title="Remove Signature"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -2412,14 +2481,25 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                         </div>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => openSignaturePad(2)}
-                        className="w-full py-1 px-2 border border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50 rounded-lg text-amber-700 dark:text-amber-300 text-[10px] font-semibold flex items-center justify-center gap-1 transition"
-                      >
-                        <PenTool className="w-2.5 h-2.5" />
-                        <span>Draw / Embed Signature</span>
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openSignaturePad(2, 'draw')}
+                          className="flex-1 py-1.5 px-2 border border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/50 rounded-lg text-amber-800 dark:text-amber-300 text-[10px] font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                        >
+                          <Hand className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Draw with Fingers / Upload</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openSignaturePad(2, 'recent')}
+                          className="py-1.5 px-2.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer shrink-0"
+                          title="Pick from Recent User Signatures (রিসেন্ট ইউজার সিগনেচার)"
+                        >
+                          <Clock className="w-3 h-3 text-amber-700" />
+                          <span>Recent</span>
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -2429,7 +2509,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                     <span className="text-[10.5px] font-bold text-amber-800 dark:text-amber-300">
                       Center / 3rd Executive Signatory
                     </span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <input
                         type="text"
                         value={signatory3Title}
@@ -2448,7 +2528,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
 
                     {/* Center Signatory Digital Signature */}
                     {signatory3Signature ? (
-                      <div className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-between gap-1.5 max-w-[240px]">
+                      <div className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-between gap-1.5 max-w-[280px]">
                         <div className="h-7 w-20 flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-slate-800 rounded">
                           <img
                             src={signatory3Signature}
@@ -2459,16 +2539,26 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => openSignaturePad(3)}
-                            className="p-1 rounded text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition"
-                            title="Redraw / Change Signature"
+                            onClick={() => openSignaturePad(3, 'recent')}
+                            className="px-2 py-0.5 rounded text-[10.5px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 border border-amber-200 dark:border-amber-800 transition flex items-center gap-1 cursor-pointer"
+                            title="Pick from Recent User Signatures"
                           >
-                            <PenTool className="w-3 h-3" />
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            <span>Recent</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openSignaturePad(3, 'upload')}
+                            className="px-2 py-0.5 rounded text-[10.5px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1 cursor-pointer"
+                            title="Resize / Edit Signature"
+                          >
+                            <Sliders className="w-3 h-3" />
+                            <span>Resize</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setSignatory3Signature('')}
-                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
                             title="Remove Signature"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -2476,14 +2566,25 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                         </div>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => openSignaturePad(3)}
-                        className="w-full py-1 px-2 border border-dashed border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-slate-900/60 hover:bg-white rounded-lg text-amber-700 dark:text-amber-300 text-[10px] font-semibold flex items-center justify-center gap-1 transition"
-                      >
-                        <PenTool className="w-2.5 h-2.5" />
-                        <span>Draw / Embed Center Signature</span>
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openSignaturePad(3, 'draw')}
+                          className="flex-1 py-1.5 px-2 border border-dashed border-amber-300 dark:border-amber-700 bg-white/60 dark:bg-slate-900/60 hover:bg-white rounded-lg text-amber-800 dark:text-amber-300 text-[10px] font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                        >
+                          <PenTool className="w-3 h-3 text-amber-600" />
+                          <span>Draw / Embed Center Signature</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openSignaturePad(3, 'recent')}
+                          className="py-1.5 px-2.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer shrink-0"
+                          title="Pick from Recent User Signatures (রিসেন্ট ইউজার সিগনেচার)"
+                        >
+                          <Clock className="w-3 h-3 text-amber-700" />
+                          <span>Recent</span>
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -2515,7 +2616,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                     <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                       Medal / Badge Style
                     </label>
-                    <div className="grid grid-cols-4 gap-1.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                       <button
                         type="button"
                         onClick={() => setBadgeStyle('rosette')}
@@ -2563,7 +2664,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
                       <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                         Seal Header Text
@@ -2666,16 +2767,16 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
         {/* ------------------------------------------------------------- */}
         {/* Modal Bottom Action Footer */}
         {/* ------------------------------------------------------------- */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95">
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[280px]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 px-4 sm:px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95">
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-full sm:max-w-[280px]">
             {initialCertificate ? `Editing ${initialCertificate.certificateNumber}` : 'Certificate will be stored in hotel history'}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition"
             >
               Cancel
             </button>
@@ -2686,7 +2787,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
               title="Save current customizations as draft in local browser storage"
             >
               <Bookmark className="w-3.5 h-3.5 text-amber-600" />
-              <span>Save Draft</span>
+              <span className="hidden xs:inline">Save Draft</span>
             </button>
             {canPrintCertificates && (
               <>
@@ -2704,7 +2805,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                   type="button"
                   onClick={handleDownloadPdf}
                   disabled={isDownloadingPdf}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 transition flex items-center gap-1.5 shadow-xs"
+                  className="hidden md:inline-flex px-3 py-1.5 rounded-xl text-xs font-semibold border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 transition items-center gap-1.5 shadow-xs"
                 >
                   <FileText className="w-3.5 h-3.5 text-red-600" />
                   <span>PDF</span>
@@ -2713,7 +2814,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                   type="button"
                   onClick={handleDownloadPng}
                   disabled={isDownloadingPng}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/20 hover:bg-amber-100 transition flex items-center gap-1.5 shadow-xs"
+                  className="hidden md:inline-flex px-3 py-1.5 rounded-xl text-xs font-semibold border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/20 hover:bg-amber-100 transition items-center gap-1.5 shadow-xs"
                 >
                   <Download className="w-3.5 h-3.5 text-amber-700" />
                   <span>PNG</span>
@@ -2748,6 +2849,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
         isOpen={signaturePadOpen}
         onClose={() => setSignaturePadOpen(false)}
         onSaveSignature={handleSaveSignature}
+        initialMode={signaturePadInitialMode}
         signatoryTitle={
           activeSignatoryTarget === 1
             ? signatory1Title

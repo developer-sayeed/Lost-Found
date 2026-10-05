@@ -983,7 +983,7 @@ export const ElementorCertificateBuilder: React.FC<ElementorCertificateBuilderPr
             type="button"
             onClick={() => setShowShortcutsModal(true)}
             className="p-1.5 hover:bg-sky-600/30 rounded text-sky-400 hover:text-sky-300 transition hidden md:inline-block"
-            title="Keyboard Shortcuts (শর্টকাট কীসমূহ)"
+            title="Keyboard Shortcuts"
           >
             <Keyboard className="w-4 h-4" />
           </button>

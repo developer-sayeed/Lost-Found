@@ -27,13 +27,13 @@ export const SignatoryBox: React.FC<SignatoryBoxProps> = ({
       className={`text-center relative group select-none ${className}`}
       style={{ width }}
     >
-      {/* Signature Graphic Area (Height ~48px) */}
-      <div className="h-12 flex items-end justify-center mb-1 relative">
+      {/* Signature Graphic Area (Height ~56px) */}
+      <div className="h-14 flex items-end justify-center mb-1 relative">
         {signatureUrl ? (
           <img
             src={signatureUrl}
             alt={`${title} Signature`}
-            className="max-h-12 max-w-[180px] object-contain filter drop-shadow-2xs"
+            className="max-h-14 max-w-[200px] object-contain filter drop-shadow-2xs"
           />
         ) : name ? (
           <div

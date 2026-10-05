@@ -78,79 +78,101 @@ export const Header: React.FC = () => {
     };
   }, [isNotifOpen]);
 
-  // Filter notifications relevant to current user with strict isolation for targeted notices
-  const userNotifications = notifications.filter(n => {
-    // Hide if dismissed or deleted by current user
-    if (isNotificationDeleted(n)) return false;
+  // Filter notifications relevant to current user with strict isolation for targeted notices and deduplication
+  const userNotifications = useMemo(() => {
+    const filtered = notifications.filter(n => {
+      // Hide if dismissed or deleted by current user
+      if (isNotificationDeleted(n)) return false;
 
-    const userIdentifier = (user?.id || user?.name || '').toLowerCase().trim();
-    const userName = (user?.name || '').toLowerCase().trim();
-    const userEmail = (user?.email || '').toLowerCase().trim();
-    const userRole = (user?.role || '').trim();
-    const lowerUserRole = userRole.toLowerCase();
-    const userDept = (user?.department || '').toLowerCase().trim();
-    const isAdminTier = ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(userRole);
+      const userIdentifier = (user?.id || user?.name || '').toLowerCase().trim();
+      const userName = (user?.name || '').toLowerCase().trim();
+      const userEmail = (user?.email || '').toLowerCase().trim();
+      const userRole = (user?.role || '').trim();
+      const lowerUserRole = userRole.toLowerCase();
+      const userDept = (user?.department || '').toLowerCase().trim();
+      const isAdminTier = ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(userRole);
 
-    const hasDeptTarget = Boolean(n.targetDepartment && n.targetDepartment.trim());
-    const hasRoleTarget = Boolean(n.targetRoles && n.targetRoles.length > 0);
-    const hasStaffTarget = Boolean(n.targetStaffName || n.targetStaffEmail || n.targetUserId);
-    const isExplicitTargeted = n.targetType === 'department' || n.targetType === 'individual' || n.targetType === 'roles' || (n.targetType !== 'all' && (hasDeptTarget || hasRoleTarget || hasStaffTarget));
+      const hasDeptTarget = Boolean(n.targetDepartment && n.targetDepartment.trim());
+      const hasRoleTarget = Boolean(n.targetRoles && n.targetRoles.length > 0);
+      const hasStaffTarget = Boolean(n.targetStaffName || n.targetStaffEmail || n.targetUserId);
+      const isExplicitTargeted = n.targetType === 'department' || n.targetType === 'individual' || n.targetType === 'roles' || (n.targetType !== 'all' && (hasDeptTarget || hasRoleTarget || hasStaffTarget));
 
-    const isSender = (n.senderName && userName && n.senderName.toLowerCase() === userName) ||
-      (n.senderEmail && userEmail && n.senderEmail.toLowerCase() === userEmail);
+      const isSender = (n.senderName && userName && n.senderName.toLowerCase() === userName) ||
+        (n.senderEmail && userEmail && n.senderEmail.toLowerCase() === userEmail);
 
-    // If notification is explicitly targeted to specific recipients
-    if (isExplicitTargeted) {
-      if (user?.role === 'Super Admin') return true;
+      // If notification is explicitly targeted to specific recipients
+      if (isExplicitTargeted) {
+        if (user?.role === 'Super Admin') return true;
 
-      // 1. Individual Staff Target
-      if (n.targetType === 'individual' || hasStaffTarget) {
-        const matchName = Boolean(n.targetStaffName && userName && (
-          n.targetStaffName.toLowerCase().trim() === userName ||
-          userName.includes(n.targetStaffName.toLowerCase().trim()) ||
-          n.targetStaffName.toLowerCase().trim().includes(userName)
-        ));
-        const matchEmail = Boolean(n.targetStaffEmail && userEmail && (
-          n.targetStaffEmail.toLowerCase().trim() === userEmail
-        ));
-        const matchId = Boolean(n.targetUserId && user?.id && n.targetUserId === user.id);
+        // 1. Individual Staff Target
+        if (n.targetType === 'individual' || hasStaffTarget) {
+          const matchName = Boolean(n.targetStaffName && userName && (
+            n.targetStaffName.toLowerCase().trim() === userName ||
+            userName.includes(n.targetStaffName.toLowerCase().trim()) ||
+            n.targetStaffName.toLowerCase().trim().includes(userName)
+          ));
+          const matchEmail = Boolean(n.targetStaffEmail && userEmail && (
+            n.targetStaffEmail.toLowerCase().trim() === userEmail
+          ));
+          const matchId = Boolean(n.targetUserId && user?.id && n.targetUserId === user.id);
 
-        return Boolean(matchName || matchEmail || matchId || isSender);
+          return Boolean(matchName || matchEmail || matchId || isSender);
+        }
+
+        // 2. Department Target
+        if (n.targetType === 'department' || hasDeptTarget) {
+          const targetDept = (n.targetDepartment || '').toLowerCase().trim();
+          const matchDept = Boolean(userDept && (
+            userDept === targetDept ||
+            userDept.includes(targetDept) ||
+            targetDept.includes(userDept)
+          ));
+          const matchRoleAsDept = Boolean(lowerUserRole && (
+            lowerUserRole === targetDept ||
+            lowerUserRole.includes(targetDept) ||
+            targetDept.includes(lowerUserRole)
+          ));
+
+          return Boolean(matchDept || matchRoleAsDept || isSender);
+        }
+
+        // 3. Role Target
+        if (n.targetType === 'roles' || hasRoleTarget) {
+          const matchRole = Boolean(n.targetRoles && n.targetRoles.some(r => r && typeof r === 'string' && r.toLowerCase().trim() === lowerUserRole));
+          return Boolean(matchRole || isSender);
+        }
+
+        return false;
       }
 
-      // 2. Department Target
-      if (n.targetType === 'department' || hasDeptTarget) {
-        const targetDept = (n.targetDepartment || '').toLowerCase().trim();
-        const matchDept = Boolean(userDept && (
-          userDept === targetDept ||
-          userDept.includes(targetDept) ||
-          targetDept.includes(userDept)
-        ));
-        const matchRoleAsDept = Boolean(lowerUserRole && (
-          lowerUserRole === targetDept ||
-          lowerUserRole.includes(targetDept) ||
-          targetDept.includes(lowerUserRole)
-        ));
-
-        return Boolean(matchDept || matchRoleAsDept || isSender);
+      // Non-targeted notifications (all-staff broadcast or system alerts)
+      if (n.type === 'store_request') {
+        return isAdminTier;
       }
 
-      // 3. Role Target
-      if (n.targetType === 'roles' || hasRoleTarget) {
-        const matchRole = Boolean(n.targetRoles && n.targetRoles.some(r => r && typeof r === 'string' && r.toLowerCase().trim() === lowerUserRole));
-        return Boolean(matchRole || isSender);
-      }
+      return true;
+    });
 
-      return false;
+    // Deduplication pass: ensure only a single notification is displayed per event/item
+    const seen = new Set<string>();
+    const deduplicated: typeof filtered = [];
+
+    for (const notif of filtered) {
+      const itemKey = notif.itemCode || notif.itemId || '';
+      const normTitle = (notif.title || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const timeBucket = Math.floor(new Date(notif.createdAt).getTime() / 60000); // 1-minute bucket
+      const dedupKey = itemKey
+        ? `${notif.type || 'gen'}_${itemKey}_${timeBucket}`
+        : `${normTitle}_${timeBucket}`;
+
+      if (!seen.has(dedupKey)) {
+        seen.add(dedupKey);
+        deduplicated.push(notif);
+      }
     }
 
-    // Non-targeted notifications (all-staff broadcast or system alerts)
-    if (n.type === 'store_request') {
-      return isAdminTier;
-    }
-
-    return true;
-  });
+    return deduplicated;
+  }, [notifications, user, isNotificationDeleted]);
 
   const getPageTitle = () => {
     switch (activeTab) {

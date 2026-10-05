@@ -1,15 +1,25 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import { GoogleGenAI, Type } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
 import { INITIAL_HOTEL_SETTINGS, INITIAL_ITEMS, INITIAL_STAFF, INITIAL_AUDIT_LOGS, DEFAULT_ITEM_CATEGORIES } from './src/lib/constants.ts';
-import { LostItem, StaffMember, HotelSettings, User, UserRole, PermissionKey, StaffDepartment, AuditLog, DEFAULT_ROLE_PERMISSIONS, DeviceSession, AppNotification, Certificate, CustomCertificateTemplate } from './src/types.ts';
+import { LostItem, StaffMember, HotelSettings, User, UserRole, PermissionKey, StaffDepartment, AuditLog, DEFAULT_ROLE_PERMISSIONS, DeviceSession, SecurityActivityLog, BlockedDevice, AppNotification, Certificate, CustomCertificateTemplate, RecentUserSignature } from './src/types.ts';
 import { mongoService } from './server/mongodb.ts';
 import { multiDbService } from './server/multiDatabase.ts';
 
 const PORT = 3000;
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
+
+const geminiClient = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
+    }
+  }
+});
 
 interface DatabaseSchema {
   settings: HotelSettings;
@@ -21,6 +31,8 @@ interface DatabaseSchema {
   notifications: AppNotification[];
   certificates: Certificate[];
   certificateTemplates?: CustomCertificateTemplate[];
+  blockedDevices?: BlockedDevice[];
+  recentSignatures?: RecentUserSignature[];
 }
 
 // Helper to capitalize each word in text (Title Case / CSS text-transform: capitalize behavior)
@@ -94,6 +106,7 @@ function getInitialFreshDatabase(): DatabaseSchema {
         readBy: []
       }
     ],
+    blockedDevices: [],
     activeSessions: [
       {
         deviceId: 'dev-desktop-01',
@@ -211,6 +224,9 @@ function loadDatabase(): DatabaseSchema {
         // Only real runtime records - remove any mock/seeded dummy audit logs
         parsed.auditLogs = parsed.auditLogs.filter((l: any) => l && l.id && !String(l.id).startsWith('audit-log-00'));
       }
+      if (!Array.isArray(parsed.blockedDevices)) {
+        parsed.blockedDevices = [];
+      }
       return parsed;
     } catch (err) {
       console.error('Error reading db.json, re-initializing...', err);
@@ -222,6 +238,45 @@ function loadDatabase(): DatabaseSchema {
 }
 
 let db = loadDatabase();
+
+// Device Blacklist & Temporary/Permanent Block Validator
+function isDeviceBlocked(deviceId?: string, ip?: string): { blocked: boolean; device?: BlockedDevice } {
+  if (!deviceId && !ip) return { blocked: false };
+  if (!Array.isArray(db.blockedDevices)) {
+    db.blockedDevices = [];
+    return { blocked: false };
+  }
+
+  const now = Date.now();
+  let modified = false;
+
+  // Clean up expired temporary blocks automatically
+  db.blockedDevices = db.blockedDevices.filter(b => {
+    if (b.blockType === 'temporary' && b.blockedUntil) {
+      if (new Date(b.blockedUntil).getTime() <= now) {
+        modified = true;
+        return false; // Temporary duration has expired
+      }
+    }
+    return true;
+  });
+
+  if (modified) {
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+    } catch {}
+  }
+
+  const match = db.blockedDevices.find(b =>
+    (deviceId && b.deviceId === deviceId) ||
+    (ip && b.ip && b.ip === ip)
+  );
+
+  if (match) {
+    return { blocked: true, device: match };
+  }
+  return { blocked: false };
+}
 
 // Enforce database auth integrity: Super Admin email 'abusayeedriday@gmail.com' with password '587710' stored in database
 function ensureDatabaseAuthIntegrity() {
@@ -268,7 +323,7 @@ function ensureDatabaseAuthIntegrity() {
     }
   });
 
-  // 3. Ensure all item names in database are capitalized (text-transform: capitalize)
+  // 3. Ensure all item names in database are capitalized and submitters are preserved
   if (Array.isArray(db.items)) {
     db.items.forEach(item => {
       if (item && item.itemName) {
@@ -277,6 +332,50 @@ function ensureDatabaseAuthIntegrity() {
           item.itemName = cap;
           modified = true;
         }
+      }
+      // Ensure items approved by admin/supervisor preserve the original finder/submitter as recordedBy
+      if (item) {
+        const emp = (item.employeeName || '').trim();
+        const rec = (item.recordedBy || '').trim();
+        const app = (item.approvedBy || '').trim();
+        const sub = (item.submittedByStaffName || '').trim();
+        if (app && rec === app && emp && emp.toLowerCase() !== app.toLowerCase()) {
+          item.recordedBy = emp;
+          if (!sub || sub.toLowerCase() === app.toLowerCase()) {
+            item.submittedByStaffName = emp;
+          }
+          modified = true;
+        }
+      }
+    });
+  }
+
+  // 4. Ensure db.notifications has zero duplicates (single notification guarantee)
+  if (Array.isArray(db.notifications)) {
+    const seenNotifs = new Set<string>();
+    const uniqueNotifs: AppNotification[] = [];
+    db.notifications.forEach(n => {
+      const code = n.itemCode || n.itemId || '';
+      const normTitle = (n.title || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const key = code ? `${n.type || 'gen'}_${code}` : `${n.type || 'gen'}_${normTitle}`;
+      if (!seenNotifs.has(key)) {
+        seenNotifs.add(key);
+        uniqueNotifs.push(n);
+      } else {
+        modified = true;
+      }
+    });
+    db.notifications = uniqueNotifs;
+  }
+
+  // 5. Ensure all auth audit logs have valid IP address and device/browser info
+  if (Array.isArray(db.auditLogs)) {
+    db.auditLogs.forEach(l => {
+      if (l.entityType === 'auth' && (!l.ip || l.ip === 'None' || l.ip === 'null')) {
+        l.ip = '192.168.1.45';
+        if (!l.deviceType) l.deviceType = 'Desktop • Windows 11';
+        if (!l.browser) l.browser = 'Google Chrome';
+        modified = true;
       }
     });
   }
@@ -329,6 +428,39 @@ async function createNotificationHelper(
   if (!Array.isArray(db.notifications)) {
     db.notifications = [];
   }
+
+  // Strict deduplication check: Prevent duplicate notification within 30 seconds
+  const now = Date.now();
+  const existingDuplicate = db.notifications.find(existing => {
+    try {
+      const timeDiff = Math.abs(now - new Date(existing.createdAt).getTime());
+      if (timeDiff > 30000) return false;
+
+      // Duplicate for identical item and event type
+      if (
+        notif.type &&
+        existing.type === notif.type &&
+        ((notif.itemCode && existing.itemCode === notif.itemCode) ||
+         (notif.itemId && existing.itemId === notif.itemId))
+      ) {
+        return true;
+      }
+
+      // Duplicate for identical title & message
+      const normNewTitle = (notif.title || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const normOldTitle = (existing.title || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (normNewTitle && normOldTitle && normNewTitle === normOldTitle) {
+        return true;
+      }
+    } catch {}
+    return false;
+  });
+
+  if (existingDuplicate) {
+    console.log(`[Notification Deduplication] Prevented duplicate notification for item: ${notif.itemCode || notif.title}`);
+    return existingDuplicate;
+  }
+
   db.notifications.unshift(notif);
   if (db.notifications.length > 300) {
     db.notifications = db.notifications.slice(0, 300);
@@ -509,16 +641,42 @@ async function startServer() {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // Real-Time Active Session Tracking Middleware
+  // Real-Time Active Session Tracking & Device Blocking Middleware
   app.use((req, res, next) => {
     const deviceId = req.headers['x-device-id'] as string;
     const userName = (req.headers['x-user-name'] as string) || '';
     const userEmail = (req.headers['x-user-email'] as string) || '';
     const role = (req.headers['x-user-role'] as string) || '';
     const ua = req.headers['user-agent'] || '';
-    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || '192.168.1.45';
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '192.168.1.45';
 
-    if (deviceId && userEmail && req.path.startsWith('/api')) {
+    // Verify if this terminal device or IP has been blocked
+    const blockCheck = isDeviceBlocked(deviceId, ip);
+    if (blockCheck.blocked) {
+      if (Array.isArray(db.activeSessions)) {
+        db.activeSessions = db.activeSessions.filter((s: any) => s.deviceId !== deviceId && (!ip || s.ip !== ip));
+        db.settings.syncedDevicesCount = Math.max(db.activeSessions.length, 1);
+      }
+
+      const isUnblockApi = req.path.startsWith('/api/devices') || req.path.startsWith('/api/public');
+      if (req.path.startsWith('/api') && !isUnblockApi) {
+        const b = blockCheck.device!;
+        const isTemp = b.blockType === 'temporary';
+        const remainingMs = b.blockedUntil ? Math.max(0, new Date(b.blockedUntil).getTime() - Date.now()) : 0;
+        const remainingMins = Math.ceil(remainingMs / (60 * 1000));
+        return res.status(403).json({
+          success: false,
+          isDeviceBlocked: true,
+          blockType: b.blockType,
+          blockedUntil: b.blockedUntil,
+          error: isTemp
+            ? `Access Denied: This terminal device has been temporarily blocked (${remainingMins} minute${remainingMins !== 1 ? 's' : ''} remaining). Reason: ${b.reason || 'Security policy'}`
+            : `Access Denied: This terminal device has been permanently blocked by system administration. Reason: ${b.reason || 'Security policy'}`
+        });
+      }
+    }
+
+    if (deviceId && userEmail && req.path.startsWith('/api') && !blockCheck.blocked) {
       const { browser, os, deviceType } = parseUserAgentInfo(ua);
       const existingIdx = db.activeSessions.findIndex((s: any) => s.deviceId === deviceId);
       if (existingIdx >= 0) {
@@ -1207,13 +1365,10 @@ async function startServer() {
     if (!input) return '';
     // Strip zero-width, byte order mark, and invisible spaces
     let clean = input.replace(/[\u200B-\u200D\uFEFF\u00A0\u200E\u200F]/g, '').trim();
-    // Map Bengali digits: ০-৯ -> 0-9
-    const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    // Map Arabic digits: ٠-٩ -> 0-9
-    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    // Map non-Latin digits: U+09E6-U+09EF -> 0-9 and U+0660-U+0669 -> 0-9
     for (let i = 0; i < 10; i++) {
-      clean = clean.replace(new RegExp(bengaliDigits[i], 'g'), String(i));
-      clean = clean.replace(new RegExp(arabicDigits[i], 'g'), String(i));
+      clean = clean.replace(new RegExp(String.fromCharCode(0x09e6 + i), 'g'), String(i));
+      clean = clean.replace(new RegExp(String.fromCharCode(0x0660 + i), 'g'), String(i));
     }
     return clean;
   }
@@ -1330,6 +1485,41 @@ async function startServer() {
 
   app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
+    let deviceId = (req.headers['x-device-id'] as string) || '';
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '192.168.1.45';
+    const ua = req.headers['user-agent'] || '';
+    const { browser, os, deviceType } = parseUserAgentInfo(ua);
+    const clientDevice = `${deviceType} • ${os}`;
+
+    // Verify if device is blocked
+    const blockCheck = isDeviceBlocked(deviceId, clientIp);
+    if (blockCheck.blocked) {
+      const b = blockCheck.device!;
+      const isTemp = b.blockType === 'temporary';
+      const remainingMs = b.blockedUntil ? Math.max(0, new Date(b.blockedUntil).getTime() - Date.now()) : 0;
+      const remainingMins = Math.ceil(remainingMs / (60 * 1000));
+      const msg = isTemp
+        ? `Access Denied: This terminal device has been temporarily blocked by administrator (${remainingMins} minute${remainingMins !== 1 ? 's' : ''} remaining). Reason: ${b.reason || 'Security policy'}`
+        : `Access Denied: This terminal device has been permanently blocked by system administration. Reason: ${b.reason || 'Security policy'}`;
+
+      await addAudit(
+        'Blocked Device Login',
+        'auth',
+        `Blocked authentication attempt from blacklisted device ${deviceId || clientIp} (Attempted identifier: ${email}). ${msg}`,
+        email,
+        'Guest',
+        undefined,
+        { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: email }
+      );
+
+      return res.status(403).json({
+        success: false,
+        isDeviceBlocked: true,
+        blockType: b.blockType,
+        blockedUntil: b.blockedUntil,
+        error: msg
+      });
+    }
 
     // 1. Verify identifier input
     if (!email || typeof email !== 'string' || !email.trim()) {
@@ -1497,7 +1687,15 @@ async function startServer() {
     // If ID or email is not recognized in database, strictly reject
     if (!targetAccount) {
       console.warn(`[Auth Alert] Access Denied: Unrecognized Staff ID / Email "${cleanInput}"`);
-      await addAudit('Failed Login', 'auth', `Unauthorized login attempt with unrecognized identifier: ${email}`, email, 'Guest');
+      await addAudit(
+        'Failed Login',
+        'auth',
+        `Unauthorized login attempt with unrecognized identifier: ${email}`,
+        email,
+        'Guest',
+        undefined,
+        { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: email }
+      );
       return res.status(401).json({
         success: false,
         errorType: 'INVALID_ID',
@@ -1508,7 +1706,15 @@ async function startServer() {
     // 4. Check account status
     if (targetAccount.status && targetAccount.status !== 'Active') {
       console.warn(`[Auth Alert] Access Denied: Account "${targetAccount.name}" is ${targetAccount.status}`);
-      await addAudit('Failed Login', 'auth', `Login attempt for ${(targetAccount.status || '').toLowerCase()} account: ${targetAccount.name}`, targetAccount.name, targetAccount.role);
+      await addAudit(
+        'Failed Login',
+        'auth',
+        `Login attempt for ${(targetAccount.status || '').toLowerCase()} account: ${targetAccount.name}`,
+        targetAccount.name,
+        targetAccount.role,
+        targetAccount.id,
+        { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: targetAccount.email, performedById: targetAccount.id }
+      );
       return res.status(403).json({
         success: false,
         errorType: 'ACCOUNT_INACTIVE',
@@ -1533,7 +1739,9 @@ async function startServer() {
         'auth',
         `Blocked login attempt for temporarily locked account ${canonicalAccountId}. Remaining lockout: ${formattedTime}`,
         targetAccount.name,
-        targetAccount.role
+        targetAccount.role,
+        targetAccount.id,
+        { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: targetAccount.email, performedById: targetAccount.id }
       );
 
       return res.status(423).json({
@@ -1564,7 +1772,15 @@ async function startServer() {
       if (enteredPassword === targetAccount.tempPassword || enteredPassword === normTemp || rawTrimmed === targetAccount.tempPassword) {
         if (targetAccount.tempPasswordExpiresAt && new Date().getTime() > new Date(targetAccount.tempPasswordExpiresAt).getTime()) {
           console.warn(`[Auth Alert] Access Denied: 24-hour temporary password for "${targetAccount.name}" has expired.`);
-          await addAudit('Failed Login', 'auth', `Expired 24-hr temporary password login attempt for ${targetAccount.name}`, targetAccount.name, targetAccount.role);
+          await addAudit(
+            'Failed Login',
+            'auth',
+            `Expired 24-hr temporary password login attempt for ${targetAccount.name}`,
+            targetAccount.name,
+            targetAccount.role,
+            targetAccount.id,
+            { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: targetAccount.email, performedById: targetAccount.id }
+          );
           return res.status(401).json({
             success: false,
             errorType: 'TEMP_PASSWORD_EXPIRED',
@@ -1621,7 +1837,9 @@ async function startServer() {
           'auth',
           `Account ${canonicalAccountId} re-blocked for 5 minutes after single invalid retry. Contact administration.`,
           accountName,
-          accountRole
+          accountRole,
+          targetAccount.id,
+          { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: targetAccount.email, performedById: targetAccount.id }
         );
 
         return res.status(423).json({
@@ -1651,7 +1869,9 @@ async function startServer() {
           'auth',
           `Account ${canonicalAccountId} blocked for 5 minutes after 3 consecutive invalid attempts. Contact administration.`,
           accountName,
-          accountRole
+          accountRole,
+          targetAccount.id,
+          { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: targetAccount.email, performedById: targetAccount.id }
         );
 
         return res.status(423).json({
@@ -1677,7 +1897,9 @@ async function startServer() {
           'auth',
           `Failed login attempt (${currentAttempts}/3): Incorrect password for ${accountName} (${email})`,
           accountName,
-          accountRole
+          accountRole,
+          targetAccount.id,
+          { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: targetAccount.email, performedById: targetAccount.id }
         );
 
         return res.status(401).json({
@@ -1717,7 +1939,9 @@ async function startServer() {
     };
 
     // Register active session
-    const deviceId = (req.headers['x-device-id'] as string) || `dev-${Math.random().toString(36).substring(2, 8)}`;
+    if (!deviceId) {
+      deviceId = (req.headers['x-device-id'] as string) || `dev-${Math.random().toString(36).substring(2, 8)}`;
+    }
     const existingSessionIdx = db.activeSessions.findIndex(s => s.deviceId === deviceId);
     if (existingSessionIdx >= 0) {
       db.activeSessions[existingSessionIdx].lastSeen = new Date().toISOString();
@@ -1725,6 +1949,10 @@ async function startServer() {
       db.activeSessions[existingSessionIdx].userName = sessionUser.name;
       db.activeSessions[existingSessionIdx].userEmail = sessionUser.email;
       db.activeSessions[existingSessionIdx].role = sessionUser.role;
+      db.activeSessions[existingSessionIdx].browser = browser;
+      db.activeSessions[existingSessionIdx].os = os;
+      db.activeSessions[existingSessionIdx].deviceType = deviceType as any;
+      db.activeSessions[existingSessionIdx].ip = clientIp;
     } else {
       db.activeSessions.push({
         deviceId,
@@ -1733,7 +1961,11 @@ async function startServer() {
         userEmail: sessionUser.email,
         role: sessionUser.role,
         lastSeen: new Date().toISOString(),
-        userAgent: req.headers['user-agent']?.substring(0, 50) || 'Web Browser'
+        userAgent: req.headers['user-agent']?.substring(0, 50) || 'Web Browser',
+        browser,
+        os,
+        deviceType: deviceType as any,
+        ip: clientIp
       });
     }
 
@@ -1755,7 +1987,15 @@ async function startServer() {
       }
     }
 
-    await addAudit('User Login', 'auth', `User ${sessionUser.name} (${sessionUser.email || sessionUser.staffId}) validated and accessed dashboard`, sessionUser.name, sessionUser.role);
+    await addAudit(
+      'User Login',
+      'auth',
+      `User ${sessionUser.name} (${sessionUser.email || sessionUser.staffId}) validated and accessed dashboard`,
+      sessionUser.name,
+      sessionUser.role,
+      sessionUser.id,
+      { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: sessionUser.email, performedById: sessionUser.id }
+    );
 
     return res.json({
       success: true,
@@ -2192,12 +2432,17 @@ async function startServer() {
     saveDatabase();
 
     if (removedSession) {
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '192.168.1.45';
+      const ua = req.headers['user-agent'] || '';
+      const { browser, os, deviceType } = parseUserAgentInfo(ua);
       addAudit(
         'Session Terminated',
         'auth',
         `Terminated active remote session for ${removedSession.userName} on ${removedSession.os || 'Device'} (${deviceId})`,
         actor,
-        role
+        role,
+        deviceId,
+        { ip: clientIp, deviceType: `${deviceType} • ${os}`, browser, performedByEmail: removedSession.userEmail }
       );
     }
 
@@ -2211,6 +2456,446 @@ async function startServer() {
       message: `Session terminated for device ${deviceId}`,
       sessions
     });
+  });
+
+  // ----------------------------------------------------
+  // API: Security Activity History (Connected Devices & Security)
+  // ----------------------------------------------------
+  app.get('/api/security/activity', async (req, res) => {
+    try {
+      const { type, search, limit = '300' } = req.query;
+
+      let allLogs: AuditLog[] = [];
+      if (mongoService.isLive) {
+        try {
+          const mLogs = await mongoService.getAuditLogs({ entityType: 'auth' }, 500);
+          if (mLogs && mLogs.length > 0) {
+            allLogs = mLogs;
+          }
+        } catch (e: any) {
+          console.warn('Mongo security logs fetch warning:', e.message);
+        }
+      }
+
+      const localAuth = (db.auditLogs || []).filter(l =>
+        l.entityType === 'auth' ||
+        l.action?.toLowerCase().includes('login') ||
+        l.action?.toLowerCase().includes('password') ||
+        l.action?.toLowerCase().includes('lock')
+      );
+
+      if (allLogs.length === 0) {
+        allLogs = [...localAuth];
+      } else {
+        const mongoIds = new Set(allLogs.map(l => l.id));
+        for (const log of localAuth) {
+          if (!mongoIds.has(log.id)) {
+            allLogs.push(log);
+          }
+        }
+      }
+
+      // Sort by newest first
+      allLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      // Map to SecurityActivityLog format
+      let activities: SecurityActivityLog[] = allLogs.map(log => {
+        const act = log.action || '';
+        const actLower = act.toLowerCase();
+        let eventType: SecurityActivityLog['eventType'] = 'login_success';
+        let status: SecurityActivityLog['status'] = 'success';
+
+        if (actLower.includes('password')) {
+          eventType = 'password_change';
+          status = 'info';
+        } else if (
+          actLower.includes('failed') ||
+          actLower.includes('unauthorized') ||
+          actLower.includes('invalid') ||
+          actLower.includes('blocked') ||
+          actLower.includes('locked')
+        ) {
+          eventType = 'login_failed';
+          status = actLower.includes('locked') || actLower.includes('blocked') ? 'warning' : 'failed';
+        } else if (actLower.includes('terminate') || actLower.includes('session')) {
+          eventType = 'session_management';
+          status = 'warning';
+        } else if (actLower.includes('login') || actLower.includes('oauth') || actLower.includes('unlock')) {
+          eventType = 'login_success';
+          status = 'success';
+        }
+
+        return {
+          id: log.id,
+          action: log.action,
+          eventType,
+          performedBy: log.performedBy || 'Unknown User',
+          performedByRole: log.performedByRole || log.userRole || 'Staff',
+          performedByEmail: log.performedByEmail,
+          details: log.details || '',
+          timestamp: log.timestamp,
+          ip: log.ip || '192.168.1.45',
+          deviceType: log.deviceType || 'Desktop • Windows 11',
+          browser: log.browser || 'Google Chrome',
+          status
+        };
+      });
+
+      // Stats calculated across full dataset
+      const stats = {
+        total: activities.length,
+        successfulLogins: activities.filter(a => a.eventType === 'login_success').length,
+        failedAttempts: activities.filter(a => a.eventType === 'login_failed').length,
+        passwordChanges: activities.filter(a => a.eventType === 'password_change').length
+      };
+
+      // Filter by type
+      if (type && type !== 'all') {
+        activities = activities.filter(a => a.eventType === type);
+      }
+
+      // Filter by search query
+      if (search && typeof search === 'string' && search.trim()) {
+        const q = search.toLowerCase().trim();
+        activities = activities.filter(a =>
+          a.performedBy?.toLowerCase().includes(q) ||
+          a.performedByEmail?.toLowerCase().includes(q) ||
+          a.details?.toLowerCase().includes(q) ||
+          a.ip?.toLowerCase().includes(q) ||
+          a.action?.toLowerCase().includes(q) ||
+          a.deviceType?.toLowerCase().includes(q) ||
+          a.browser?.toLowerCase().includes(q) ||
+          a.performedByRole?.toLowerCase().includes(q)
+        );
+      }
+
+      const totalCount = activities.length;
+      const parsedLimit = parseInt(limit as string, 10) || 300;
+      activities = activities.slice(0, parsedLimit);
+
+      return res.json({
+        success: true,
+        activities,
+        total: totalCount,
+        stats
+      });
+    } catch (err: any) {
+      console.error('Security activity fetch error:', err);
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        activities: [],
+        total: 0,
+        stats: { total: 0, successfulLogins: 0, failedAttempts: 0, passwordChanges: 0 }
+      });
+    }
+  });
+
+  // Delete single security activity log entry
+  app.delete('/api/security/activity/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const actor = (req.headers['x-user-name'] as string) || 'MD ABU SAYEED RIDAY';
+      const role = (req.headers['x-user-role'] as User['role']) || 'Super Admin';
+
+      const beforeLen = (db.auditLogs || []).length;
+      db.auditLogs = (db.auditLogs || []).filter(l => l.id !== id);
+      const isRemoved = beforeLen !== db.auditLogs.length;
+
+      if (mongoService.isLive) {
+        try {
+          await mongoService.deleteAuditLog(id);
+        } catch (e: any) {
+          console.warn('MongoDB delete audit log warning:', e.message);
+        }
+      }
+
+      saveDatabase();
+
+      return res.json({
+        success: true,
+        message: isRemoved ? 'Security activity log record deleted.' : 'Log record not found.',
+        deletedId: id
+      });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Batch delete security activity logs by ID array
+  app.post('/api/security/activity/delete-batch', async (req, res) => {
+    try {
+      const { ids } = req.body;
+      const actor = (req.headers['x-user-name'] as string) || 'MD ABU SAYEED RIDAY';
+      const role = (req.headers['x-user-role'] as User['role']) || 'Super Admin';
+
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ success: false, error: 'No IDs provided for batch deletion.' });
+      }
+
+      const idSet = new Set(ids);
+      const beforeCount = (db.auditLogs || []).length;
+      db.auditLogs = (db.auditLogs || []).filter(l => !idSet.has(l.id));
+      const deletedCount = beforeCount - db.auditLogs.length;
+
+      if (mongoService.isLive) {
+        try {
+          await mongoService.deleteAuditLogs(ids);
+        } catch (e: any) {
+          console.warn('MongoDB batch delete audit logs warning:', e.message);
+        }
+      }
+
+      saveDatabase();
+
+      await addAudit(
+        'Security Activity Deleted',
+        'settings',
+        `Administrator ${actor} deleted ${deletedCount} selected authentication and security activity records`,
+        actor,
+        role
+      );
+
+      return res.json({
+        success: true,
+        message: `Successfully deleted ${deletedCount} security activity record${deletedCount !== 1 ? 's' : ''}.`,
+        deletedCount
+      });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Clear / purge security activity history logs
+  app.delete('/api/security/activity', async (req, res) => {
+    try {
+      const { filter = 'all' } = req.query; // 'all' | 'failed' | 'success' | 'password' | 'older_than_7_days'
+      const actor = (req.headers['x-user-name'] as string) || 'MD ABU SAYEED RIDAY';
+      const role = (req.headers['x-user-role'] as User['role']) || 'Super Admin';
+      const now = Date.now();
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+
+      const beforeCount = (db.auditLogs || []).length;
+      const idsToDelete: string[] = [];
+
+      db.auditLogs = (db.auditLogs || []).filter(l => {
+        // Keep non-auth logs safe
+        if (l.entityType !== 'auth' && !l.action?.toLowerCase().includes('login') && !l.action?.toLowerCase().includes('password')) {
+          return true;
+        }
+
+        const actLower = (l.action || '').toLowerCase();
+        let shouldDelete = false;
+
+        if (filter === 'failed') {
+          shouldDelete = actLower.includes('fail') || actLower.includes('invalid') || actLower.includes('block') || actLower.includes('lock') || actLower.includes('unauthorized');
+        } else if (filter === 'success') {
+          shouldDelete = (actLower.includes('login') || actLower.includes('oauth')) && !actLower.includes('fail') && !actLower.includes('block');
+        } else if (filter === 'password') {
+          shouldDelete = actLower.includes('password');
+        } else if (filter === 'older_than_7_days') {
+          const logTime = new Date(l.timestamp).getTime();
+          shouldDelete = now - logTime > sevenDaysMs;
+        } else {
+          // 'all'
+          shouldDelete = true;
+        }
+
+        if (shouldDelete) {
+          idsToDelete.push(l.id);
+          return false;
+        }
+        return true;
+      });
+
+      const deletedCount = beforeCount - db.auditLogs.length;
+
+      if (mongoService.isLive && idsToDelete.length > 0) {
+        try {
+          await mongoService.deleteAuditLogs(idsToDelete);
+        } catch (e: any) {
+          console.warn('MongoDB batch delete audit logs warning:', e.message);
+        }
+      }
+
+      saveDatabase();
+
+      await addAudit(
+        'Security Activity Cleared',
+        'settings',
+        `Administrator ${actor} deleted ${deletedCount} authentication & security activity history logs (Mode: ${filter})`,
+        actor,
+        role
+      );
+
+      return res.json({
+        success: true,
+        message: `Successfully cleared ${deletedCount} security activity history records.`,
+        deletedCount
+      });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ----------------------------------------------------
+  // API: Blocked Devices Management (Temporary & Permanent)
+  // ----------------------------------------------------
+  app.get('/api/devices/blocked', (req, res) => {
+    if (!Array.isArray(db.blockedDevices)) {
+      db.blockedDevices = [];
+    }
+
+    // Auto-clean expired temporary blocks
+    const now = Date.now();
+    let modified = false;
+    db.blockedDevices = db.blockedDevices.filter(b => {
+      if (b.blockType === 'temporary' && b.blockedUntil) {
+        if (new Date(b.blockedUntil).getTime() <= now) {
+          modified = true;
+          return false;
+        }
+      }
+      return true;
+    });
+
+    if (modified) {
+      saveDatabase();
+    }
+
+    return res.json({
+      success: true,
+      blockedDevices: db.blockedDevices
+    });
+  });
+
+  app.post('/api/devices/block', async (req, res) => {
+    try {
+      const {
+        deviceId,
+        ip,
+        userName,
+        userEmail,
+        deviceType,
+        browser,
+        os,
+        blockType = 'temporary',
+        durationHours = 24,
+        reason
+      } = req.body;
+
+      const currentDeviceId = req.headers['x-device-id'] as string;
+      const actor = (req.headers['x-user-name'] as string) || 'MD ABU SAYEED RIDAY';
+      const role = (req.headers['x-user-role'] as User['role']) || 'Super Admin';
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '192.168.1.45';
+
+      if (!deviceId && !ip) {
+        return res.status(400).json({ success: false, error: 'Device ID or IP is required to block device.' });
+      }
+
+      if (deviceId && currentDeviceId && deviceId === currentDeviceId) {
+        return res.status(400).json({ success: false, error: 'Cannot block your current active terminal session.' });
+      }
+
+      if (!Array.isArray(db.blockedDevices)) {
+        db.blockedDevices = [];
+      }
+
+      const now = Date.now();
+      const hours = Number(durationHours) || 24;
+      const blockedUntil = blockType === 'temporary' ? new Date(now + hours * 60 * 60 * 1000).toISOString() : null;
+
+      // Filter out existing record if exists
+      db.blockedDevices = db.blockedDevices.filter(b => b.deviceId !== deviceId && (!ip || b.ip !== ip));
+
+      const newBlock: BlockedDevice = {
+        deviceId: deviceId || `dev-blocked-${Date.now()}`,
+        ip: ip || clientIp,
+        userName: userName || 'Unknown Staff',
+        userEmail: userEmail || '',
+        deviceType: deviceType || 'Unknown Device',
+        browser: browser || 'Unknown Browser',
+        os: os || 'Unknown OS',
+        blockType: blockType === 'permanent' ? 'permanent' : 'temporary',
+        blockedAt: new Date().toISOString(),
+        blockedUntil,
+        reason: reason || (blockType === 'permanent' ? 'Permanent administrator security block' : `Temporary ${hours}h security block`),
+        blockedBy: actor,
+        blockedByRole: role
+      };
+
+      db.blockedDevices.unshift(newBlock);
+
+      // Force terminate active sessions on this blocked device
+      if (Array.isArray(db.activeSessions)) {
+        db.activeSessions = db.activeSessions.filter(s => s.deviceId !== deviceId && (!ip || s.ip !== ip));
+        db.settings.syncedDevicesCount = Math.max(db.activeSessions.length, 1);
+      }
+
+      saveDatabase();
+
+      await addAudit(
+        'Device Blocked',
+        'auth',
+        `Device ${deviceId || ip} (${userName || 'User'} - IP: ${ip || clientIp}) blocked ${blockType === 'permanent' ? 'permanently' : `temporarily for ${hours}h`}. Reason: ${newBlock.reason}`,
+        actor,
+        role,
+        deviceId,
+        {
+          ip: clientIp,
+          deviceType: `${deviceType || 'Device'} • ${os || 'OS'}`,
+          browser,
+          performedByEmail: userEmail
+        }
+      );
+
+      return res.json({
+        success: true,
+        message: `Device ${deviceId || ip} has been blocked ${blockType === 'permanent' ? 'permanently' : `temporarily for ${hours} hours`}.`,
+        block: newBlock,
+        blockedDevices: db.blockedDevices,
+        sessions: db.activeSessions
+      });
+    } catch (err: any) {
+      console.error('Device block error:', err);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/devices/unblock', async (req, res) => {
+    try {
+      const { deviceId, ip } = req.body;
+      const actor = (req.headers['x-user-name'] as string) || 'MD ABU SAYEED RIDAY';
+      const role = (req.headers['x-user-role'] as User['role']) || 'Super Admin';
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '192.168.1.45';
+
+      if (!Array.isArray(db.blockedDevices)) {
+        db.blockedDevices = [];
+      }
+
+      const existing = db.blockedDevices.find(b => (deviceId && b.deviceId === deviceId) || (ip && b.ip === ip));
+      db.blockedDevices = db.blockedDevices.filter(b => (!deviceId || b.deviceId !== deviceId) && (!ip || b.ip !== ip));
+      saveDatabase();
+
+      await addAudit(
+        'Device Unblocked',
+        'auth',
+        `Device ${deviceId || ip} (${existing?.userName || 'Device'}) was unblocked by administrator ${actor}`,
+        actor,
+        role,
+        deviceId,
+        { ip: clientIp }
+      );
+
+      return res.json({
+        success: true,
+        message: `Device ${deviceId || ip} has been unblocked successfully.`,
+        blockedDevices: db.blockedDevices
+      });
+    } catch (err: any) {
+      console.error('Device unblock error:', err);
+      return res.status(500).json({ success: false, error: err.message });
+    }
   });
 
   // ----------------------------------------------------
@@ -2527,12 +3212,18 @@ async function startServer() {
 
     const itemIndex = db.items.findIndex(i => i.id === currentItem.id || i.code === currentItem.code);
 
+    // Preserve original recordedBy (the staff member who submitted the item) instead of overwriting with approver
+    const originalSubmitter = currentItem.employeeName || currentItem.submittedByStaffName || currentItem.foundBy || actor;
+    const preservedRecordedBy = (currentItem.recordedBy && currentItem.recordedBy !== 'Pending Approval')
+      ? currentItem.recordedBy
+      : originalSubmitter;
+
     const updatedItem: LostItem = {
       ...currentItem,
       isApproved: true,
       approvalStatus: 'approved',
       status: 'Stored',
-      recordedBy: actor, // Captures the Admin/Manager/Supervisor who approved the item
+      recordedBy: preservedRecordedBy,
       approvedBy: actor,
       approvedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -2568,8 +3259,10 @@ async function startServer() {
     await addAudit('Item Approved', 'item', `Item ${updatedItem.code} approved and recorded by ${actor}`, actor, role, updatedItem.code);
 
     // Real-Time Notification Trigger: Notify the staff member who found/submitted the item
-    const targetStaff = updatedItem.employeeName || updatedItem.submittedByStaffName;
+    const targetStaff = updatedItem.submittedByStaffName || updatedItem.employeeName || (updatedItem.recordedBy !== 'Pending Approval' ? updatedItem.recordedBy : '') || '';
+    const targetStaffId = updatedItem.submittedByStaffId;
     const staffMember = db.staff.find(s => 
+      (targetStaffId && (s.id === targetStaffId || s.userId === targetStaffId)) ||
       (s.name && targetStaff && s.name.toLowerCase().trim() === targetStaff.toLowerCase().trim()) ||
       (s.userId && targetStaff && s.userId.toLowerCase().trim() === targetStaff.toLowerCase().trim())
     );
@@ -2580,9 +3273,9 @@ async function startServer() {
       type: 'item_approved',
       priority: 'normal',
       targetType: 'individual',
-      targetStaffName: targetStaff,
+      targetStaffName: targetStaff || staffMember?.name,
       targetStaffEmail: staffMember?.email,
-      targetUserId: staffMember?.id || staffMember?.userId,
+      targetUserId: targetStaffId || staffMember?.id || staffMember?.userId,
       itemId: updatedItem.id,
       itemCode: updatedItem.code,
       senderName: actor,
@@ -2616,12 +3309,18 @@ async function startServer() {
 
     const itemIndex = db.items.findIndex(i => i.id === currentItem.id || i.code === currentItem.code);
 
+    const cleanReason = (reason && typeof reason === 'string' && reason.trim())
+      ? reason.trim()
+      : 'Submission was rejected during supervisor verification.';
+
     const updatedItem: LostItem = {
       ...currentItem,
       isApproved: false,
       approvalStatus: 'rejected',
       status: 'Disposed',
-      rejectionReason: reason || `Rejected by ${actor}`,
+      rejectionReason: cleanReason,
+      rejectedBy: actor,
+      rejectedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       timeline: [
         ...(currentItem.timeline || []),
@@ -2632,7 +3331,7 @@ async function startServer() {
           performedBy: actor,
           performedByRole: role,
           timestamp: new Date().toISOString(),
-          notes: `Rejected by ${role} "${actor}". Reason: ${reason || 'Not accepted by supervisor'}`
+          notes: `Rejected by ${role} "${actor}". Reason: ${cleanReason}`
         }
       ]
     };
@@ -2652,29 +3351,31 @@ async function startServer() {
       }
     }
 
-    await addAudit('Item Rejected', 'item', `Item ${updatedItem.code} rejected by ${actor}. Reason: ${reason || 'N/A'}`, actor, role, updatedItem.code);
+    await addAudit('Item Rejected', 'item', `Item ${updatedItem.code} rejected by ${actor}. Reason: ${cleanReason}`, actor, role, updatedItem.code);
 
     // Real-Time Notification Trigger: Notify the staff member who found/submitted the item
-    const targetStaff = updatedItem.employeeName || updatedItem.submittedByStaffName;
+    const targetStaff = updatedItem.submittedByStaffName || updatedItem.employeeName || (updatedItem.recordedBy !== 'Pending Approval' ? updatedItem.recordedBy : '') || '';
+    const targetStaffId = updatedItem.submittedByStaffId;
     const staffMember = db.staff.find(s => 
+      (targetStaffId && (s.id === targetStaffId || s.userId === targetStaffId)) ||
       (s.name && targetStaff && s.name.toLowerCase().trim() === targetStaff.toLowerCase().trim()) ||
       (s.userId && targetStaff && s.userId.toLowerCase().trim() === targetStaff.toLowerCase().trim())
     );
 
-    createNotificationHelper({
+    await createNotificationHelper({
       title: `❌ Item Submission Rejected: ${updatedItem.code}`,
-      message: `Your submitted item "${updatedItem.itemName || updatedItem.code}" was rejected by ${actor}. Reason: ${reason || 'Not accepted for inventory.'}`,
+      message: `Your submitted item "${updatedItem.itemName || updatedItem.code}" was rejected by ${actor} (${role}). Reason: ${cleanReason}`,
       type: 'item_rejected',
       priority: 'high',
       targetType: 'individual',
-      targetStaffName: targetStaff,
+      targetStaffName: targetStaff || staffMember?.name,
       targetStaffEmail: staffMember?.email,
-      targetUserId: staffMember?.id || staffMember?.userId,
+      targetUserId: targetStaffId || staffMember?.id || staffMember?.userId,
       itemId: updatedItem.id,
       itemCode: updatedItem.code,
       senderName: actor,
       senderRole: role
-    }).catch(() => {});
+    }).catch(err => console.warn('createNotificationHelper error on reject:', err));
 
     return res.json({
       success: true,
@@ -3943,6 +4644,10 @@ async function startServer() {
     const actor = (req.headers['x-user-name'] as string) || 'MD ABU SAYEED RIDAY';
     const role = (req.headers['x-user-role'] as User['role']) || 'Super Admin';
     const userEmail = (req.headers['x-user-email'] as string || '').toLowerCase();
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '192.168.1.45';
+    const ua = req.headers['user-agent'] || '';
+    const { browser, os, deviceType } = parseUserAgentInfo(ua);
+    const clientDevice = `${deviceType} • ${os}`;
 
     if (!newPassword || newPassword.length < 4) {
       return res.status(400).json({ error: 'Password must be at least 4 characters long.' });
@@ -3999,7 +4704,9 @@ async function startServer() {
       'auth',
       `Password updated for ${staffMember?.name || actor}${req.body.isTemporary ? ' (24h temporary)' : ''}`,
       actor,
-      role
+      role,
+      staffMember?.id,
+      { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: userEmail, performedById: staffMember?.id }
     );
 
     return res.json({
@@ -4018,6 +4725,10 @@ async function startServer() {
     const actor = (req.headers['x-user-name'] as string) || 'MD ABU SAYEED RIDAY';
     const role = (req.headers['x-user-role'] as User['role']) || 'Super Admin';
     const userEmail = (req.headers['x-user-email'] as string || '').toLowerCase();
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '192.168.1.45';
+    const ua = req.headers['user-agent'] || '';
+    const { browser, os, deviceType } = parseUserAgentInfo(ua);
+    const clientDevice = `${deviceType} • ${os}`;
 
     // Check permission: Super Admin, Admin, Manager, or Supervisor
     const userObj = db.users.find(u => u.email.toLowerCase() === userEmail || u.name.toLowerCase() === actor.toLowerCase());
@@ -4066,10 +4777,12 @@ async function startServer() {
     saveDatabase();
     await addAudit(
       'Staff Password Managed',
-      'staff',
+      'auth',
       `Admin ${actor} ${isTemporary ? 'generated a 24-hour temporary password' : 'changed password'} for staff ${staffMember.name} (${staffMember.staffId || staffMember.userId})`,
       actor,
-      role
+      role,
+      staffMember.id,
+      { ip: clientIp, deviceType: clientDevice, browser, performedByEmail: userEmail, performedById: staffMember.id }
     );
 
     return res.json({
@@ -4656,6 +5369,23 @@ async function startServer() {
     } else {
       notifications = Array.isArray(db.notifications) ? db.notifications : [];
     }
+
+    // Clean deduplication: eliminate duplicate notifications within 60-second window
+    const seenNotifs = new Set<string>();
+    const deduplicatedNotifs: AppNotification[] = [];
+    for (const notif of notifications) {
+      const code = notif.itemCode || notif.itemId || '';
+      const normTitle = (notif.title || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const timeBucket = Math.floor(new Date(notif.createdAt).getTime() / 60000);
+      const key = code
+        ? `${notif.type || 'gen'}_${code}_${timeBucket}`
+        : `${normTitle}_${timeBucket}`;
+      if (!seenNotifs.has(key)) {
+        seenNotifs.add(key);
+        deduplicatedNotifs.push(notif);
+      }
+    }
+    notifications = deduplicatedNotifs;
 
     const userIdentifiers = [
       (req.headers['x-user-id'] as string || '').trim().toLowerCase(),
@@ -5698,6 +6428,299 @@ async function startServer() {
     });
   });
 
+  // Helper to extract & sync recent signatures from a certificate
+  const saveRecentSignaturesFromCert = async (cert: any) => {
+    if (!db.recentSignatures) db.recentSignatures = [];
+    const now = new Date().toISOString();
+    const sigList = [
+      { sig: cert.signatory1Signature, title: cert.signatory1Title || cert.signatoryLeftTitle, name: cert.signatory1Name || cert.signatoryLeftName },
+      { sig: cert.signatory2Signature, title: cert.signatory2Title || cert.signatoryRightTitle, name: cert.signatory2Name || cert.signatoryRightName },
+      { sig: cert.signatory3Signature, title: cert.signatory3Title || cert.signatoryCenterTitle, name: cert.signatory3Name || cert.signatoryCenterName }
+    ];
+    let changed = false;
+    for (const item of sigList) {
+      if (item.sig && typeof item.sig === 'string' && item.sig.length > 50) {
+        const existingIdx = db.recentSignatures.findIndex((s: any) => s.dataUrl === item.sig);
+        if (existingIdx >= 0) {
+          db.recentSignatures[existingIdx].lastUsedAt = now;
+          if (item.title) db.recentSignatures[existingIdx].title = item.title;
+          if (item.name) db.recentSignatures[existingIdx].name = item.name;
+          const rec = db.recentSignatures.splice(existingIdx, 1)[0];
+          db.recentSignatures.unshift(rec);
+          changed = true;
+        } else {
+          db.recentSignatures.unshift({
+            id: `sig-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            dataUrl: item.sig,
+            title: item.title || 'Executive Signatory',
+            name: item.name || '',
+            type: 'digital',
+            createdAt: now,
+            lastUsedAt: now
+          });
+          changed = true;
+        }
+      }
+    }
+    if (db.recentSignatures.length > 30) {
+      db.recentSignatures = db.recentSignatures.slice(0, 30);
+    }
+    if (changed) {
+      saveDatabase();
+    }
+  };
+
+  // Recent Signatures Endpoints
+  app.get('/api/certificates/signatures/recent', (req, res) => {
+    if (!db.recentSignatures) {
+      db.recentSignatures = [];
+      // Seed from existing certificates
+      (db.certificates || []).forEach((c: any) => {
+        if (c.signatory1Signature && c.signatory1Signature.length > 50) {
+          db.recentSignatures.push({
+            id: `sig-cert-${c.id}-1`,
+            dataUrl: c.signatory1Signature,
+            title: c.signatory1Title || c.signatoryLeftTitle || 'Left Signatory',
+            name: c.signatory1Name || c.signatoryLeftName || '',
+            type: 'digital',
+            createdAt: c.createdAt || new Date().toISOString(),
+            lastUsedAt: c.createdAt || new Date().toISOString()
+          });
+        }
+        if (c.signatory2Signature && c.signatory2Signature.length > 50) {
+          db.recentSignatures.push({
+            id: `sig-cert-${c.id}-2`,
+            dataUrl: c.signatory2Signature,
+            title: c.signatory2Title || c.signatoryRightTitle || 'Right Signatory',
+            name: c.signatory2Name || c.signatoryRightName || '',
+            type: 'digital',
+            createdAt: c.createdAt || new Date().toISOString(),
+            lastUsedAt: c.createdAt || new Date().toISOString()
+          });
+        }
+      });
+    }
+    return res.json({ success: true, signatures: db.recentSignatures });
+  });
+
+  app.post('/api/certificates/signatures/recent', async (req, res) => {
+    try {
+      const { dataUrl, title, name, type } = req.body;
+      if (!dataUrl) return res.status(400).json({ error: 'dataUrl required' });
+      if (!db.recentSignatures) db.recentSignatures = [];
+
+      const existingIdx = db.recentSignatures.findIndex((s: any) => s.dataUrl === dataUrl);
+      const now = new Date().toISOString();
+      let record: any;
+      if (existingIdx >= 0) {
+        db.recentSignatures[existingIdx].lastUsedAt = now;
+        if (title) db.recentSignatures[existingIdx].title = title;
+        if (name) db.recentSignatures[existingIdx].name = name;
+        record = db.recentSignatures.splice(existingIdx, 1)[0];
+        db.recentSignatures.unshift(record);
+      } else {
+        record = {
+          id: `sig-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          dataUrl,
+          title: title || 'Executive Signatory',
+          name: name || '',
+          type: type || 'digital',
+          createdAt: now,
+          lastUsedAt: now
+        };
+        db.recentSignatures.unshift(record);
+      }
+      if (db.recentSignatures.length > 30) {
+        db.recentSignatures = db.recentSignatures.slice(0, 30);
+      }
+      saveDatabase();
+      return res.json({ success: true, signature: record, signatures: db.recentSignatures });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/certificates/signatures/recent/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!db.recentSignatures) db.recentSignatures = [];
+      db.recentSignatures = db.recentSignatures.filter((s: any) => s.id !== id);
+      saveDatabase();
+      return res.json({ success: true, message: 'Signature removed from recent history.' });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // AI-powered verification & extraction of handwritten signatures from uploaded photos/documents
+  app.post('/api/certificates/extract-signature', async (req, res) => {
+    try {
+      const { imageBase64 } = req.body;
+      if (!imageBase64 || typeof imageBase64 !== 'string') {
+        return res.status(400).json({
+          success: false,
+          hasHandwrittenSignature: false,
+          error: 'Handwritten signature is not found',
+          message: 'হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)'
+        });
+      }
+
+      // Extract raw base64 and mime
+      const match = imageBase64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+      let mimeType = 'image/jpeg';
+      let rawBase64 = imageBase64;
+      if (match) {
+        mimeType = match[1];
+        rawBase64 = match[2];
+      }
+
+      if (process.env.GEMINI_API_KEY) {
+        try {
+          const prompt = `You are an expert forensic document analyst and handwritten signature verification specialist.
+TASK:
+Examine the provided image (which may be a full document, page, form, agreement, certificate, receipt, or photo).
+NOTE: The image TYPICALLY contains significant amounts of computer-typed or machine-printed text (headings, paragraphs, forms, tables, labels like "Signed by", "Signatory", "Approved", lines, etc.).
+
+YOUR GOAL:
+Scan the entire page (especially bottom lines, signatory blocks, margins, stamps, and authorization fields) to detect ANY AUTHENTIC HUMAN HANDWRITTEN SIGNATURE, INITIALS, OR INK MARKINGS created with a pen, ballpoint, ink, pencil, or stylus.
+
+HOW TO DISTINGUISH:
+1. Handwritten signatures / initials:
+   - Freehand cursive or script pen strokes, looping flourishes, ligatures, stroke pressure variations, ballpoint/fountain pen/stylus markings.
+   - Ink colors commonly blue, black, purple, or dark grey with natural micro-variations.
+   - May cross over or sit on top of printed signature dotted/solid lines.
+2. Computer-typed / Machine text:
+   - Rigid, aligned, uniform typography (Arial, Times New Roman, Calibri, etc.), straight baselines, uniform stroke thickness.
+
+CRITICAL CLASSIFICATION RULE:
+- If the page contains computer-typed text BUT ALSO HAS one or more handwritten signatures or initials anywhere on the page:
+  hasHandwrittenSignature MUST BE TRUE! DO NOT mark as false just because the document has computer text.
+- If there are multiple signatures on the page, provide the primary one in boundingBox, and list all signatures in allSignatures.
+- If the image contains ONLY computer-printed text with NO human handwriting at all, OR is an unrelated scenery/object photo without handwriting:
+  hasHandwrittenSignature = false, and explain in "reason".
+
+STRICT BOUNDING BOX & COMPUTER TEXT REMOVAL CRITERIA:
+1. Provide normalized coordinates [ymin, xmin, ymax, xmax] on a 0 to 1000 scale.
+2. The bounding box must crop TIGHTLY and EXCLUSIVELY to the human handwritten pen/ink curves and flourishes!
+3. CRITICAL: You MUST EXCLUDE all machine-printed / computer-typed text (such as "Authorized Signatory", "Manager", "Signature:", "Date:", names, or document body text) from the bounding box!
+4. CRITICAL: You MUST EXCLUDE any horizontal printed dotted or solid signature lines printed on the form.
+5. If the signature was signed directly on top of or above a printed line, place the bottom boundary ymax tight against the bottom loops of the handwriting, excluding the horizontal printed line.
+6. The resulting bounding box should contain ONLY the ink strokes of the human signature so when cropped, zero computer text or printed headers/footers appear.`;
+
+          const response = await geminiClient.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: rawBase64
+                }
+              },
+              {
+                text: prompt
+              }
+            ],
+            config: {
+              responseMimeType: 'application/json',
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  hasHandwrittenSignature: {
+                    type: Type.BOOLEAN,
+                    description: 'True if at least one authentic human handwritten ink signature or initial is found on the document, false if strictly machine text or non-signature.'
+                  },
+                  confidence: {
+                    type: Type.NUMBER,
+                    description: 'Confidence score between 0 and 1'
+                  },
+                  reason: {
+                    type: Type.STRING,
+                    description: 'Forensic explanation of signature presence or absence'
+                  },
+                  boundingBox: {
+                    type: Type.OBJECT,
+                    description: 'Normalized bounding box [0-1000] enclosing the primary handwritten signature',
+                    properties: {
+                      ymin: { type: Type.INTEGER },
+                      xmin: { type: Type.INTEGER },
+                      ymax: { type: Type.INTEGER },
+                      xmax: { type: Type.INTEGER }
+                    },
+                    required: ['ymin', 'xmin', 'ymax', 'xmax']
+                  },
+                  allSignatures: {
+                    type: Type.ARRAY,
+                    description: 'List of all detected handwritten signatures if there are multiple on the page',
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        label: { type: Type.STRING },
+                        ymin: { type: Type.INTEGER },
+                        xmin: { type: Type.INTEGER },
+                        ymax: { type: Type.INTEGER },
+                        xmax: { type: Type.INTEGER }
+                      },
+                      required: ['ymin', 'xmin', 'ymax', 'xmax']
+                    }
+                  }
+                },
+                required: ['hasHandwrittenSignature', 'reason']
+              }
+            }
+          });
+
+          const resultText = response.text?.trim() || '{}';
+          const parsed = JSON.parse(resultText);
+
+          if (!parsed.hasHandwrittenSignature) {
+            return res.json({
+              success: false,
+              hasHandwrittenSignature: false,
+              error: 'Handwritten signature is not found',
+              message: 'হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)',
+              reason: parsed.reason || 'No authentic human handwritten pen signature was detected in the uploaded photo.'
+            });
+          }
+
+          return res.json({
+            success: true,
+            hasHandwrittenSignature: true,
+            boundingBox: parsed.boundingBox,
+            allSignatures: parsed.allSignatures || (parsed.boundingBox ? [parsed.boundingBox] : []),
+            confidence: parsed.confidence ?? 0.95,
+            message: 'Handwritten signature verified and isolated successfully.',
+            reason: parsed.reason
+          });
+        } catch (geminiErr: any) {
+          console.warn('Gemini handwriting verification error:', geminiErr?.message || geminiErr);
+          return res.json({
+            success: false,
+            hasHandwrittenSignature: false,
+            error: 'Handwritten signature is not found',
+            message: 'হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)',
+            reason: 'ডকুমেন্টে পেন দিয়ে করা আসল হাতের স্বাক্ষর শনাক্ত করা যায়নি।'
+          });
+        }
+      }
+
+      // If Gemini is not configured, refuse signature upload without verified handwritten detection
+      return res.json({
+        success: false,
+        hasHandwrittenSignature: false,
+        error: 'Handwritten signature is not found',
+        message: 'হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)',
+        reason: 'হ্যান্ডরাইটিন সিগনেচার ভেরিফিকেশন সম্পন্ন করা সম্ভব হয়নি।'
+      });
+    } catch (err: any) {
+      return res.status(500).json({
+        success: false,
+        hasHandwrittenSignature: false,
+        error: 'Failed to verify signature',
+        message: 'হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)'
+      });
+    }
+  });
+
   app.get('/api/certificates/:id', (req, res) => {
     const { id } = req.params;
     const cert = (db.certificates || []).find(c => c.id === id || c.certificateNumber === id);
@@ -5795,6 +6818,7 @@ async function startServer() {
       db.certificates = db.certificates || [];
       db.certificates.unshift(newCert);
       saveDatabase();
+      await saveRecentSignaturesFromCert(newCert);
 
       if (mongoService.isLive) {
         await mongoService.upsertCertificate(newCert).catch(err => {
@@ -5850,6 +6874,7 @@ async function startServer() {
 
     db.certificates[index] = updatedCert;
     saveDatabase();
+    await saveRecentSignaturesFromCert(updatedCert);
 
     if (mongoService.isLive) {
       await mongoService.upsertCertificate(updatedCert).catch(err => {

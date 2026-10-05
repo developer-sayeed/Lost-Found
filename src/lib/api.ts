@@ -7,6 +7,8 @@ import {
   FilterState,
   DEFAULT_ROLE_PERMISSIONS,
   DeviceSession,
+  SecurityActivityLog,
+  BlockedDevice,
   AppNotification,
   MultiDatabaseSystemState,
   DatabaseEngineType,
@@ -119,13 +121,11 @@ export const api = {
         offlineLockout.previouslyLocked = true;
       }
 
-      // Normalize Bengali and Arabic numerals
+      // Normalize non-Latin numerals (Bengali U+09E6-U+09EF and Arabic U+0660-U+0669)
       let enteredPass = (password || '').replace(/[\u200B-\u200D\uFEFF\u00A0\u200E\u200F]/g, '').trim();
-      const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-      const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
       for (let i = 0; i < 10; i++) {
-        enteredPass = enteredPass.replace(new RegExp(bengaliDigits[i], 'g'), String(i));
-        enteredPass = enteredPass.replace(new RegExp(arabicDigits[i], 'g'), String(i));
+        enteredPass = enteredPass.replace(new RegExp(String.fromCharCode(0x09e6 + i), 'g'), String(i));
+        enteredPass = enteredPass.replace(new RegExp(String.fromCharCode(0x0660 + i), 'g'), String(i));
       }
 
       const isSuperAdminAlias =
@@ -556,6 +556,161 @@ export const api = {
       message: `Terminated session for device ${deviceId}`,
       sessions: []
     };
+  },
+
+  // Security Activity (Login Attempts, Successful Logins, Password Changes)
+  async getSecurityActivity(
+    user?: User | null,
+    query?: { type?: string; search?: string; limit?: number }
+  ): Promise<{
+    success: boolean;
+    activities: SecurityActivityLog[];
+    total: number;
+    stats: {
+      total: number;
+      successfulLogins: number;
+      failedAttempts: number;
+      passwordChanges: number;
+    };
+  }> {
+    try {
+      const params = new URLSearchParams();
+      if (query?.type) params.set('type', query.type);
+      if (query?.search) params.set('search', query.search);
+      if (query?.limit) params.set('limit', String(query.limit));
+
+      const res = await fetch(`/api/security/activity?${params.toString()}`, {
+        headers: getAuthHeaders(user)
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('Get security activity error:', e);
+    }
+    return {
+      success: true,
+      activities: [],
+      total: 0,
+      stats: { total: 0, successfulLogins: 0, failedAttempts: 0, passwordChanges: 0 }
+    };
+  },
+
+  async deleteSecurityActivity(id: string, user?: User | null): Promise<{ success: boolean; message: string }> {
+    try {
+      const res = await fetch(`/api/security/activity/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(user)
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('Delete security activity error:', e);
+    }
+    return { success: false, message: 'Failed to delete activity log' };
+  },
+
+  async deleteSecurityActivitiesBatch(ids: string[], user?: User | null): Promise<{ success: boolean; message: string; deletedCount: number }> {
+    try {
+      const res = await fetch('/api/security/activity/delete-batch', {
+        method: 'POST',
+        headers: getAuthHeaders(user),
+        body: JSON.stringify({ ids })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('Batch delete security activities error:', e);
+    }
+    return { success: false, message: 'Failed to delete selected activity logs', deletedCount: 0 };
+  },
+
+  async clearSecurityActivities(
+    filter: 'all' | 'failed' | 'success' | 'password' | 'older_than_7_days' = 'all',
+    user?: User | null
+  ): Promise<{ success: boolean; message: string; deletedCount: number }> {
+    try {
+      const res = await fetch(`/api/security/activity?filter=${filter}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(user)
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('Clear security activities error:', e);
+    }
+    return { success: false, message: 'Failed to clear activity logs', deletedCount: 0 };
+  },
+
+  // Blocked Devices API
+  async getBlockedDevices(user?: User | null): Promise<{ success: boolean; blockedDevices: BlockedDevice[] }> {
+    try {
+      const res = await fetch('/api/devices/blocked', {
+        headers: getAuthHeaders(user)
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('Get blocked devices error:', e);
+    }
+    return { success: true, blockedDevices: [] };
+  },
+
+  async blockDevice(
+    params: {
+      deviceId?: string;
+      ip?: string;
+      userName?: string;
+      userEmail?: string;
+      deviceType?: string;
+      browser?: string;
+      os?: string;
+      blockType: 'temporary' | 'permanent';
+      durationHours?: number;
+      reason?: string;
+    },
+    user?: User | null
+  ): Promise<{ success: boolean; message: string; block?: BlockedDevice; blockedDevices?: BlockedDevice[]; sessions?: DeviceSession[] }> {
+    try {
+      const res = await fetch('/api/devices/block', {
+        method: 'POST',
+        headers: getAuthHeaders(user),
+        body: JSON.stringify(params)
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      const data = await res.json();
+      throw new Error(data.error || 'Failed to block device');
+    } catch (e: any) {
+      console.warn('Block device error:', e);
+      return { success: false, message: e.message || 'Failed to block device' };
+    }
+  },
+
+  async unblockDevice(
+    params: { deviceId?: string; ip?: string },
+    user?: User | null
+  ): Promise<{ success: boolean; message: string; blockedDevices?: BlockedDevice[] }> {
+    try {
+      const res = await fetch('/api/devices/unblock', {
+        method: 'POST',
+        headers: getAuthHeaders(user),
+        body: JSON.stringify(params)
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      const data = await res.json();
+      throw new Error(data.error || 'Failed to unblock device');
+    } catch (e: any) {
+      console.warn('Unblock device error:', e);
+      return { success: false, message: e.message || 'Failed to unblock device' };
+    }
   },
 
   // Items
@@ -1946,6 +2101,40 @@ export const api = {
       }
     } catch {}
     return { success: true, message: 'Certificate deleted locally.' };
+  },
+
+  async extractHandwrittenSignature(
+    imageBase64: string,
+    user?: User | null
+  ): Promise<{
+    success: boolean;
+    hasHandwrittenSignature: boolean;
+    boundingBox?: { ymin: number; xmin: number; ymax: number; xmax: number };
+    allSignatures?: Array<{ label?: string; ymin: number; xmin: number; ymax: number; xmax: number }>;
+    confidence?: number;
+    error?: string;
+    message?: string;
+    reason?: string;
+  }> {
+    try {
+      const res = await fetch('/api/certificates/extract-signature', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user ? getAuthHeaders(user) : {})
+        },
+        body: JSON.stringify({ imageBase64 })
+      });
+      const data = await res.json();
+      return data;
+    } catch (e: any) {
+      return {
+        success: false,
+        hasHandwrittenSignature: false,
+        error: 'Network error',
+        message: 'হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)'
+      };
+    }
   },
 
   // ----------------------------------------------------

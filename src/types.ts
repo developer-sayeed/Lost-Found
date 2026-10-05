@@ -368,6 +368,8 @@ export interface LostItem {
   submittedByStaffId?: string;
   submittedByStaffName?: string;
   rejectionReason?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
   // Soft Delete / Trash System (Retained for 60 days before auto-purge)
   isDeleted?: boolean;
   deletedAt?: string;
@@ -808,6 +810,37 @@ export interface DeviceSession {
   createdAt?: string;
   userAgent?: string;
   isCurrent?: boolean;
+}
+
+export interface SecurityActivityLog {
+  id: string;
+  action: string;
+  eventType: 'login_success' | 'login_failed' | 'password_change' | 'session_management';
+  performedBy: string;
+  performedByRole?: string;
+  performedByEmail?: string;
+  details: string;
+  timestamp: string;
+  ip: string;
+  deviceType?: string;
+  browser?: string;
+  status: 'success' | 'failed' | 'warning' | 'info';
+}
+
+export interface BlockedDevice {
+  deviceId: string;
+  ip?: string;
+  userName?: string;
+  userEmail?: string;
+  deviceType?: string;
+  browser?: string;
+  os?: string;
+  blockType: 'temporary' | 'permanent';
+  blockedAt: string;
+  blockedUntil?: string | null;
+  reason?: string;
+  blockedBy: string;
+  blockedByRole?: string;
 }
 
 export interface User {
@@ -1294,6 +1327,16 @@ export interface Certificate {
   issuedAt: string;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface RecentUserSignature {
+  id: string;
+  dataUrl: string;
+  title?: string;
+  name?: string;
+  type: 'pen' | 'upload' | 'digital';
+  createdAt: string;
+  lastUsedAt: string;
 }
 
 

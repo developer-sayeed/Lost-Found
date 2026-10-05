@@ -12,70 +12,70 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ 
   const shortcuts = [
     {
       action: 'Undo',
-      actionBn: 'পূর্বাবস্থায় ফিরুন (Undo)',
+      description: 'Revert last canvas action',
       keys: ['Ctrl / ⌘', 'Z'],
       icon: Undo,
       color: 'text-sky-400'
     },
     {
       action: 'Redo',
-      actionBn: 'পুনরায় করুন (Redo)',
+      description: 'Repeat previously undone action',
       keys: ['Ctrl / ⌘', 'Y', 'or', 'Ctrl+Shift+Z'],
       icon: Redo,
       color: 'text-emerald-400'
     },
     {
       action: 'Copy Element',
-      actionBn: 'উপাদান কপি করুন (Copy)',
+      description: 'Copy selected element to clipboard',
       keys: ['Ctrl / ⌘', 'C'],
       icon: Copy,
       color: 'text-amber-400'
     },
     {
       action: 'Cut Element',
-      actionBn: 'উপাদান কাট করুন (Cut)',
+      description: 'Cut selected element to clipboard',
       keys: ['Ctrl / ⌘', 'X'],
       icon: Scissors,
       color: 'text-rose-400'
     },
     {
       action: 'Paste Element',
-      actionBn: 'কপি/কাট উপাদান পেস্ট করুন (Paste)',
+      description: 'Paste element from clipboard',
       keys: ['Ctrl / ⌘', 'V'],
       icon: Clipboard,
       color: 'text-purple-400'
     },
     {
       action: 'Delete Element',
-      actionBn: 'উপাদান মুছুন (Delete)',
+      description: 'Delete selected element from canvas',
       keys: ['Delete', 'or', 'Backspace'],
       icon: Trash2,
       color: 'text-red-500'
     },
     {
       action: 'Duplicate Element',
-      actionBn: 'হুবহু প্রতিলিপি (Duplicate)',
+      description: 'Clone selected element instantly',
       keys: ['Ctrl / ⌘', 'D'],
       icon: Copy,
       color: 'text-cyan-400'
     },
     {
       action: 'Nudge Position',
-      actionBn: 'ধীরে ধীরে অবস্থান পরিবর্তন (Nudge)',
+      description: 'Move selected element by 1 pixel',
       keys: ['↑', '↓', '←', '→'],
       icon: Move,
       color: 'text-slate-300'
     },
     {
       action: 'Fast Nudge Position',
-      actionBn: 'দ্রুত অবস্থান পরিবর্তন (Fast Nudge)',
+      description: 'Move selected element by 10 pixels',
       keys: ['Shift', '+', 'Arrow Keys'],
       icon: Move,
       color: 'text-blue-300'
     },
     {
       action: 'Deselect Element',
-      actionBn: 'নির্বাচন বাতিল করুন (Deselect)',
+      description: 'Clear active element selection',
       keys: ['Escape'],
       icon: CornerDownLeft,
       color: 'text-slate-400'
@@ -99,7 +99,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ 
             </div>
             <div>
               <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
-                Keyboard Shortcuts (শর্টকাট কীসমূহ)
+                Keyboard Shortcuts
               </h3>
               <p className="text-[11px] text-slate-400">
                 Work faster with full keyboard controls in Certificate Builder
@@ -130,7 +130,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ 
                   </div>
                   <div>
                     <div className="text-xs font-bold text-slate-200">{item.action}</div>
-                    <div className="text-[10px] text-slate-400">{item.actionBn}</div>
+                    <div className="text-[10px] text-slate-400">{item.description}</div>
                   </div>
                 </div>
 

@@ -37,6 +37,7 @@ import { isWithinHandover24Hours } from '../lib/handoverUtils';
 import { Badge } from './Badge';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { useLanguage } from '../context/LanguageContext';
+import { RejectSubmissionModal } from './modals/RejectSubmissionModal';
 
 type SortField =
   | 'serial'
@@ -87,6 +88,7 @@ export const ItemsView: React.FC = () => {
   const [batchDeleteReason, setBatchDeleteReason] = useState('');
   const [isPermanentBatchDelete, setIsPermanentBatchDelete] = useState(false);
   const [isProcessingBatchDelete, setIsProcessingBatchDelete] = useState(false);
+  const [rejectModalItem, setRejectModalItem] = useState<LostItem | null>(null);
 
   const batchDeleteModalRef = useClickOutside<HTMLDivElement>(() => {
     if (!isProcessingBatchDelete) setIsBatchDeleteModalOpen(false);
@@ -935,14 +937,9 @@ export const ItemsView: React.FC = () => {
                               </button>
                               <button
                                 id={`btn-items-reject-${item.id}`}
-                                onClick={async () => {
-                                  const confirmed = typeof window === 'undefined' || !window.confirm || window.confirm(`Are you sure you want to reject this item (${item.itemName})?`);
-                                  if (confirmed) {
-                                    await rejectItem(item.id);
-                                  }
-                                }}
+                                onClick={() => setRejectModalItem(item)}
                                 title="Reject Submission"
-                                className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors mr-1 rtl:mr-0 rtl:ml-1"
+                                className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors mr-1 rtl:mr-0 rtl:ml-1 cursor-pointer"
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -1199,6 +1196,15 @@ export const ItemsView: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Reject Submission Reason Modal */}
+      <RejectSubmissionModal
+        isOpen={Boolean(rejectModalItem)}
+        item={rejectModalItem}
+        onClose={() => setRejectModalItem(null)}
+        onConfirmReject={async (itemId, reason) => {
+          await rejectItem(itemId, reason);
+        }}
+      />
     </div>
   );
 };
