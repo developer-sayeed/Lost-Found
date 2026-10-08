@@ -3,10 +3,10 @@
   "replicationMode": "dual-write",
   "realtimeSyncEnabled": true,
   "autoFailoverEnabled": false,
-  "lastGlobalSyncAt": "2026-10-05T08:05:39.347Z",
+  "lastGlobalSyncAt": "2026-10-08T21:02:13.768Z",
   "activeConnectionsCount": 1,
-  "totalReplicatedRecords": 114,
-  "averagePingMs": 76,
+  "totalReplicatedRecords": 116,
+  "averagePingMs": 218,
   "databases": [
     {
       "id": "db-mongodb",
@@ -22,11 +22,11 @@
       "isPrimary": true,
       "isEnabled": true,
       "ssl": true,
-      "lastSyncAt": "2026-10-05T10:29:13.987Z",
-      "pingMs": 78,
+      "lastSyncAt": "2026-10-08T21:05:41.563Z",
+      "pingMs": 159,
       "recordCounts": {
-        "items": 114,
-        "staff": 21,
+        "items": 116,
+        "staff": 17,
         "inquiries": 3,
         "settings": 1,
         "notifications": 0
