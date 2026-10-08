@@ -16,7 +16,6 @@ import { AuditLogsView } from './components/AuditLogsView';
 import { SettingsView } from './components/SettingsView';
 import { UserProfileView } from './components/UserProfileView';
 import { RemovedItemsView } from './components/RemovedItemsView';
-import { MultiDatabaseManager } from './components/MultiDatabaseManager';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { AddItemModal } from './components/modals/AddItemModal';
 import { ItemDetailsModal } from './components/modals/ItemDetailsModal';

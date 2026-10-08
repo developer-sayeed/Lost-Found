@@ -3,10 +3,10 @@
   "replicationMode": "dual-write",
   "realtimeSyncEnabled": true,
   "autoFailoverEnabled": false,
-  "lastGlobalSyncAt": "2026-10-08T21:02:13.768Z",
+  "lastGlobalSyncAt": "2026-10-08T21:17:37.359Z",
   "activeConnectionsCount": 1,
-  "totalReplicatedRecords": 116,
-  "averagePingMs": 218,
+  "totalReplicatedRecords": 0,
+  "averagePingMs": 70,
   "databases": [
     {
       "id": "db-mongodb",
@@ -22,15 +22,8 @@
       "isPrimary": true,
       "isEnabled": true,
       "ssl": true,
-      "lastSyncAt": "2026-10-08T21:05:41.563Z",
-      "pingMs": 159,
-      "recordCounts": {
-        "items": 116,
-        "staff": 17,
-        "inquiries": 3,
-        "settings": 1,
-        "notifications": 0
-      }
+      "lastSyncAt": "2026-10-08T21:17:47.814Z",
+      "pingMs": 78
     },
     {
       "id": "db-firebase",

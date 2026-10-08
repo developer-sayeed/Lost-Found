@@ -65,7 +65,6 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { HotelLink, ThemePreset, DeviceSession, BlockedDevice } from '../types';
 import { MongoDatabaseSettings } from './MongoDatabaseSettings';
-import { MultiDatabaseManager } from './MultiDatabaseManager';
 import { DataImportExportSettings } from './DataImportExportSettings';
 import { GoogleDriveBackupManager } from './GoogleDriveBackupManager';
 import { CategorySettings } from './CategorySettings';
@@ -145,7 +144,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     return canAccessHotel ? 'hotel' : 'security';
   });
 
-  const [databaseSubTab, setDatabaseSubTab] = useState<'cluster' | 'mongodb' | 'gdrive'>('cluster');
+  const [databaseSubTab, setDatabaseSubTab] = useState<'mongodb' | 'gdrive'>('mongodb');
   const [connectedDevicesSubTab, setConnectedDevicesSubTab] = useState<'terminals' | 'blocked_devices' | 'security_activity'>('terminals');
 
   // Device Filter & Block Modal States
@@ -1281,29 +1280,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
         <DataImportExportSettings />
       )}
 
-      {/* TAB: MULTI-DATABASE ARCHITECTURE & MONGODB */}
+      {/* TAB: DATABASE ARCHITECTURE & GOOGLE DRIVE */}
       {activeTab === 'database' && (
         <div className="space-y-4 animate-fade-in">
-          {/* Sub-navigation between Multi-Database Cluster & MongoDB Deep Setup */}
+          {/* Sub-navigation between MongoDB Setup & Google Drive Backup */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                id="btn-subtab-multidb"
-                onClick={() => setDatabaseSubTab('cluster')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  databaseSubTab === 'cluster'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <Database className="w-3.5 h-3.5" />
-                <span>Real-Time Database Integrations</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 font-mono font-bold">
-                  MongoDB, Firebase, SQL, Redis, Supabase
-                </span>
-              </button>
-
               <button
                 type="button"
                 id="btn-subtab-mongodb"
@@ -1336,15 +1318,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             <div className="flex items-center space-x-2 text-xs text-slate-500 px-2">
               <span className={`w-2 h-2 rounded-full ${mongoStatus?.connected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
               <span className="font-semibold text-slate-700">
-                {mongoStatus?.connected ? 'MongoDB Cluster Live' : 'Offline Engine Active'}
+                {mongoStatus?.connected ? 'MongoDB Atlas Live' : 'Local Storage Active'}
               </span>
             </div>
           </div>
 
           {/* Sub-view Content */}
-          {databaseSubTab === 'cluster' ? (
-            <MultiDatabaseManager />
-          ) : databaseSubTab === 'mongodb' ? (
+          {databaseSubTab === 'mongodb' ? (
             <MongoDatabaseSettings />
           ) : (
             <GoogleDriveBackupManager />

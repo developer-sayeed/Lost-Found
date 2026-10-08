@@ -20,7 +20,10 @@ import {
   Check,
   X,
   Sparkles,
-  PlayCircle
+  PlayCircle,
+  Copy,
+  Key,
+  HelpCircle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -37,7 +40,8 @@ import {
   deleteBackupFromGoogleDrive,
   pruneOldDriveBackups,
   DEFAULT_BACKUP_FOLDER_NAME,
-  GoogleDriveAuthState
+  GoogleDriveAuthState,
+  connectWithDirectToken
 } from '../lib/googleDriveBackup';
 import { GoogleDriveBackupFile, FullSystemBackupPackage, GoogleDriveBackupSettings } from '../types';
 
@@ -53,6 +57,10 @@ export const GoogleDriveBackupManager: React.FC = () => {
   });
   const [isConnecting, setIsConnecting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [manualToken, setManualToken] = useState('');
+  const [showTokenInput, setShowTokenInput] = useState(false);
+  const [isConnectingToken, setIsConnectingToken] = useState(false);
+  const [copiedHost, setCopiedHost] = useState(false);
 
   // Backup & Files State
   const [driveFiles, setDriveFiles] = useState<GoogleDriveBackupFile[]>([]);
@@ -189,9 +197,61 @@ export const GoogleDriveBackupManager: React.FC = () => {
     } catch (err: any) {
       console.error('Google Drive sign-in failed:', err);
       setAuthError(err.message || 'Failed to authenticate with Google Drive.');
+      if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
+        setShowTokenInput(true);
+      }
     } finally {
       setIsConnecting(false);
     }
+  };
+
+  // Direct Access Token Connection (for localhost, local files, and offline development)
+  const handleConnectWithToken = async () => {
+    const trimmed = manualToken.trim();
+    if (!trimmed) {
+      setAuthError('Please enter a valid Google OAuth Access Token.');
+      return;
+    }
+    setIsConnectingToken(true);
+    setAuthError(null);
+    try {
+      const { user: fUser, accessToken } = await connectWithDirectToken(trimmed);
+      setAuthState({
+        isAuthenticated: true,
+        user: {
+          displayName: fUser.displayName,
+          email: fUser.email,
+          photoURL: fUser.photoURL,
+          uid: fUser.uid
+        },
+        hasToken: true
+      });
+      setStatusMessage({
+        type: 'success',
+        text: `Connected to Google Drive as ${fUser.email || fUser.displayName || 'Google Account'}`
+      });
+      setShowTokenInput(false);
+      setManualToken('');
+
+      // Load files
+      const folderId = await ensureDriveBackupFolder(accessToken);
+      const files = await listGoogleDriveBackups(accessToken, folderId);
+      setDriveFiles(files);
+    } catch (err: any) {
+      console.error('Direct token connection failed:', err);
+      setAuthError(err.message || 'Failed to connect with access token. Please check that the token is valid.');
+    } finally {
+      setIsConnectingToken(false);
+    }
+  };
+
+  const handleCopyHost = () => {
+    const host = window.location.hostname || 'localhost';
+    try {
+      navigator.clipboard.writeText(host);
+      setCopiedHost(true);
+      setTimeout(() => setCopiedHost(false), 2500);
+    } catch {}
   };
 
   // Disconnect from Google Drive
@@ -602,36 +662,154 @@ export const GoogleDriveBackupManager: React.FC = () => {
                 Disconnect
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={handleConnect}
-                disabled={isConnecting}
-                className="gsi-material-button"
-                style={{ height: '42px', borderRadius: '12px' }}
-              >
-                <div className="gsi-material-button-state"></div>
-                <div className="gsi-material-button-content-wrapper">
-                  <div className="gsi-material-button-icon">
-                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ display: 'block' }}>
-                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-                    </svg>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                  className="gsi-material-button"
+                  style={{ height: '42px', borderRadius: '12px' }}
+                >
+                  <div className="gsi-material-button-state"></div>
+                  <div className="gsi-material-button-content-wrapper">
+                    <div className="gsi-material-button-icon">
+                      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ display: 'block' }}>
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                      </svg>
+                    </div>
+                    <span className="gsi-material-button-contents">
+                      {isConnecting ? 'Connecting...' : 'Sign in with Google Drive'}
+                    </span>
                   </div>
-                  <span className="gsi-material-button-contents">
-                    {isConnecting ? 'Connecting...' : 'Sign in with Google Drive'}
-                  </span>
-                </div>
-              </button>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowTokenInput(prev => !prev)}
+                  className="px-3.5 py-2.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+                  title="Connect directly using a Google OAuth Access Token without domain restrictions"
+                >
+                  <Key className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{showTokenInput ? 'Hide Token Input' : 'Connect via Token'}</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
 
+        {/* Direct Token Input Panel (Localhost & Local File Friendly) */}
+        {showTokenInput && !authState.isAuthenticated && (
+          <div className="p-4 bg-indigo-50/80 border border-indigo-200 rounded-xl space-y-3 animate-in fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center space-x-2">
+                <Key className="w-4 h-4 text-indigo-600" />
+                <h4 className="text-xs font-bold text-slate-900">Direct Google Access Token Connection</h4>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
+                  Localhost Friendly
+                </span>
+              </div>
+              <a
+                href="https://developers.google.com/oauthplayground"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center space-x-1"
+              >
+                <span>OAuth 2.0 Playground</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              When testing locally (or if your domain is not authorized in Firebase Console), you can paste any Google OAuth access token with Drive File scope (<code>https://www.googleapis.com/auth/drive.file</code>) to connect immediately without domain restrictions.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <input
+                type="password"
+                value={manualToken}
+                onChange={e => setManualToken(e.target.value)}
+                placeholder="Paste Google Access Token (ya29.a0...)"
+                className="flex-1 px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleConnectWithToken}
+                disabled={isConnectingToken || !manualToken.trim()}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0 flex items-center justify-center space-x-1.5"
+              >
+                {isConnectingToken ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Connect Token</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Detailed Auth Error & Unauthorized Domain Resolution Guide */}
         {authError && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-center space-x-2">
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{authError}</span>
+          <div className="space-y-3 animate-in fade-in">
+            <div className="p-4 bg-rose-50 border border-rose-200 text-rose-900 rounded-xl text-xs space-y-3">
+              <div className="flex items-start space-x-2.5">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-1 flex-1">
+                  <p className="font-bold text-rose-900">
+                    {authError.includes('unauthorized-domain')
+                      ? 'Firebase Domain Authorization Required (auth/unauthorized-domain)'
+                      : 'Google Drive Authentication Notice'}
+                  </p>
+                  <p className="text-slate-700 text-xs leading-relaxed">
+                    {authError}
+                  </p>
+                </div>
+              </div>
+
+              {authError.includes('unauthorized-domain') && (
+                <div className="p-3.5 bg-white rounded-xl border border-rose-200/90 space-y-3 text-xs text-slate-700 shadow-2xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                    <span className="font-bold text-slate-900">Option 1: Add domain to Firebase Console</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyHost}
+                      className="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-rose-100 hover:bg-rose-200 text-rose-900 rounded-lg text-[11px] font-bold transition-colors cursor-pointer w-fit"
+                    >
+                      {copiedHost ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-rose-700" />}
+                      <span>{copiedHost ? 'Copied to Clipboard!' : `Copy Host "${window.location.hostname || 'localhost'}"`}</span>
+                    </button>
+                  </div>
+
+                  <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-600 leading-relaxed">
+                    <li>Go to <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-semibold underline">Firebase Console</a> and select your project.</li>
+                    <li>Navigate to <strong>Authentication &gt; Settings &gt; Authorized domains</strong>.</li>
+                    <li>Click <strong>Add domain</strong> and enter: <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-rose-700 font-bold">{window.location.hostname || 'localhost'}</code></li>
+                    <li>Wait ~30 seconds for Firebase rules to apply, then click <strong>Sign in with Google Drive</strong>.</li>
+                  </ol>
+
+                  <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="text-[11px] text-slate-600">
+                      <strong>Option 2: Instant Connection without Firebase Console changes</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowTokenInput(true)}
+                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer w-fit"
+                    >
+                      Paste Access Token Below
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

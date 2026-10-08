@@ -1256,14 +1256,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsRealtimeConnected(false);
       };
 
+      let lastDbSyncTime = 0;
       es.onmessage = (event) => {
         try {
           const parsed = JSON.parse(event.data);
           if (parsed.event === 'database_state_changed') {
-            api.getItems({ includeDeleted: true }).then(res => {
-              if (res?.items) setItems(res.items);
-            }).catch(() => {});
-            fetchNotifications();
+            const now = Date.now();
+            if (now - lastDbSyncTime > 10000) {
+              lastDbSyncTime = now;
+              api.getItems({ includeDeleted: true }).then(res => {
+                if (res?.items) setItems(res.items);
+              }).catch(() => {});
+              fetchNotifications();
+            }
           } else if (parsed.event === 'database_sync_completed') {
             if (parsed.payload?.state) {
               setMultiDbState(parsed.payload.state);
@@ -1333,14 +1338,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [multiDbState?.primaryEngine]);
 
-  // Periodic health check every 10 seconds for real-time header indicator
+  // Initial database health check on mount and quiet 5-minute heartbeat when tab is active
   useEffect(() => {
     checkDatabaseHealth();
     const interval = setInterval(() => {
-      checkDatabaseHealth();
-    }, 10000);
+      if (!document.hidden && effectiveOnline) {
+        checkDatabaseHealth();
+      }
+    }, 300000);
     return () => clearInterval(interval);
-  }, [checkDatabaseHealth]);
+  }, [checkDatabaseHealth, effectiveOnline]);
 
   const pingDatabaseEngine = async (engine: DatabaseEngineType) => {
     const res = await api.pingDatabaseEngine(engine);
