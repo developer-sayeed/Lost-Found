@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole, PermissionKey, DEFAULT_ROLE_PERMISSIONS } from '../types';
+import { User, UserRole, PermissionKey, DEFAULT_ROLE_PERMISSIONS, ALL_PERMISSIONS } from '../types';
 import { api } from '../lib/api';
 
 interface AuthContextType {
@@ -128,23 +128,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getUserPermissions = (targetUser?: User | null): PermissionKey[] => {
     const u = targetUser || user;
     if (!u) return [];
-    if (u.permissions && u.permissions.length > 0) {
-      return u.permissions;
+
+    if (u.role === 'Super Admin') {
+      return ALL_PERMISSIONS.map(p => p.id);
     }
-    // Check if role baseline permissions are customized in settings
+
+    // 1. Role baseline permissions (from customized settings matrix or default)
+    let rolePerms: PermissionKey[] = DEFAULT_ROLE_PERMISSIONS[u.role] || [];
     try {
       const rawSettings = localStorage.getItem('warwick_offline_cached_settings');
       if (rawSettings) {
         const parsed = JSON.parse(rawSettings);
-        if (parsed?.rolePermissions?.[u.role]) {
-          return parsed.rolePermissions[u.role];
+        if (parsed?.rolePermissions?.[u.role] && Array.isArray(parsed.rolePermissions[u.role])) {
+          rolePerms = parsed.rolePermissions[u.role];
         }
       }
     } catch {}
-    if (u.role === 'Super Admin') {
-      return DEFAULT_ROLE_PERMISSIONS['Super Admin'];
+
+    // 2. User specific custom/upgraded permissions
+    let userSpecificPerms: PermissionKey[] = [];
+    if (u.permissions && Array.isArray(u.permissions)) {
+      userSpecificPerms = u.permissions;
     }
-    return DEFAULT_ROLE_PERMISSIONS[u.role] || [];
+
+    // 3. Also check if this user is in cached staff list with upgraded permissions
+    try {
+      const rawStaff = localStorage.getItem('warwick_offline_cached_staff');
+      if (rawStaff) {
+        const parsedStaff = JSON.parse(rawStaff);
+        if (Array.isArray(parsedStaff)) {
+          const matched = parsedStaff.find(
+            (s: any) =>
+              (s.id && s.id === u.id) ||
+              (s.userId && (s.userId === u.userId || s.userId === u.id)) ||
+              (s.staffId && (s.staffId === u.staffId || s.staffId === u.id)) ||
+              (s.email && u.email && s.email.toLowerCase() === u.email.toLowerCase())
+          );
+          if (matched && Array.isArray(matched.permissions) && matched.permissions.length > 0) {
+            userSpecificPerms = Array.from(new Set([...userSpecificPerms, ...matched.permissions]));
+          }
+        }
+      }
+    } catch {}
+
+    // Combine role baseline and upgraded user-specific permissions
+    return Array.from(new Set([...rolePerms, ...userSpecificPerms]));
   };
 
   const hasPermission = (permission: PermissionKey): boolean => {
@@ -152,24 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Super Admin has master access to all features unless specifically restricted
     if (user.role === 'Super Admin') return true;
 
-    // Check specific user permissions if defined
-    let activePerms: PermissionKey[] = [];
-    if (user.permissions && Array.isArray(user.permissions) && user.permissions.length > 0) {
-      activePerms = user.permissions;
-    } else {
-      try {
-        const rawSettings = localStorage.getItem('warwick_offline_cached_settings');
-        if (rawSettings) {
-          const parsed = JSON.parse(rawSettings);
-          if (parsed?.rolePermissions?.[user.role]) {
-            activePerms = parsed.rolePermissions[user.role];
-          }
-        }
-      } catch {}
-      if (!activePerms || activePerms.length === 0) {
-        activePerms = DEFAULT_ROLE_PERMISSIONS[user.role] || [];
-      }
-    }
+    const activePerms = getUserPermissions(user);
 
     if (activePerms.includes(permission)) return true;
 
@@ -177,6 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (permission === 'certificates_view' && activePerms.includes('certificates')) return true;
     if (permission === 'certificates_create' && activePerms.includes('certificates')) return true;
     if (permission === 'certificates_edit' && activePerms.includes('certificates')) return true;
+    if (permission === 'certificates_delete' && activePerms.includes('certificates')) return true;
     if (permission === 'certificates_print' && (activePerms.includes('certificates') || activePerms.includes('print'))) return true;
     if (permission === 'certificates_save' && activePerms.includes('certificates')) return true;
 
@@ -249,17 +261,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newPerms = DEFAULT_ROLE_PERMISSIONS[newRole];
     const updated = { ...user, role: newRole, permissions: newPerms };
     setUser(updated);
+    try {
+      localStorage.setItem('warwick_auth_user', JSON.stringify(updated));
+    } catch {}
   };
 
   const updateUserPermissions = (permissions: PermissionKey[]) => {
     if (!user) return;
     const updated = { ...user, permissions };
     setUser(updated);
+    try {
+      localStorage.setItem('warwick_auth_user', JSON.stringify(updated));
+    } catch {}
   };
 
   const updateProfile = async (profileData: Partial<User>): Promise<User> => {
     const updatedUser = await api.updateUserProfile(profileData, user);
     setUser(updatedUser);
+    try {
+      localStorage.setItem('warwick_auth_user', JSON.stringify(updatedUser));
+    } catch {}
     return updatedUser;
   };
 

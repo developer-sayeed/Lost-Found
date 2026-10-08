@@ -1069,8 +1069,8 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
         {/* ------------------------------------------------------------- */}
         {/* Modal Top Header */}
         {/* ------------------------------------------------------------- */}
-        <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 gap-2">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 gap-2 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
               <Award className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
@@ -1078,28 +1078,28 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate">
                 {initialCertificate ? 'Edit Certificate' : 'Generate Certificate'}
               </h2>
-              <p className="text-[10.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
                 Customize hotel certificates, award templates, citations & signatures
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <button
               type="button"
               onClick={handlePrint}
               disabled={isPrinting}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition disabled:opacity-50"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
               title={isPreviewMode ? 'Open Printable Preview First' : 'Direct Print to Printer'}
             >
               {isPrinting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
-              <span>{isPreviewMode ? 'Print Preview' : 'Direct Print'}</span>
+              <span className="hidden xs:inline">{isPreviewMode ? 'Print Preview' : 'Direct Print'}</span>
             </button>
             <button
               type="button"
               onClick={handleDownloadPdf}
               disabled={isDownloadingPdf}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300 hover:bg-red-50 text-xs font-semibold transition disabled:opacity-50"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300 hover:bg-red-50 text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
             >
               {isDownloadingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5 text-red-600" />}
               <span>PDF</span>
@@ -1108,7 +1108,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
               type="button"
               onClick={handleDownloadPng}
               disabled={isDownloadingPng}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition disabled:opacity-50"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
             >
               {isDownloadingPng ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
               <span>PNG</span>
@@ -1116,7 +1116,8 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition ml-1"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition ml-0.5 cursor-pointer"
+              title="Close"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1124,37 +1125,37 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
         </div>
 
         {/* Editor Mode Header Switcher */}
-        <div className="flex items-center justify-between px-5 py-2.5 bg-slate-100 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-3 sm:px-5 py-2 bg-slate-100 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 overflow-x-auto gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setEditorMode('form')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs whitespace-nowrap cursor-pointer ${
                 editorMode === 'form'
                   ? 'bg-amber-500 text-slate-950 font-extrabold shadow-amber-500/20'
                   : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700'
               }`}
             >
               <Sliders className="w-3.5 h-3.5" />
-              <span>⚙️ Choose Template & Generate</span>
+              <span>Choose Template</span>
             </button>
             <button
               type="button"
               onClick={() => setEditorMode('visual_editor')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs whitespace-nowrap cursor-pointer ${
                 editorMode === 'visual_editor'
                   ? 'bg-amber-500 text-slate-950 font-extrabold shadow-amber-500/20'
                   : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>🎨 Certificate Builder (Drag & Drop)</span>
+              <span>Visual Builder</span>
             </button>
           </div>
 
-          <div className="text-xs text-slate-500 dark:text-slate-400 hidden sm:flex items-center gap-1.5">
+          <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 hidden md:flex items-center gap-1.5 shrink-0">
             <Award className="w-3.5 h-3.5 text-amber-500" />
-            <span>25 Hotel Staff Award Types Available</span>
+            <span>25 Hotel Staff Award Types</span>
           </div>
         </div>
 
@@ -1175,30 +1176,31 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
         ) : (
           <>
             {/* Mobile Tab Switcher */}
-            <div className="lg:hidden flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <div className="lg:hidden sticky top-0 z-20 flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
               <button
                 type="button"
                 onClick={() => setPreviewTab('form')}
-                className={`flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 ${
+                className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-2 border-b-2 transition-all ${
                   previewTab === 'form'
-                    ? 'border-amber-600 text-amber-600'
-                    : 'border-transparent text-slate-500'
+                    ? 'border-amber-600 text-amber-600 bg-amber-50/50 dark:bg-amber-950/20'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
                 <Sliders className="w-4 h-4" />
-                Customization Controls
+                <span>Customization Controls</span>
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewTab('preview')}
-                className={`flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 ${
+                className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-2 border-b-2 transition-all ${
                   previewTab === 'preview'
-                    ? 'border-amber-600 text-amber-600'
-                    : 'border-transparent text-slate-500'
+                    ? 'border-amber-600 text-amber-600 bg-amber-50/50 dark:bg-amber-950/20'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
                 <Eye className="w-4 h-4" />
-                Live Preview
+                <span>Live Preview</span>
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
               </button>
             </div>
 
@@ -1636,14 +1638,6 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                   <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                   <span className="text-[11px]">Selected: <strong className="font-bold">{title || 'Certificate'}</strong></span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setEditorMode('visual_editor')}
-                  className="text-[10px] font-bold text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-1"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span>Customize in Builder →</span>
-                </button>
               </div>
             </div>
 
@@ -2415,7 +2409,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                           type="button"
                           onClick={() => openSignaturePad(1, 'recent')}
                           className="py-1.5 px-2.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer shrink-0"
-                          title="Pick from Recent User Signatures (রিসেন্ট ইউজার সিগনেচার)"
+                          title="Pick from Recent User Signatures"
                         >
                           <Clock className="w-3 h-3 text-amber-700" />
                           <span>Recent</span>
@@ -2494,7 +2488,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                           type="button"
                           onClick={() => openSignaturePad(2, 'recent')}
                           className="py-1.5 px-2.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer shrink-0"
-                          title="Pick from Recent User Signatures (রিসেন্ট ইউজার সিগনেচার)"
+                          title="Pick from Recent User Signatures"
                         >
                           <Clock className="w-3 h-3 text-amber-700" />
                           <span>Recent</span>
@@ -2579,7 +2573,7 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
                           type="button"
                           onClick={() => openSignaturePad(3, 'recent')}
                           className="py-1.5 px-2.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer shrink-0"
-                          title="Pick from Recent User Signatures (রিসেন্ট ইউজার সিগনেচার)"
+                          title="Pick from Recent User Signatures"
                         >
                           <Clock className="w-3 h-3 text-amber-700" />
                           <span>Recent</span>
@@ -2737,11 +2731,26 @@ export const CertificateGeneratorModal: React.FC<CertificateGeneratorModalProps>
           {/* Right Column: Live Scaled Preview Stage */}
           {/* ------------------------------------------------------------- */}
           <div
-            className={`lg:col-span-7 bg-slate-200/80 dark:bg-slate-950 p-4 sm:p-6 overflow-y-auto max-h-[calc(96vh-130px)] flex flex-col items-center justify-start ${
+            className={`lg:col-span-7 bg-slate-100 dark:bg-slate-950 p-2 sm:p-4 md:p-6 overflow-y-auto max-h-[calc(98vh-120px)] flex flex-col items-center justify-start ${
               previewTab === 'preview' ? 'block' : 'hidden lg:flex'
             }`}
           >
-            <div className="w-full mb-2 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+            {/* Mobile Back to Edit Shortcut */}
+            <div className="lg:hidden w-full mb-2.5 flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setPreviewTab('form')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs shadow-xs hover:bg-amber-400 active:scale-95 transition"
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Edit Certificate Info</span>
+              </button>
+              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                1000 × 700 px
+              </span>
+            </div>
+
+            <div className="hidden lg:flex w-full mb-2 items-center justify-between text-xs text-slate-600 dark:text-slate-400">
               <span className="font-semibold flex items-center gap-1.5">
                 <Eye className="w-4 h-4 text-amber-600" />
                 Live Certificate Preview (Exact 5-Star Print Spooler)

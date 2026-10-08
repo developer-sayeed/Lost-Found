@@ -558,7 +558,7 @@ const translations: Record<Language, Translations> = {
     reset: 'Reset',
     approve: 'Approve',
     viewPrintQr: 'View, Print & Download QR Tag',
-    handoverToGuest: 'Handover to Guest (Admin Only)',
+    handoverToGuest: 'Handover to Guest',
 
     // Staff Management View
     staffManagementTitle: 'Hotel Staff Management',
@@ -902,7 +902,7 @@ const translations: Record<Language, Translations> = {
     reset: 'إعادة ضبط',
     approve: 'موافقة',
     viewPrintQr: 'عرض وطباعة رمز الاستجابة السريعة',
-    handoverToGuest: 'تسليم للنزيل (خاص بالمسؤولين)',
+    handoverToGuest: 'تسليم للنزيل',
 
     // Staff Management View
     staffManagementTitle: 'إدارة موظفي الفندق',

@@ -187,7 +187,52 @@ export const StaffManagementView: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  // Floating Fixed Action Menu State (Immune to table clipping/overflow)
+  interface StaffActionMenuState {
+    member: StaffMember;
+    top?: number;
+    bottom?: number;
+    right: number;
+  }
+  const [activeActionMenu, setActiveActionMenu] = useState<StaffActionMenuState | null>(null);
+
+  const handleOpenActionMenu = (e: React.MouseEvent<HTMLButtonElement>, member: StaffMember) => {
+    e.stopPropagation();
+    if (activeActionMenu?.member.id === member.id) {
+      setActiveActionMenu(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const windowWidth = window.innerWidth;
+    const menuEstimatedHeight = 240;
+    const spaceBelow = windowHeight - rect.bottom;
+
+    let top: number | undefined = undefined;
+    let bottom: number | undefined = undefined;
+
+    if (spaceBelow < menuEstimatedHeight && rect.top > menuEstimatedHeight) {
+      // Space is restricted below, flip upwards
+      bottom = windowHeight - rect.top + 6;
+    } else {
+      // Position below the button
+      top = rect.bottom + 6;
+    }
+
+    const right = Math.max(12, windowWidth - rect.right);
+
+    setActiveActionMenu({
+      member,
+      top,
+      bottom,
+      right
+    });
+  };
+
+  const handleCloseActionMenu = useCallback(() => {
+    setActiveActionMenu(null);
+  }, []);
+
   const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
   const [passwordStaffTarget, setPasswordStaffTarget] = useState<StaffMember | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -207,10 +252,26 @@ export const StaffManagementView: React.FC = () => {
 
   const canManageStaff = isSuperAdmin || isAdmin || hasPermission('staff_management') || hasPermission('manage_staff_access');
   const canEditStaff = isSuperAdmin || isAdmin || hasPermission('edit_staff') || hasPermission('manage_staff_access');
-  const canDeleteStaff = isSuperAdmin || (isAdmin && hasPermission('delete_staff'));
+  const canDeleteStaff = isSuperAdmin || isAdmin || hasPermission('delete_staff');
   const canManageAccess = isSuperAdmin || isAdmin || hasPermission('manage_staff_access');
   const canViewOtherProfiles = isSuperAdmin || isAdmin || isManager || hasPermission('view_staff_profile');
   const canViewPermissionsTab = isSuperAdmin || isAdmin || isManager || hasPermission('manage_staff_access') || hasPermission('staff_management');
+
+  // Helper to reliably check if a staff member record is the currently logged in user
+  const isCurrentStaffUser = useCallback((member?: StaffMember | null) => {
+    if (!member || !user) return false;
+    const userEmail = (user.email || '').toLowerCase().trim();
+    const userName = (user.name || '').toLowerCase().trim();
+    const memberEmail = (member.email || '').toLowerCase().trim();
+    const memberUserId = (member.userId || member.staffId || member.id || '').toLowerCase().trim();
+    const memberName = (member.name || '').toLowerCase().trim();
+
+    return Boolean(
+      (memberEmail && userEmail && memberEmail === userEmail) ||
+      (memberUserId && userEmail && memberUserId === userEmail) ||
+      (memberName && userName && memberName === userName)
+    );
+  }, [user]);
 
   // Permission Management View states
   const [activeTab, setActiveTab] = useState<'directory' | 'permissions'>('directory');
@@ -465,38 +526,46 @@ export const StaffManagementView: React.FC = () => {
     });
   }, [staff, staffPermSearch, staffRoleFilterInPerms, staffOverrideFilter]);
 
-  // Unified global click-outside & Escape listener for staff action menu
+  // Unified global click-outside, scroll & Escape listener for fixed staff action menu
   useEffect(() => {
-    if (!activeMenuId) return;
+    if (!activeActionMenu) return;
 
     const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
       if (
-        target.closest(`[data-staff-menu-popover="${activeMenuId}"]`) ||
-        target.closest(`[data-staff-menu-btn="${activeMenuId}"]`)
+        target.closest(`[data-staff-menu-popover]`) ||
+        target.closest(`[data-staff-menu-btn]`)
       ) {
         return;
       }
-      setActiveMenuId(null);
+      setActiveActionMenu(null);
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setActiveMenuId(null);
+        setActiveActionMenu(null);
       }
+    };
+
+    const handleScrollOrResize = () => {
+      setActiveActionMenu(null);
     };
 
     document.addEventListener('mousedown', handleOutsideClick);
     document.addEventListener('touchstart', handleOutsideClick);
     document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
 
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
       document.removeEventListener('touchstart', handleOutsideClick);
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
     };
-  }, [activeMenuId]);
+  }, [activeActionMenu]);
 
   // Compute dynamic items logged per staff
   const staffWithStats = useMemo(() => {
@@ -1145,18 +1214,7 @@ export const StaffManagementView: React.FC = () => {
                 </tr>
               ) : (
                 paginatedStaff.map((member, index) => {
-                  const userEmail = (user?.email || '').toLowerCase().trim();
-                  const userName = (user?.name || '').toLowerCase().trim();
-                  const memberEmail = (member.email || '').toLowerCase().trim();
-                  const memberUserId = (member.userId || '').toLowerCase().trim();
-                  const memberName = (member.name || '').toLowerCase().trim();
-
-                  const isCurrentUser = Boolean(
-                    (memberEmail && userEmail && memberEmail === userEmail) ||
-                    (memberUserId && userEmail && memberUserId === userEmail) ||
-                    (memberName && userName && memberName === userName)
-                  );
-
+                  const isCurrentUser = isCurrentStaffUser(member);
                   const permissions = member.permissions || DEFAULT_ROLE_PERMISSIONS[member.role] || [];
                   const isMemberSuperAdmin = member.role === 'Super Admin';
                   const submittedItemsCount = member.computedItemsCount;
@@ -1301,80 +1359,18 @@ export const StaffManagementView: React.FC = () => {
                           <button
                             id={`btn-staff-menu-${member.id}`}
                             data-staff-menu-btn={member.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveMenuId(activeMenuId === member.id ? null : member.id);
-                            }}
-                            className={`p-1.5 rounded-lg transition-colors ${
-                              activeMenuId === member.id
-                                ? 'bg-indigo-50 text-indigo-600'
+                            onClick={(e) => handleOpenActionMenu(e, member)}
+                            aria-label={`Actions for ${member.name}`}
+                            title="More Staff Actions"
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                              activeActionMenu?.member.id === member.id
+                                ? 'bg-indigo-600 text-white shadow-2xs'
                                 : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
                             }`}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </button>
                         </div>
-
-                        {activeMenuId === member.id && (
-                          <div 
-                            data-staff-menu-popover={member.id}
-                            className="absolute right-4 top-10 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-30 text-left animate-in fade-in zoom-in-95 duration-100"
-                          >
-                            {(canViewOtherProfiles || isCurrentUser) && (
-                              <button
-                                onClick={() => {
-                                  openStaffProfile(member);
-                                  setActiveMenuId(null);
-                                }}
-                                className="w-full px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center space-x-2 transition-colors"
-                              >
-                                <User className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>View Profile & Items</span>
-                              </button>
-                            )}
-                            
-                            {(canEditStaff || canManageAccess) && (
-                              <button
-                                onClick={() => {
-                                  setEditingStaff(member);
-                                  setIsStaffModalOpen(true);
-                                  setActiveMenuId(null);
-                                }}
-                                className="w-full px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center space-x-2 transition-colors"
-                              >
-                                <Sliders className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>Edit & Permissions</span>
-                              </button>
-                            )}
-
-                            {(canEditStaff || canManageAccess || isSuperAdmin) && (
-                              <button
-                                id={`btn-staff-pass-menu-${member.id}`}
-                                onClick={() => {
-                                  setPasswordStaffTarget(member);
-                                  setActiveMenuId(null);
-                                }}
-                                className="w-full px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 flex items-center space-x-2 transition-colors cursor-pointer"
-                              >
-                                <KeyRound className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>Change / 24-Hr Password</span>
-                              </button>
-                            )}
-
-                            {canDeleteStaff && !isCurrentUser && (
-                              <button
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  setStaffToDelete(member);
-                                }}
-                                className="w-full px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 flex items-center space-x-2 transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>Remove Staff</span>
-                              </button>
-                            )}
-                          </div>
-                        )}
                       </td>
                     </tr>
                   );
@@ -2426,7 +2422,7 @@ export const StaffManagementView: React.FC = () => {
       {/* Interactive Delete Staff Confirmation Modal */}
       {staffToDelete && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-backdrop-fade-in"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget && !isDeleting) {
               setStaffToDelete(null);
@@ -2435,7 +2431,7 @@ export const StaffManagementView: React.FC = () => {
         >
           <div
             ref={deleteStaffModalRef}
-            className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 animate-scale-up"
+            className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 animate-modal-slide-down"
           >
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-rose-100 border border-rose-200 text-rose-600 flex items-center justify-center flex-shrink-0">
@@ -2510,6 +2506,118 @@ export const StaffManagementView: React.FC = () => {
           setTimeout(() => setFeedbackNotice(null), 4000);
         }}
       />
+
+      {/* Fixed Floating Staff Action Menu (Completely immune to table overflow/clipping) */}
+      {activeActionMenu && (
+        <>
+          {/* Invisible backdrop to dismiss menu on click outside */}
+          <div
+            className="fixed inset-0 z-40 bg-transparent"
+            onClick={handleCloseActionMenu}
+          />
+          <div
+            data-staff-menu-popover={activeActionMenu.member.id}
+            style={{
+              position: 'fixed',
+              top: activeActionMenu.top !== undefined ? `${activeActionMenu.top}px` : undefined,
+              bottom: activeActionMenu.bottom !== undefined ? `${activeActionMenu.bottom}px` : undefined,
+              right: `${activeActionMenu.right}px`,
+              zIndex: 50
+            }}
+            className="w-60 bg-white rounded-2xl shadow-2xl border border-slate-200/90 py-1.5 text-left animate-in fade-in zoom-in-95 duration-150 ring-1 ring-black/5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header: Staff Member Name, Serial/ID and Role Badge */}
+            <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-900 truncate leading-tight">
+                  {activeActionMenu.member.name}
+                </p>
+                <p className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
+                  {activeActionMenu.member.staffId || activeActionMenu.member.userId || activeActionMenu.member.id}
+                </p>
+              </div>
+              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shrink-0 ${
+                ROLE_META[activeActionMenu.member.role]?.badgeBg || 'bg-slate-100'
+              } ${
+                ROLE_META[activeActionMenu.member.role]?.badgeText || 'text-slate-700'
+              } ${
+                ROLE_META[activeActionMenu.member.role]?.borderColor || 'border-slate-200'
+              }`}>
+                {activeActionMenu.member.role}
+              </span>
+            </div>
+
+            {/* Interactive Actions List */}
+            <div className="p-1 space-y-0.5">
+              {(canViewOtherProfiles || isCurrentStaffUser(activeActionMenu.member)) && (
+                <button
+                  type="button"
+                  id={`btn-action-view-${activeActionMenu.member.id}`}
+                  onClick={() => {
+                    openStaffProfile(activeActionMenu.member);
+                    handleCloseActionMenu();
+                  }}
+                  className="w-full px-3 py-2 text-xs font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50/70 rounded-xl flex items-center space-x-2.5 transition-colors cursor-pointer"
+                >
+                  <User className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>View Profile & Items</span>
+                </button>
+              )}
+
+              {(canEditStaff || canManageAccess) && (
+                <button
+                  type="button"
+                  id={`btn-action-edit-${activeActionMenu.member.id}`}
+                  onClick={() => {
+                    setEditingStaff(activeActionMenu.member);
+                    setIsStaffModalOpen(true);
+                    handleCloseActionMenu();
+                  }}
+                  className="w-full px-3 py-2 text-xs font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50/70 rounded-xl flex items-center space-x-2.5 transition-colors cursor-pointer"
+                >
+                  <Sliders className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>Edit Details & Permissions</span>
+                </button>
+              )}
+
+              {(canEditStaff || canManageAccess || isSuperAdmin) && (
+                <button
+                  type="button"
+                  id={`btn-action-pass-${activeActionMenu.member.id}`}
+                  onClick={() => {
+                    setPasswordStaffTarget(activeActionMenu.member);
+                    handleCloseActionMenu();
+                  }}
+                  className="w-full px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50/70 rounded-xl flex items-center space-x-2.5 transition-colors cursor-pointer"
+                >
+                  <KeyRound className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>Change / 24-Hr Password</span>
+                </button>
+              )}
+
+              {canDeleteStaff && !isCurrentStaffUser(activeActionMenu.member) && (
+                <>
+                  <div className="my-1 border-t border-slate-100" />
+                  <button
+                    type="button"
+                    id={`btn-action-delete-${activeActionMenu.member.id}`}
+                    onClick={() => {
+                      const target = activeActionMenu.member;
+                      handleCloseActionMenu();
+                      setStaffToDelete(target);
+                    }}
+                    className="w-full px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-xl flex items-center space-x-2.5 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-500 shrink-0" />
+                    <span>Remove Staff Member</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

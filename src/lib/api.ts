@@ -60,6 +60,9 @@ function getAuthHeaders(user?: User | null) {
     if (currentUser.department) {
       headers['x-user-department'] = currentUser.department;
     }
+    if (currentUser.permissions && Array.isArray(currentUser.permissions)) {
+      headers['x-user-permissions'] = JSON.stringify(currentUser.permissions);
+    }
   }
   return headers;
 }
@@ -2132,7 +2135,7 @@ export const api = {
         success: false,
         hasHandwrittenSignature: false,
         error: 'Network error',
-        message: 'হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)'
+        message: 'Handwritten signature is not found'
       };
     }
   },

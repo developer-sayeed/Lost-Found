@@ -349,7 +349,7 @@ export const StaffModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-backdrop-fade-in"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) {
           handleClose();
@@ -358,7 +358,7 @@ export const StaffModal: React.FC = () => {
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]"
+        className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-modal-slide-down"
       >
         {/* Header */}
         <div className="p-6 pb-4 flex items-center justify-between border-b border-slate-100">

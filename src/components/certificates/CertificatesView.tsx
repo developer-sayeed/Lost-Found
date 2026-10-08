@@ -771,8 +771,8 @@ export const CertificatesView: React.FC = () => {
           </button>
         </div>
       ) : viewMode === 'grid' ? (
-        /* Grid Card View - 2 Columns on Mobile, 2 on MD, 3 on XL */
-        <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-6">
+        /* Grid Card View - Responsive: 1 Col Mobile, 2 Col Tablet, 3 Col MD, 4 Col LG, 5 Col >=1280px (XL & 2XL) */
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 gap-2.5 sm:gap-3.5 lg:gap-4 xl:gap-4">
           {filteredCertificates.map(cert => {
             const isCertActive = activeActionId === cert.id;
             return (
@@ -782,11 +782,11 @@ export const CertificatesView: React.FC = () => {
               >
                 {/* Scaled Thumbnail (with CertificateRenderer for full fidelity) */}
                 <div
-                  className="relative h-[115px] sm:h-[215px] bg-slate-100 dark:bg-slate-950 overflow-hidden cursor-pointer flex items-center justify-center border-b border-slate-200 dark:border-slate-800"
+                  className="relative h-[190px] sm:h-[180px] md:h-[185px] lg:h-[175px] xl:h-[165px] 2xl:h-[180px] bg-slate-100 dark:bg-slate-950 overflow-hidden cursor-pointer flex items-center justify-center border-b border-slate-200 dark:border-slate-800"
                   onClick={() => setViewingCert(cert)}
                 >
                   <div
-                    className="pointer-events-none transition-transform duration-300 group-hover:scale-[1.03] origin-center scale-[0.15] sm:scale-[0.28]"
+                    className="pointer-events-none transition-transform duration-300 group-hover:scale-[1.03] origin-center scale-[0.27] sm:scale-[0.25] md:scale-[0.25] lg:scale-[0.23] xl:scale-[0.21] 2xl:scale-[0.23]"
                     style={{
                       width: '1000px',
                       height: '700px'
@@ -802,12 +802,12 @@ export const CertificatesView: React.FC = () => {
                   </div>
 
                   {/* Template & Category badge */}
-                  <div className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5 flex items-center gap-1">
+                  <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 flex items-center gap-1">
                     {(() => {
                       const badge = getTemplateBadge(cert);
                       return (
                         <span
-                          className={`text-[8px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded sm:rounded-md shadow-xs ${badge.badgeBg}`}
+                          className={`text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded sm:rounded-md shadow-xs ${badge.badgeBg}`}
                         >
                           {badge.label}
                         </span>
@@ -821,23 +821,23 @@ export const CertificatesView: React.FC = () => {
                   </div>
 
                   {/* Certificate Number */}
-                  <div className="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5">
-                    <span className="text-[8px] sm:text-[10px] font-mono font-semibold px-1.5 sm:px-2 py-0.5 rounded sm:rounded-md bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 border border-slate-200/50 shadow-2xs">
+                  <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5">
+                    <span className="text-[8.5px] sm:text-[9.5px] font-mono font-semibold px-1.5 sm:px-2 py-0.5 rounded sm:rounded-md bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 border border-slate-200/50 shadow-2xs">
                       {cert.certificateNumber}
                     </span>
                   </div>
                 </div>
 
                 {/* Card Details */}
-                <div className="p-2 sm:p-4 flex-1 flex flex-col justify-between">
+                <div className="p-2.5 sm:p-3 xl:p-3 2xl:p-3.5 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="text-[9px] sm:text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider truncate">
+                    <div className="text-[10px] xl:text-[9.5px] 2xl:text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider truncate">
                       {cert.title}
                     </div>
-                    <h3 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white mt-0.5 truncate">
+                    <h3 className="text-xs sm:text-sm xl:text-[13px] 2xl:text-base font-bold text-slate-900 dark:text-white mt-0.5 truncate">
                       {cert.recipientName}
                     </h3>
-                    <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 flex items-center gap-1">
+                    <div className="text-[10px] sm:text-[11px] xl:text-[10px] 2xl:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 flex items-center gap-1">
                       <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                       <span className="truncate">
                         {cert.recipientPosition}
@@ -845,7 +845,7 @@ export const CertificatesView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="mt-2 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] sm:text-xs text-slate-500 dark:text-slate-400">
+                  <div className="mt-2 sm:mt-2.5 pt-1.5 sm:pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] sm:text-[11px] xl:text-[10px] 2xl:text-xs text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1 truncate">
                       <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                       <span className="truncate">{cert.awardPeriod || cert.awardDate}</span>
@@ -854,28 +854,28 @@ export const CertificatesView: React.FC = () => {
                 </div>
 
                 {/* Card Footer Actions: View, Print, PDF, PNG, Edit, Delete */}
-                <div className="px-2 sm:px-4 py-1.5 sm:py-2.5 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-1">
+                <div className="px-2 sm:px-2.5 xl:px-2.5 py-1.5 sm:py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-1">
                   {canViewCertificates && (
                     <button
                       type="button"
                       onClick={() => setViewingCert(cert)}
-                      className="px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1 shadow-2xs"
+                      className="px-1.5 sm:px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1 shadow-2xs"
                     >
                       <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       <span>View</span>
                     </button>
                   )}
 
-                  <div className="flex items-center gap-0.5 sm:gap-1">
+                  <div className="flex items-center gap-0.5">
                     {/* Direct/Preview Print Button */}
                     {canPrintCertificates && (
                       <button
                         type="button"
                         onClick={(e) => handleDirectPrint(cert, e)}
-                        className="p-1 sm:p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                        className="p-1 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
                         title={isPreviewMode ? 'Open Printable Preview' : 'Direct Print Certificate'}
                       >
-                        <Printer className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <Printer className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                     )}
 
@@ -885,13 +885,13 @@ export const CertificatesView: React.FC = () => {
                         type="button"
                         onClick={(e) => handleDirectDownloadPdf(cert, e)}
                         disabled={isCertActive}
-                        className="p-1 sm:p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                        className="p-1 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
                         title="Download PDF"
                       >
                         {isCertActive && actionType === 'pdf' ? (
-                          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-red-600" />
+                          <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin text-red-600" />
                         ) : (
-                          <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         )}
                       </button>
                     )}
@@ -902,13 +902,13 @@ export const CertificatesView: React.FC = () => {
                         type="button"
                         onClick={(e) => handleDirectDownloadPng(cert, e)}
                         disabled={isCertActive}
-                        className="p-1 sm:p-1.5 rounded-lg text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition hidden sm:inline-flex"
+                        className="p-1 rounded-lg text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition hidden 2xl:inline-flex"
                         title="Download PNG image"
                       >
                         {isCertActive && actionType === 'png' ? (
-                          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-amber-700" />
+                          <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin text-amber-700" />
                         ) : (
-                          <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         )}
                       </button>
                     )}
@@ -918,10 +918,10 @@ export const CertificatesView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleOpenElementor(cert)}
-                        className="p-1 sm:p-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition hidden sm:inline-flex"
+                        className="p-1 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition hidden 2xl:inline-flex"
                         title="Customize in Certificate Builder"
                       >
-                        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                     )}
 
@@ -933,10 +933,10 @@ export const CertificatesView: React.FC = () => {
                           setEditingCert(cert);
                           setIsGeneratorOpen(true);
                         }}
-                        className="p-1 sm:p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                        className="p-1 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
                         title="Edit Certificate"
                       >
-                        <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <Edit className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                     )}
 
@@ -945,10 +945,10 @@ export const CertificatesView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setCertToDelete(cert)}
-                        className="p-1 sm:p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                        className="p-1 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
                         title="Delete Certificate"
                       >
-                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                     )}
                   </div>

@@ -32,6 +32,7 @@ import {
   CertificateBadgeStyle
 } from '../../types';
 import { CertificateRenderer } from './CertificateTemplates';
+import { CertificatePreviewStage } from './CertificatePreviewStage';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
@@ -522,7 +523,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-6">
               {filteredPresets.map((preset) => {
                 const sampleCert = getSampleCertificate(preset);
                 const isCustom = preset.categoryKey === 'custom' || customTemplates.some((t) => t.id === preset.id);
@@ -677,32 +678,34 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
         </div>
       </div>
 
-      {/* Full-Screen Inspector Modal */}
+      {/* Full-Screen Inspector Modal - Responsive Mobile Optimized */}
       {inspectingPreset && (
         <div
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-md animate-fade-in"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setInspectingPreset(null);
           }}
         >
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-full max-h-[96vh] flex flex-col overflow-hidden shadow-2xl">
-            <div className="p-4 px-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-white text-sm">{inspectingPreset.name}</h4>
-                <p className="text-xs text-amber-400">{inspectingPreset.subtitle}</p>
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-full max-h-[98vh] sm:max-h-[96vh] flex flex-col overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="p-3 sm:px-6 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-2.5">
+              <div className="min-w-0 flex-1">
+                <h4 className="font-bold text-white text-xs sm:text-sm truncate">{inspectingPreset.name}</h4>
+                <p className="text-[11px] text-amber-400 truncate">{inspectingPreset.subtitle}</p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => {
                     handleStartEdit(inspectingPreset);
                     setInspectingPreset(null);
                   }}
-                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 border border-slate-700"
+                  className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1 border border-slate-700"
+                  title="Customize Preset"
                 >
                   <Edit2 className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Edit Template</span>
+                  <span className="hidden xs:inline">Edit Template</span>
                 </button>
 
                 <button
@@ -712,37 +715,30 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                     setInspectingPreset(null);
                     onClose();
                   }}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1"
                 >
                   <Check className="w-4 h-4" />
-                  <span>Use This Preset</span>
+                  <span>Use Preset</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setInspectingPreset(null)}
-                  className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800"
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800"
+                  aria-label="Close"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-slate-950">
-              <div
-                className="shadow-2xl rounded-sm overflow-hidden"
-                style={{
-                  width: '900px',
-                  height: '630px',
-                  transform: 'scale(0.85)',
-                  transformOrigin: 'center center'
-                }}
-              >
-                <CertificateRenderer
-                  cert={getSampleCertificate(inspectingPreset)}
-                  idPrefix="inspect-preview"
-                />
-              </div>
+            {/* Stage Body */}
+            <div className="flex-1 p-2 sm:p-6 overflow-y-auto flex flex-col items-center justify-start bg-slate-950 min-h-0">
+              <CertificatePreviewStage
+                cert={getSampleCertificate(inspectingPreset)}
+                idPrefix="inspect-preview"
+                showToolbar={true}
+              />
             </div>
           </div>
         </div>

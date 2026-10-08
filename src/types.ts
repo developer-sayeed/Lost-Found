@@ -854,6 +854,7 @@ export interface User {
   dateOfBirth?: string;
   iqamaNumber?: string;
   staffId?: string;
+  userId?: string;
   workplace?: string;
   position?: string;
   emergencyContact?: string;

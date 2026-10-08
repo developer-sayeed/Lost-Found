@@ -465,4 +465,37 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(129, 140, 248, 0.6); /* soft indigo on dark */
 }
 
+/* Smooth Fade-in & Slide-down Animation for Modals & Dialogs */
+@keyframes modalFadeInSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.97);
+  }
+  60% {
+    opacity: 0.95;
+    transform: translateY(2px) scale(1.005);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-modal-slide-down {
+  animation: modalFadeInSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes backdropFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-backdrop-fade-in {
+  animation: backdropFadeIn 0.22s ease-out forwards;
+}
+
 

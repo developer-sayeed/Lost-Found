@@ -726,7 +726,7 @@ export const DashboardView: React.FC = () => {
                         )}
                         {isStored && (
                           <>
-                            {isAdmin && hasPermission('handover') && (
+                            {hasPermission('handover') && (
                               <button
                                 id={`btn-handover-${item.id}`}
                                 onClick={() => openHandover(item)}
@@ -748,7 +748,7 @@ export const DashboardView: React.FC = () => {
                             )}
                           </>
                         )}
-                        {isHandedOver && isAdmin && isWithinHandover24Hours(item) && (
+                        {isHandedOver && (isAdmin || hasPermission('handover')) && isWithinHandover24Hours(item) && (
                           <button
                             id={`btn-dashboard-return-store-${item.id}`}
                             onClick={() => openReturnToStore(item)}

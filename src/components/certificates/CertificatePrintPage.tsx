@@ -8,7 +8,9 @@ import {
   ZoomIn,
   ZoomOut,
   Sparkles,
-  Maximize2
+  Maximize2,
+  Smartphone,
+  Loader2
 } from 'lucide-react';
 import { Certificate } from '../../types';
 import { CertificateRenderer } from './CertificateTemplates';
@@ -26,13 +28,33 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
   onBack,
   canSave = true
 }) => {
-  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [autoScale, setAutoScale] = useState<number>(1);
+  const [manualZoom, setManualZoom] = useState<number | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
   const [isExportingPng, setIsExportingPng] = useState<boolean>(false);
   const [autoPrintTriggered, setAutoPrintTriggered] = useState<boolean>(false);
+  const [isPrintingNow, setIsPrintingNow] = useState<boolean>(false);
   const printStageRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef<number>(0);
 
-  const [isPrintingNow, setIsPrintingNow] = useState(false);
+  // Auto-fit calculation based on viewport width
+  useEffect(() => {
+    const updateScale = () => {
+      if (typeof window !== 'undefined') {
+        const isMobile = window.innerWidth < 640;
+        const pad = isMobile ? 16 : 48;
+        const availableW = window.innerWidth - pad;
+        const fit = Math.min(Math.max(availableW / 1000, 0.22), 1.05);
+        setAutoScale(fit);
+      }
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
+  const currentScale = manualZoom !== null ? manualZoom : autoScale;
 
   // Prepare fonts & DOM readiness on mount
   useEffect(() => {
@@ -189,12 +211,23 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
     }
   };
 
+  const handleTouchEndStage = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (manualZoom === null || manualZoom <= autoScale + 0.05) {
+        setManualZoom(1);
+      } else {
+        setManualZoom(null);
+      }
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] bg-slate-950 flex flex-col overflow-y-auto animate-fade-in print:bg-white print:static print:inset-auto print:overflow-visible">
-      {/* 
-        Print specific styles:
-        Hides everything except the direct certificate container
-      */}
+      {/* Print specific styles */}
       <style>{`
         @media print {
           @page {
@@ -211,7 +244,6 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          /* Hide non-print UI completely */
           .no-print,
           header,
           nav,
@@ -222,7 +254,6 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
           .Toastify {
             display: none !important;
           }
-          /* Position certificate to fill printable page with zero overflow */
           #direct-print-page-wrapper {
             position: absolute !important;
             left: 0 !important;
@@ -263,138 +294,157 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
       `}</style>
 
       {/* Top Action Bar (Hidden during print) */}
-      <div className="no-print sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-xl">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div className="no-print sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-3 sm:px-6 py-2.5 sm:py-3 shadow-xl">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
           {/* Left: Back button & Certificate info */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={onBack}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-xs"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-xs shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back</span>
             </button>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                  {certificate.certificateNumber || 'DIRECT PRINT'}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+                  {certificate.certificateNumber || 'PRINT'}
                 </span>
-                <span className="text-xs font-bold text-white truncate max-w-xs sm:max-w-md">
-                  {certificate.recipientName} • {certificate.title}
+                <span className="text-xs font-bold text-white truncate max-w-[140px] xs:max-w-[200px] sm:max-w-md">
+                  {certificate.recipientName}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5 hidden sm:block">
-                Direct Print Page • Landscape A4 (297mm × 210mm) Ready
+              <p className="text-[11px] text-slate-400 hidden sm:block">
+                Landscape A4 Ready • {certificate.title}
               </p>
             </div>
           </div>
 
-          {/* Center: Zoom Controls */}
-          <div className="hidden lg:flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-slate-300">
+          {/* Center: Zoom Controls (Responsive for mobile & desktop) */}
+          <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-slate-300">
             <button
               type="button"
-              onClick={() => setZoomLevel(prev => Math.max(0.6, prev - 0.1))}
+              onClick={() => setManualZoom(Math.max(0.3, Math.round((currentScale - 0.1) * 10) / 10))}
               className="p-1 rounded-lg hover:bg-slate-700 hover:text-white transition"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="text-xs font-mono px-2">{Math.round(zoomLevel * 100)}%</span>
+
+            <span className="text-[11px] sm:text-xs font-mono font-bold px-1 sm:px-2 min-w-[42px] text-center text-slate-200">
+              {Math.round(currentScale * 100)}%
+            </span>
+
             <button
               type="button"
-              onClick={() => setZoomLevel(prev => Math.min(1.4, prev + 0.1))}
+              onClick={() => setManualZoom(Math.min(1.4, Math.round((currentScale + 0.1) * 10) / 10))}
               className="p-1 rounded-lg hover:bg-slate-700 hover:text-white transition"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
+
             <button
               type="button"
-              onClick={() => setZoomLevel(1)}
-              className="px-1.5 py-0.5 text-[10px] font-semibold text-amber-400 hover:bg-slate-700 rounded transition"
-              title="Reset Zoom"
+              onClick={() => setManualZoom(null)}
+              className={`px-1.5 py-0.5 text-[10px] font-semibold rounded transition ${
+                manualZoom === null ? 'bg-amber-500 text-slate-950 font-bold' : 'text-amber-400 hover:bg-slate-700'
+              }`}
+              title="Fit to Screen"
             >
-              Reset
+              Fit
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setManualZoom(1)}
+              className={`hidden xs:inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded transition ${
+                manualZoom === 1 ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:bg-slate-700'
+              }`}
+              title="Actual Size"
+            >
+              100%
             </button>
           </div>
 
           {/* Right: Primary Print & Export Buttons */}
-          <div className="flex items-center gap-2">
-            {/* Primary Print Button */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={handlePrintNow}
-              className="px-4 py-2 rounded-xl bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-amber-500/25 active:scale-95"
+              disabled={isPrintingNow}
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs transition flex items-center gap-1.5 shadow-lg shadow-amber-500/25 active:scale-95 disabled:opacity-50"
             >
-              <Printer className="w-4 h-4" />
-              <span>Direct Print (Ctrl+P)</span>
+              {isPrintingNow ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
+              <span className="hidden xs:inline">Direct Print</span>
+              <span className="xs:hidden">Print</span>
             </button>
 
-            {/* Clean Tab Print Fallback */}
             <button
               type="button"
               onClick={handleOpenCleanPrintTab}
-              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700 shadow-xs"
+              className="hidden sm:inline-flex px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition items-center gap-1.5 border border-slate-700 shadow-xs"
               title="Open pure printable HTML in dedicated tab"
             >
               <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Open Clean Tab</span>
+              <span>Clean Tab</span>
             </button>
 
-            {/* PDF Download */}
             {canSave && (
-              <button
-                type="button"
-                onClick={handleDownloadPdf}
-                disabled={isExportingPdf}
-                className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700 shadow-xs disabled:opacity-50"
-                title="Download Landscape A4 PDF"
-              >
-                <FileText className="w-3.5 h-3.5 text-red-400" />
-                <span className="hidden md:inline">{isExportingPdf ? 'Exporting...' : 'PDF'}</span>
-              </button>
-            )}
+              <>
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  disabled={isExportingPdf}
+                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1 border border-slate-700 shadow-xs disabled:opacity-50"
+                  title="Download Landscape A4 PDF"
+                >
+                  <FileText className="w-3.5 h-3.5 text-red-400" />
+                  <span>PDF</span>
+                </button>
 
-            {/* PNG Download */}
-            {canSave && (
-              <button
-                type="button"
-                onClick={handleDownloadPng}
-                disabled={isExportingPng}
-                className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1.5 border border-slate-700 shadow-xs disabled:opacity-50"
-                title="Download 2000px High-Res PNG"
-              >
-                <Download className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden md:inline">{isExportingPng ? 'Exporting...' : 'PNG'}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadPng}
+                  disabled={isExportingPng}
+                  className="hidden xs:inline-flex px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition items-center gap-1 border border-slate-700 shadow-xs disabled:opacity-50"
+                  title="Download High-Res PNG"
+                >
+                  <Download className="w-3.5 h-3.5 text-amber-400" />
+                  <span>PNG</span>
+                </button>
+              </>
             )}
           </div>
         </div>
       </div>
 
       {/* Helpful Hint Ribbon (Hidden during print) */}
-      <div className="no-print bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center text-xs text-amber-300 flex items-center justify-center gap-2">
+      <div className="no-print bg-amber-500/10 border-b border-amber-500/20 px-3 py-1.5 sm:py-2 text-center text-[11px] sm:text-xs text-amber-300 flex items-center justify-center gap-1.5">
         <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-        <span>
-          <strong>Print Tip:</strong> Set printer Destination to <em>"Save as PDF"</em> or select your color printer. Ensure layout is set to <strong>Landscape</strong> and Margins to <strong>None</strong> for a 100% full-bleed luxury award.
+        <span className="truncate">
+          Set Destination to <strong>Save as PDF</strong> or Color Printer • Layout: <strong>Landscape</strong> • Margins: <strong>None</strong>
         </span>
       </div>
 
-      {/* Main Print Stage Area */}
+      {/* Main Print Stage Area (Responsive, touch-pan enabled, auto-scaling) */}
       <div
         id="direct-print-page-wrapper"
         ref={printStageRef}
-        className="flex-1 flex items-center justify-center p-4 sm:p-8 md:p-12 overflow-auto"
+        onTouchEnd={handleTouchEndStage}
+        className="flex-1 flex items-center justify-center p-2 sm:p-6 md:p-10 overflow-auto touch-pan-x touch-pan-y"
       >
         <div
           style={{
-            transform: `scale(${zoomLevel})`,
+            transform: `scale(${currentScale})`,
             transformOrigin: 'center center',
-            transition: 'transform 0.15s ease-out'
+            transition: 'transform 0.15s ease-out',
+            width: '1000px',
+            height: '700px'
           }}
-          className="relative transition-transform shadow-2xl rounded-sm print:shadow-none"
+          className="relative transition-transform shadow-2xl rounded-sm print:shadow-none select-none shrink-0"
         >
           <CertificateRenderer
             cert={certificate}

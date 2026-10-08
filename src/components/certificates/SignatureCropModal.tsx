@@ -473,7 +473,7 @@ export const SignatureCropModal: React.FC<SignatureCropModalProps> = ({
               className="px-4 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md cursor-pointer"
             >
               <Check className="w-4 h-4" />
-              <span>Apply Crop (ক্রপ নিশ্চিত করুন)</span>
+              <span>Apply Crop</span>
             </button>
           </div>
         </div>

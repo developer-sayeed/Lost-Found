@@ -38,6 +38,10 @@ import { RecentUserSignature } from '../../types';
 import { api } from '../../lib/api';
 import { SignatureCropModal, CropRect } from './SignatureCropModal';
 import {
+  processUploadedSignature,
+  SignatureProcessingOptions as ProcessPhotoOptions
+} from '../../services/signatureProcessor';
+import {
   getRecentSignatures,
   saveRecentSignature,
   deleteRecentSignature,
@@ -173,237 +177,7 @@ const detectInkBoundingBox = (
   }
 };
 
-interface ProcessPhotoOptions {
-  imageSrc: string;
-  scalePercent: number; // e.g. 100
-  scaleWidthPercent: number; // 50 - 200
-  scaleHeightPercent: number; // 50 - 200
-  offsetX: number;
-  offsetY: number;
-  rotationDeg: number;
-  transparentBg: boolean;
-  bgThreshold: number; // 150 - 245
-  inkColor: string;
-  cropBounds?: CropBounds | null;
-}
 
-/**
- * High-definition signature processor: scales, rotates, crops, recolors, and strips paper background
- */
-const processUploadedSignature = (opts: ProcessPhotoOptions): Promise<string> => {
-  return new Promise((resolve) => {
-    if (!opts.imageSrc) {
-      resolve('');
-      return;
-    }
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-
-    img.onload = () => {
-      // High-res output canvas (600x200 standard aspect ratio for certificates)
-      const targetWidth = 600;
-      const targetHeight = 200;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        resolve(opts.imageSrc);
-        return;
-      }
-
-      // Source image or cropped region
-      const crop = opts.cropBounds;
-      const srcX = crop ? Math.max(0, crop.x) : 0;
-      const srcY = crop ? Math.max(0, crop.y) : 0;
-      const srcW = crop && crop.width > 10 ? Math.min(img.width - srcX, crop.width) : img.width;
-      const srcH = crop && crop.height > 10 ? Math.min(img.height - srcY, crop.height) : img.height;
-
-      // Base fitted size inside 600x200
-      const aspect = srcW / srcH;
-      let drawW = targetWidth * 0.72;
-      let drawH = drawW / aspect;
-
-      if (drawH > targetHeight * 0.75) {
-        drawH = targetHeight * 0.75;
-        drawW = drawH * aspect;
-      }
-
-      // Multipliers: overall scale, width scale, height scale
-      const overallFactor = Math.max(0.15, Math.min(opts.scalePercent / 100, 4.0));
-      const widthFactor = Math.max(0.4, Math.min(opts.scaleWidthPercent / 100, 2.5));
-      const heightFactor = Math.max(0.4, Math.min(opts.scaleHeightPercent / 100, 2.5));
-
-      drawW = drawW * overallFactor * widthFactor;
-      drawH = drawH * overallFactor * heightFactor;
-
-      ctx.save();
-      ctx.clearRect(0, 0, targetWidth, targetHeight);
-
-      // Rotation & Center
-      const centerX = targetWidth / 2 + opts.offsetX;
-      const centerY = targetHeight / 2 + opts.offsetY;
-
-      ctx.translate(centerX, centerY);
-      if (opts.rotationDeg !== 0) {
-        ctx.rotate((opts.rotationDeg * Math.PI) / 180);
-      }
-
-      ctx.drawImage(
-        img,
-        srcX,
-        srcY,
-        srcW,
-        srcH,
-        -drawW / 2,
-        -drawH / 2,
-        drawW,
-        drawH
-      );
-
-      ctx.restore();
-
-      // Transparency & Ink enhancement
-      if (opts.transparentBg || (opts.inkColor && opts.inkColor !== 'original')) {
-        try {
-          const imgData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-          const data = imgData.data;
-
-          // Target ink color if specified
-          let targetR = 15,
-            targetG = 23,
-            targetB = 42; // Deep executive slate
-          const shouldRecolor = Boolean(opts.inkColor && opts.inkColor !== 'original');
-          if (shouldRecolor && opts.inkColor) {
-            if (opts.inkColor.startsWith('#')) {
-              const hex = opts.inkColor.slice(1);
-              if (hex.length === 6) {
-                targetR = parseInt(hex.substring(0, 2), 16);
-                targetG = parseInt(hex.substring(2, 4), 16);
-                targetB = parseInt(hex.substring(4, 6), 16);
-              }
-            }
-          }
-
-          // Sample paper background:
-          // Find dominant background paper color and brightness across perimeter margins
-          let sumBgR = 0,
-            sumBgG = 0,
-            sumBgB = 0,
-            countBg = 0;
-          const lumSamples: number[] = [];
-
-          for (let y = 0; y < targetHeight; y += 3) {
-            for (let x = 0; x < targetWidth; x += 3) {
-              const idx = (y * targetWidth + x) * 4;
-              const a = data[idx + 3];
-              if (a > 30) {
-                const r = data[idx];
-                const g = data[idx + 1];
-                const b = data[idx + 2];
-                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-                lumSamples.push(lum);
-
-                // Perimeter margins are almost exclusively paper background
-                if (x < 25 || x > targetWidth - 25 || y < 15 || y > targetHeight - 15) {
-                  sumBgR += r;
-                  sumBgG += g;
-                  sumBgB += b;
-                  countBg++;
-                }
-              }
-            }
-          }
-
-          lumSamples.sort((a, b) => a - b);
-          // 85th percentile of brightness gives the true paper background brightness
-          const p85Lum = lumSamples.length > 0 ? lumSamples[Math.floor(lumSamples.length * 0.85)] : 235;
-
-          const refR = countBg > 0 ? sumBgR / countBg : 240;
-          const refG = countBg > 0 ? sumBgG / countBg : 240;
-          const refB = countBg > 0 ? sumBgB / countBg : 240;
-          const refLum = 0.299 * refR + 0.587 * refG + 0.114 * refB;
-
-          // Estimate the true paper background luminance (bound between 165 and 255)
-          const paperBgLum = Math.max(165, Math.min(255, Math.max(p85Lum, refLum)));
-          // Cutoff point: anything within 22 of the paper background is 100% paper
-          const bgCutoff = paperBgLum - 22;
-          // Full ink darkness: anything 75+ darker than paper background is solid ink
-          const solidInkLum = Math.max(20, paperBgLum - 75);
-
-          for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            const a = data[i + 3];
-
-            if (a > 0) {
-              const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-              const colorDistToPaper = Math.hypot(r - refR, g - refG, b - refB);
-
-              if (opts.transparentBg) {
-                // If it matches paper luminance or is close to background paper color
-                if (lum >= bgCutoff || (colorDistToPaper < 32 && lum > paperBgLum - 45)) {
-                  data[i + 3] = 0; // Pure 100% transparent background!
-                  continue;
-                }
-
-                // If darkness is very slight (faint paper shadow / paper fiber)
-                const darkness = paperBgLum - lum;
-                if (darkness < 22) {
-                  data[i + 3] = 0; // Transparent paper shadow
-                  continue;
-                }
-
-                // Smooth anti-aliased ink stroke edge
-                const inkFactor = Math.min(1.0, (darkness - 22) / Math.max(1, paperBgLum - solidInkLum - 22));
-                const calculatedAlpha = Math.round(255 * (0.35 + 0.65 * inkFactor));
-                data[i + 3] = Math.min(a, calculatedAlpha);
-              }
-
-              // Ink Enhancement & Recoloring
-              if (data[i + 3] > 0) {
-                if (shouldRecolor) {
-                  data[i] = targetR;
-                  data[i + 1] = targetG;
-                  data[i + 2] = targetB;
-                } else {
-                  // Natural ink enhancement
-                  // Check if it's blue ink
-                  if (b > r + 12 && b > g) {
-                    data[i] = Math.max(10, Math.round(r * 0.75));
-                    data[i + 1] = Math.max(25, Math.round(g * 0.8));
-                    data[i + 2] = Math.min(225, Math.round(b * 1.15));
-                  } else {
-                    // Deep rich black/dark charcoal ink
-                    const lumFactor = Math.min(1.0, lum / Math.max(1, paperBgLum - 30));
-                    data[i] = Math.round(r * lumFactor * 0.65);
-                    data[i + 1] = Math.round(g * lumFactor * 0.65);
-                    data[i + 2] = Math.round(b * lumFactor * 0.7);
-                  }
-                }
-              }
-            }
-          }
-
-          ctx.putImageData(imgData, 0, 0);
-        } catch {
-          // If browser restricts pixel manipulation on foreign domains
-        }
-      }
-
-      resolve(canvas.toDataURL('image/png'));
-    };
-
-    img.onerror = () => {
-      resolve(opts.imageSrc);
-    };
-
-    img.src = opts.imageSrc;
-  });
-};
 
 export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
   isOpen,
@@ -640,7 +414,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
   // Validate finger signature quality and completeness
   const validateFingerSignature = (currentStrokes: Stroke[]): { valid: boolean; reason?: string } => {
     if (!currentStrokes || currentStrokes.length === 0) {
-      return { valid: false, reason: 'স্বাক্ষর খালি — অনুগ্রহ করে আঙুল দিয়ে স্বাক্ষর করুন (Signature is empty).' };
+      return { valid: false, reason: 'Signature is empty — please sign with your finger.' };
     }
     let totalPoints = 0;
     let totalLength = 0;
@@ -669,7 +443,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
     if (totalPoints < 12 || w < 32 || h < 14 || totalLength < 50) {
       return {
         valid: false,
-        reason: 'স্বাক্ষরটি খুব ছোট বা অসম্পূর্ণ। অনুগ্রহ করে আঙুল দিয়ে স্পষ্ট ও পূর্ণাঙ্গ স্বাক্ষর করুন (Signature is too short or incomplete).'
+        reason: 'Signature is too short or incomplete. Please provide a clear and complete signature.'
       };
     }
     return { valid: true };
@@ -903,7 +677,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
       setCropBounds(null);
       setIsVerifyingSignature(true);
       setSignatureVerifyStatus('scanning');
-      setSignatureVerifyMessage('ডকুমেন্টে হ্যান্ডরাইটিন সিগনেচার যাচাই করা হচ্ছে...');
+      setSignatureVerifyMessage('Scanning document for handwritten signature...');
 
       try {
         // Call AI forensic verification endpoint
@@ -920,16 +694,30 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
         if (!verifyRes.hasHandwrittenSignature) {
           setIsVerifyingSignature(false);
           setSignatureVerifyStatus('rejected');
-          setSignatureVerifyMessage('হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)');
-          setPreviewDataUrl('');
-          setHasSignature(false);
-          toast.error('হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)');
+          setSignatureVerifyMessage('Handwritten signature is not found');
+          // Still process with background thresholding so user can see document and use Crop Studio!
+          const cleanPreview = await processUploadedSignature({
+            imageSrc: res,
+            scalePercent: 100,
+            scaleWidthPercent: 100,
+            scaleHeightPercent: 100,
+            offsetX: 0,
+            offsetY: 0,
+            rotationDeg: 0,
+            transparentBg: true,
+            bgThreshold: 215,
+            inkColor: 'original',
+            cropBounds: null
+          });
+          setPreviewDataUrl(cleanPreview);
+          setHasSignature(true);
+          toast.info('Use "Crop Signature" to select a specific signature from the document.');
           return;
         }
 
         // Authentic handwritten signature confirmed!
         setSignatureVerifyStatus('verified');
-        setSignatureVerifyMessage('✓ হ্যান্ডরাইটিন সিগনেচার সফলভাবে শনাক্ত ও আইসোলেট করা হয়েছে');
+        setSignatureVerifyMessage('✓ Handwritten signature successfully detected and isolated');
         if (typeof verifyRes.confidence === 'number') {
           setSignatureConfidence(verifyRes.confidence);
         }
@@ -978,14 +766,26 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
         setPreviewDataUrl(processed);
         setHasSignature(true);
         setIsVerifyingSignature(false);
-        toast.success('হ্যান্ডরাইটিন সিগনেচার সফলভাবে শনাক্ত ও ব্যাকগ্রাউন্ড টেক্সট অপসারিত হয়েছে!');
+        toast.success('Handwritten signature successfully detected and background removed!');
       } catch (err) {
         setIsVerifyingSignature(false);
         setSignatureVerifyStatus('rejected');
-        setSignatureVerifyMessage('হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)');
-        setPreviewDataUrl('');
-        setHasSignature(false);
-        toast.error('হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)');
+        setSignatureVerifyMessage('Handwritten signature is not found');
+        const fallbackClean = await processUploadedSignature({
+          imageSrc: res,
+          scalePercent: 100,
+          scaleWidthPercent: 100,
+          scaleHeightPercent: 100,
+          offsetX: 0,
+          offsetY: 0,
+          rotationDeg: 0,
+          transparentBg: true,
+          bgThreshold: 215,
+          inkColor: 'original',
+          cropBounds: null
+        });
+        setPreviewDataUrl(fallbackClean);
+        setHasSignature(true);
       }
     };
     reader.readAsDataURL(file);
@@ -994,7 +794,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
   // Open visual Crop Studio modal
   const handleOpenCropModal = () => {
     if (!uploadedRawImage) {
-      toast.info('অনুগ্রহ করে প্রথমে ছবি আপলোড করুন');
+      toast.info('Please upload an image first');
       return;
     }
     setIsCropModalOpen(true);
@@ -1025,8 +825,8 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
     setPreviewDataUrl(processed);
     setHasSignature(true);
     setSignatureVerifyStatus('verified');
-    setSignatureVerifyMessage('✓ হ্যান্ডরাইটিন সিগনেচার সফলভাবে ক্রপ ও আইসোলেট করা হয়েছে');
-    toast.success('স্বাক্ষর সফলভাবে ক্রপ ও ব্যাকগ্রাউন্ড টেক্সট অপসারিত হয়েছে!');
+    setSignatureVerifyMessage('✓ Handwritten signature successfully cropped and isolated');
+    toast.success('Signature successfully cropped and isolated!');
   };
 
   // Quick select an AI detected signature candidate from the document
@@ -1227,13 +1027,13 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
     if (mode === 'draw') {
       const validation = validateFingerSignature(strokes);
       if (!validation.valid) {
-        toast.error(`❌ স্বাক্ষর প্রত্যাখ্যাত (Signature Refused): ${validation.reason || 'আঙুল দিয়ে স্পষ্ট ও পূর্ণাঙ্গ স্বাক্ষর করুন'}`);
+        toast.error(`❌ Signature Refused: ${validation.reason || 'Please provide a clear and complete signature.'}`);
         return;
       }
     }
 
     if (mode === 'upload' && signatureVerifyStatus === 'rejected') {
-      toast.error('❌ হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)');
+      toast.error('❌ Handwritten signature is not found');
       return;
     }
 
@@ -1267,72 +1067,72 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-xs animate-fade-in overflow-y-auto">
       <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] my-auto">
         {/* Header */}
-        <div className="px-5 py-3.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <PenTool className="w-4 h-4" />
+        <div className="px-3.5 sm:px-5 py-2.5 sm:py-3.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-2.5 min-w-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <PenTool className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold tracking-tight">Executive Signature Studio</h3>
-              <p className="text-[11px] text-slate-300">
-                Official Signature & Resizing for <span className="text-amber-300 font-semibold">{signatoryTitle}</span>
+            <div className="min-w-0">
+              <h3 className="text-xs sm:text-sm font-bold tracking-tight truncate">Executive Signature Studio</h3>
+              <p className="text-[10px] sm:text-[11px] text-slate-300 truncate">
+                Signature for <span className="text-amber-300 font-semibold">{signatoryTitle}</span>
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer shrink-0 ml-1"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-slate-200 bg-slate-50 px-4 pt-2 gap-1.5 overflow-x-auto">
+        <div className="flex border-b border-slate-200 bg-slate-50 px-2 sm:px-4 pt-1.5 sm:pt-2 gap-1 sm:gap-1.5 overflow-x-auto shrink-0">
           <button
             type="button"
             onClick={() => setMode('upload')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-t-xl transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-t-xl transition-all cursor-pointer whitespace-nowrap ${
               mode === 'upload'
                 ? 'bg-white text-amber-700 border-t-2 border-amber-600 shadow-2xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Upload className="w-3.5 h-3.5" />
-            <span>Upload & Resize Photo</span>
-            <span className="text-[10px] bg-amber-100 text-amber-800 px-1 rounded font-bold">AI Detect</span>
+            <span>Upload Photo</span>
+            <span className="text-[9.5px] bg-amber-100 text-amber-800 px-1 rounded font-bold hidden xs:inline">AI Detect</span>
           </button>
 
           <button
             type="button"
             id="tab-draw-with-fingers"
             onClick={() => setMode('draw')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-t-xl transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-t-xl transition-all cursor-pointer whitespace-nowrap ${
               mode === 'draw'
                 ? 'bg-white text-amber-700 border-t-2 border-amber-600 shadow-2xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Hand className="w-3.5 h-3.5 text-amber-600" />
-            <span>Draw with Fingers</span>
-            <span className="text-[9.5px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">Touch</span>
+            <span>Draw Fingers</span>
+            <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded font-bold hidden xs:inline">Touch</span>
           </button>
 
           <button
             type="button"
             id="tab-recent-user-signatures"
             onClick={() => setMode('recent')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-t-xl transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold rounded-t-xl transition-all cursor-pointer whitespace-nowrap ${
               mode === 'recent'
                 ? 'bg-white text-amber-700 border-t-2 border-amber-600 shadow-2xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>Recent User Signatures</span>
+            <span>Recent</span>
             {recentSignatures.length > 0 && (
-              <span className="text-[10px] bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded-full font-bold">
+              <span className="text-[9.5px] bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-full font-bold">
                 {recentSignatures.length}
               </span>
             )}
@@ -1359,7 +1159,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                 <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 rounded-xl flex items-center justify-between text-xs animate-pulse shadow-xs">
                   <div className="flex items-center gap-2.5 text-amber-900 font-semibold">
                     <Loader2 className="w-4 h-4 animate-spin text-amber-600 shrink-0" />
-                    <span>AI ভেরিফিকেশন: ডকুমেন্টে হ্যান্ডরাইটিন সিগনেচার যাচাই ও ব্যাকগ্রাউন্ড টেক্সট অপসারণ করা হচ্ছে...</span>
+                    <span>AI Verification: Scanning document for handwritten signature and removing background text...</span>
                   </div>
                   <span className="text-[10.5px] bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full font-bold">
                     Scanning
@@ -1373,24 +1173,24 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-red-800 font-bold text-sm">
                       <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-                      <span>হ্যান্ডরাইটিন সিগনেচার ইজ নট ফাউন্ড (Handwritten signature is not found)</span>
+                      <span>Handwritten signature is not found</span>
                     </div>
                     <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-extrabold text-[10px] border border-red-200 uppercase">
                       Rejected
                     </span>
                   </div>
                   <p className="text-red-700 leading-relaxed">
-                    আপলোডকৃত ছবিতে কোনো পেন দিয়ে করা আসল হাতে লেখা স্বাক্ষর (Handwritten Signature) পাওয়া যায়নি। সাধারণ টাইপ করা কম্পিউটার টেক্সট, ডকুমেন্টের লেখা বা অপ্রাসঙ্গিক ছবি গ্রহণযোগ্য নয়।
+                    No authentic pen-written signature was detected in the uploaded image. Regular typed text, document printouts, or irrelevant images are not accepted.
                   </p>
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <button
                       type="button"
                       onClick={handleOpenCropModal}
                       className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      title="কাগজ বা ডকুমেন্ট থেকে নির্দিষ্ট সিগনেচার অংশ ম্যানুয়ালি ক্রপ করুন"
+                      title="Crop a specific signature area manually from document"
                     >
                       <Crop className="w-3.5 h-3.5" />
-                      <span>ম্যানুয়ালি ক্রপ করুন (Crop Signature)</span>
+                      <span>Crop Signature</span>
                     </button>
                     <button
                       type="button"
@@ -1398,7 +1198,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                       className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
                     >
                       <Upload className="w-3.5 h-3.5" />
-                      <span>অন্য ছবি আপলোড করুন</span>
+                      <span>Upload Another Image</span>
                     </button>
                     <button
                       type="button"
@@ -1406,7 +1206,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                       className="px-3.5 py-1.5 bg-white hover:bg-red-100 text-red-800 border border-red-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
                     >
                       <Hand className="w-3.5 h-3.5 text-red-600" />
-                      <span>আঙুল দিয়ে আঁকুন (Draw with Fingers)</span>
+                      <span>Draw with Fingers</span>
                     </button>
                   </div>
                 </div>
@@ -1417,7 +1217,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                 <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center justify-between text-xs shadow-xs">
                   <div className="flex items-center gap-2 text-emerald-900 font-bold">
                     <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>✓ হ্যান্ডরাইটিন সিগনেচার সফলভাবে শনাক্ত ও আইসোলেট করা হয়েছে</span>
+                    <span>✓ Handwritten signature successfully detected and isolated</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button
@@ -1449,7 +1249,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                       Upload Signature Photo / Document
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      কাগজে পেন দিয়ে করা স্বাক্ষরের ছবি আপলোড করুন (AI স্বয়ংক্রিয়ভাবে টাইপ করা টেক্সট বাদ দিয়ে কেবল আসল সিগনেচার শনাক্ত করবে)
+                      Upload a photo of a pen-written signature on paper (AI automatically isolates the genuine signature and removes background text)
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
@@ -1515,7 +1315,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                     <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-1.5 font-bold text-amber-950 dark:text-amber-200">
                         <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>ডকুমেন্টে {detectedSignaturesList.length}টি সিগনেচার শনাক্ত হয়েছে — বেছে নিন:</span>
+                        <span>Detected {detectedSignaturesList.length} signatures in document — select one:</span>
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {detectedSignaturesList.map((sig, idx) => (
@@ -1525,7 +1325,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                             onClick={() => handleSelectDetectedSignature(sig)}
                             className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 text-amber-900 dark:text-amber-200 transition shadow-2xs cursor-pointer flex items-center gap-1"
                           >
-                            <span>{sig.label || `স্বাক্ষর #${idx + 1}`}</span>
+                            <span>{sig.label || `Signature #${idx + 1}`}</span>
                           </button>
                         ))}
                         <button
@@ -1534,7 +1334,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                           className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition shadow-2xs cursor-pointer flex items-center gap-1"
                         >
                           <Crop className="w-3 h-3" />
-                          <span>কাস্টম ক্রপ</span>
+                          <span>Custom Crop</span>
                         </button>
                       </div>
                     </div>
@@ -1797,7 +1597,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
           )}
 
           {/* ======================================================== */}
-          {/* TAB 2: DRAW WITH FINGERS (আঙুল দিয়ে আঁকুন)                 */}
+          {/* TAB 2: DRAW WITH FINGERS                                  */}
           {/* ======================================================== */}
           {mode === 'draw' && (
             <div className="space-y-3">
@@ -1808,9 +1608,9 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                     <Hand className="w-3.5 h-3.5" />
                   </div>
                   <div>
-                    <span className="font-bold">Draw with Fingers (স্মুথ ফিঙ্গার ড্রয়িং):</span>{' '}
+                    <span className="font-bold">Draw with Fingers:</span>{' '}
                     <span className="text-[11px] text-amber-800">
-                      আঙুল দিয়ে মসৃণভাবে পূর্ণাঙ্গ স্বাক্ষর করুন। অসম্পূর্ণ বা অতিরিক্ত ছোট স্বাক্ষর রিফিউজ করা হবে।
+                      Sign smoothly with your finger. Incomplete or tiny marks will be rejected.
                     </span>
                   </div>
                 </div>
@@ -1907,12 +1707,12 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                   {validateFingerSignature(strokes).valid ? (
                     <span className="text-emerald-700 font-bold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      <span>✓ বৈধ ফিঙ্গার সিগনেচার (Valid Finger Signature)</span>
+                      <span>✓ Valid Finger Signature</span>
                     </span>
                   ) : (
                     <span className="text-amber-800 font-bold flex items-center gap-1.5">
                       <AlertCircle className="w-4 h-4 text-amber-600 animate-pulse" />
-                      <span>⚠️ অসম্পূর্ণ বা খুব ছোট স্বাক্ষর — আঙুল দিয়ে স্পষ্ট ও পূর্ণাঙ্গ স্বাক্ষর করুন</span>
+                      <span>⚠️ Incomplete or too small — please sign clearly with your finger</span>
                     </span>
                   )}
                   <span className="text-slate-400 font-mono text-[10.5px]">
@@ -1940,7 +1740,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
           )}
 
           {/* ======================================================== */}
-          {/* TAB 3: RECENT USER SIGNATURES (রিসেন্ট ইউজার সিগনেচার)     */}
+          {/* TAB 3: RECENT USER SIGNATURES                             */}
           {/* ======================================================== */}
           {mode === 'recent' && (
             <div className="space-y-3.5">
@@ -1948,14 +1748,14 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                 <div>
                   <div className="flex items-center space-x-2">
                     <span className="text-xs font-bold text-slate-900">
-                      Recent User Signatures (রিসেন্ট ইউজার সিগনেচার)
+                      Recent User Signatures
                     </span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-200 text-amber-900">
                       {recentSignatures.length} Saved
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 mt-0.5">
-                    আপনার পূর্বে ব্যবহৃত সমস্ত পেন ও আপলোডকৃত সিগনেচার এখানে সংরক্ষিত আছে। যেকোনো সিগনেচার ১-ক্লিকেই রিউজ করুন।
+                    All your previously drawn and uploaded signatures are saved here. Reuse any signature with 1 click.
                   </p>
                 </div>
 
@@ -2018,7 +1818,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                   <div>
                     <h4 className="text-xs font-bold text-slate-800">No Recent Signatures Saved Yet</h4>
                     <p className="text-[11px] text-slate-500 max-w-sm mx-auto mt-1">
-                      পেন দিয়ে ড্র করুন অথবা ফটোকপির ছবি আপলোড করে সাইজ ঠিক করে <strong>&quot;Embed Signature&quot;</strong> বাটনে ক্লিক করলেই স্বয়ংক্রিয়ভাবে এখানে পরবর্তীতে ব্যবহারের জন্য সেভ হয়ে থাকবে।
+                      Draw with pen or upload a photo, adjust size and click <strong>&quot;Embed Signature&quot;</strong> to automatically save it here for future use.
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center justify-center gap-2 pt-2">

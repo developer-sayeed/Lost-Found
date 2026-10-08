@@ -278,7 +278,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, updateUserPermissions, updateUserRole } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [selectedStaffProfile, setSelectedStaffProfile] = useState<StaffMember | null>(null);
   const [items, setItems] = useState<LostItem[]>(() => offlineStorage.loadItems());
@@ -1520,6 +1520,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ...prev,
         ...merged
       }));
+      offlineStorage.saveSettings(merged);
       if (typeof document !== 'undefined') {
         applyDynamicTheme(merged);
       }
@@ -2181,7 +2182,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateStaff = async (id: string, updates: Partial<StaffMember>) => {
     const updated = await api.updateStaff(id, updates, user);
-    setStaff(prev => prev.map(s => (s.id === id || (s as any)._id === id || s.userId === id || s.staffId === id ? { ...s, ...updated } : s)));
+    setStaff(prev => {
+      const nextStaff = prev.map(s => (s.id === id || (s as any)._id === id || s.userId === id || s.staffId === id ? { ...s, ...updated } : s));
+      offlineStorage.saveStaff(nextStaff);
+      return nextStaff;
+    });
+
+    // If the updated staff member is the currently logged in user, synchronize auth state immediately
+    if (user && (
+      user.id === id ||
+      (user as any)._id === id ||
+      user.staffId === id ||
+      user.userId === id ||
+      (user.email && updated.email && user.email.toLowerCase() === updated.email.toLowerCase()) ||
+      (user.name && updated.name && user.name.toLowerCase() === updated.name.toLowerCase())
+    )) {
+      if (updated.permissions) {
+        updateUserPermissions(updated.permissions);
+      }
+      if (updated.role && updated.role !== user.role) {
+        updateUserRole(updated.role);
+      }
+    }
+
     setSyncSuccessNotice(`Staff member updated successfully.`);
     setTimeout(() => setSyncSuccessNotice(null), 3000);
     showCustomToast('success', 'staffSaved', { name: updates.name || 'Staff' });

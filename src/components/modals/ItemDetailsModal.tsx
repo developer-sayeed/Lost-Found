@@ -14,12 +14,16 @@ import {
   HeartHandshake,
   Truck,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Edit2,
+  Printer,
+  RotateCcw
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { generateItemQrDataUrl, downloadQrCodeImage } from '../../lib/qrcode';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import { isWithinHandover24Hours } from '../../lib/handoverUtils';
 import { ItemActivityTimeline } from './ItemActivityTimeline';
 import { RejectSubmissionModal } from './RejectSubmissionModal';
 
@@ -31,9 +35,15 @@ export const ItemDetailsModal: React.FC = () => {
     openItemQrModal,
     settings,
     approveItem,
-    rejectItem
+    rejectItem,
+    openHandover,
+    openDispatch,
+    openEditItem,
+    openPrint,
+    openReturnToStore,
+    openDelete
   } = useApp();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, hasPermission } = useAuth();
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -133,7 +143,7 @@ export const ItemDetailsModal: React.FC = () => {
                 Submitted by <strong>{selectedItem.employeeName}</strong>. Awaiting Admin Approval before active inventory placement.
               </span>
             </div>
-            {isAdminTier ? (
+            {(isAdminTier || hasPermission('edit')) ? (
               <div className="flex items-center space-x-2">
                 <button
                   type="button"
@@ -433,15 +443,109 @@ export const ItemDetailsModal: React.FC = () => {
           </div>
         </div>
 
-        {/* View-Only Mode Footer */}
-        <div className="p-4 px-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400 font-medium">
-            View-Only Mode
-          </span>
+        {/* Dynamic Action Controls Footer */}
+        <div className="p-4 px-6 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Handover to Guest */}
+            {isStored && hasPermission('handover') && (
+              <button
+                type="button"
+                id="btn-details-handover-action"
+                onClick={() => {
+                  setIsDetailsModalOpen(false);
+                  openHandover(selectedItem);
+                }}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+              >
+                <HeartHandshake className="w-4 h-4" />
+                <span>Handover to Guest</span>
+              </button>
+            )}
+
+            {/* Dispatch to Finder Staff */}
+            {isStored && hasPermission('dispatch') && (
+              <button
+                type="button"
+                id="btn-details-dispatch-action"
+                onClick={() => {
+                  setIsDetailsModalOpen(false);
+                  openDispatch(selectedItem);
+                }}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+              >
+                <Truck className="w-4 h-4" />
+                <span>Dispatch</span>
+              </button>
+            )}
+
+            {/* Return to Store within 24h grace period */}
+            {isHandedOver && (isAdmin || hasPermission('handover')) && isWithinHandover24Hours(selectedItem) && (
+              <button
+                type="button"
+                id="btn-details-return-store-action"
+                onClick={() => {
+                  setIsDetailsModalOpen(false);
+                  openReturnToStore(selectedItem);
+                }}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Return to Store</span>
+              </button>
+            )}
+
+            {/* Edit Item */}
+            {!isHandedOver && !selectedItem.isDeleted && hasPermission('edit') && (
+              <button
+                type="button"
+                id="btn-details-edit-action"
+                onClick={() => {
+                  setIsDetailsModalOpen(false);
+                  openEditItem(selectedItem);
+                }}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+              >
+                <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                <span>Edit</span>
+              </button>
+            )}
+
+            {/* Print Official Receipt / Summary Sheet */}
+            {hasPermission('print') && (
+              <button
+                type="button"
+                id="btn-details-print-action"
+                onClick={() => {
+                  openPrint(selectedItem, isHandedOver ? 'receipt' : 'report');
+                }}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5 text-slate-500" />
+                <span>{isHandedOver ? 'Print Receipt' : 'Print Document'}</span>
+              </button>
+            )}
+
+            {/* Delete Item to Trash */}
+            {!isHandedOver && !selectedItem.isDeleted && hasPermission('delete') && (
+              <button
+                type="button"
+                id="btn-details-delete-action"
+                onClick={() => {
+                  setIsDetailsModalOpen(false);
+                  openDelete(selectedItem);
+                }}
+                className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <span>Delete</span>
+              </button>
+            )}
+          </div>
+
           <button
             id="btn-close-details-footer"
             onClick={() => setIsDetailsModalOpen(false)}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-colors"
+            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
           >
             Close
           </button>

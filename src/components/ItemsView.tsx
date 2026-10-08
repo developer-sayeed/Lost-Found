@@ -401,8 +401,8 @@ export const ItemsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Staff Pending Approval Alert Banner for Admin/Manager/Supervisor */}
-      {isAdminTier && pendingApprovalsCount > 0 && (
+      {/* Staff Pending Approval Alert Banner for Admin/Manager/Supervisor or authorized edit staff */}
+      {(isAdminTier || hasPermission('edit')) && pendingApprovalsCount > 0 && (
         <div className="p-4 bg-amber-50 border border-amber-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs animate-fade-in">
           <div className="flex items-center space-x-3 rtl:space-x-reverse text-amber-900">
             <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
@@ -677,30 +677,35 @@ export const ItemsView: React.FC = () => {
               <span>Export ({selectedItemIds.length})</span>
             </button>
 
-            <button
-              onClick={() => {
-                const firstSelected = activeItems.find(i => i.id === selectedItemIds[0]);
-                if (firstSelected) openPrint(firstSelected);
-              }}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium rounded-xl border border-slate-700 transition-all shadow-xs"
-            >
-              <Printer className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Print First</span>
-            </button>
+            {/* Bulk Print Button */}
+            {hasPermission('print') && (
+              <button
+                onClick={() => {
+                  const firstSelected = activeItems.find(i => i.id === selectedItemIds[0]);
+                  if (firstSelected) openPrint(firstSelected);
+                }}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium rounded-xl border border-slate-700 transition-all shadow-xs cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Print First</span>
+              </button>
+            )}
 
             {/* Bulk Delete Button */}
-            <button
-              id="btn-bulk-delete-selected"
-              onClick={() => {
-                setBatchDeleteReason('');
-                setIsPermanentBatchDelete(false);
-                setIsBatchDeleteModalOpen(true);
-              }}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete Selected ({selectedItemIds.length})</span>
-            </button>
+            {hasPermission('delete') && (
+              <button
+                id="btn-bulk-delete-selected"
+                onClick={() => {
+                  setBatchDeleteReason('');
+                  setIsPermanentBatchDelete(false);
+                  setIsBatchDeleteModalOpen(true);
+                }}
+                className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Selected ({selectedItemIds.length})</span>
+              </button>
+            )}
 
             <button
               title="Clear selection"
@@ -921,8 +926,8 @@ export const ItemsView: React.FC = () => {
                       {/* Actions */}
                       <td className="py-3.5 px-5 text-right rtl:text-left whitespace-nowrap">
                         <div className="flex items-center justify-end rtl:justify-start space-x-1 rtl:space-x-reverse">
-                          {/* Pending Approval Actions for Admin Tier */}
-                          {(item.status === 'Pending Approval' || item.approvalStatus === 'pending') && isAdminTier && (
+                          {/* Pending Approval Actions for Admin Tier or authorized staff */}
+                          {(item.status === 'Pending Approval' || item.approvalStatus === 'pending') && (isAdminTier || hasPermission('edit')) && (
                             <>
                               <button
                                 id={`btn-items-approve-${item.id}`}
@@ -980,11 +985,11 @@ export const ItemsView: React.FC = () => {
 
                           {isStored && (
                             <>
-                              {isAdmin && hasPermission('handover') && (
+                              {hasPermission('handover') && (
                                 <button
                                   id={`btn-items-handover-${item.id}`}
                                   onClick={() => openHandover(item)}
-                                  title={t.handoverToGuest || 'Handover to Guest (Admin Only)'}
+                                  title={t.handoverToGuest || 'Handover to Guest'}
                                   className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
                                 >
                                   <HeartHandshake className="w-4 h-4" />
@@ -1004,7 +1009,7 @@ export const ItemsView: React.FC = () => {
                             </>
                           )}
 
-                          {isHandedOver && isAdmin && isWithinHandover24Hours(item) && (
+                          {isHandedOver && (isAdmin || hasPermission('handover')) && isWithinHandover24Hours(item) && (
                             <button
                               id={`btn-items-return-store-${item.id}`}
                               onClick={() => openReturnToStore(item)}
