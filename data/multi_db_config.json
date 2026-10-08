@@ -1,0 +1,113 @@
+{
+  "primaryEngine": "mongodb",
+  "replicationMode": "dual-write",
+  "realtimeSyncEnabled": true,
+  "autoFailoverEnabled": false,
+  "lastGlobalSyncAt": "2026-10-08T21:58:43.524Z",
+  "activeConnectionsCount": 1,
+  "totalReplicatedRecords": 116,
+  "averagePingMs": 154,
+  "databases": [
+    {
+      "id": "db-mongodb",
+      "name": "MongoDB Atlas",
+      "type": "mongodb",
+      "description": "Cloud-hosted real-time document database storing lost & found items, staff accounts, and inquiries with instant synchronization.",
+      "badge": "Real-Time Cloud DB",
+      "uri": "mongodb+srv://mdriday256:587710@cluster0.pfjdgng.mongodb.net/",
+      "host": "cluster0.pfjdgng.mongodb.net",
+      "port": 27017,
+      "dbName": "hotel",
+      "status": "connected",
+      "isPrimary": true,
+      "isEnabled": true,
+      "ssl": true,
+      "lastSyncAt": "2026-10-08T22:00:51.341Z",
+      "pingMs": 148,
+      "recordCounts": {
+        "items": 116,
+        "staff": 17,
+        "inquiries": 3,
+        "settings": 1,
+        "notifications": 0
+      }
+    },
+    {
+      "id": "db-firebase",
+      "name": "Firebase Firestore",
+      "type": "firestore",
+      "description": "Google Cloud real-time Firestore database with live snapshot subscriptions, multi-region synchronization, and cloud security rules.",
+      "badge": "Real-Time Cloud DB",
+      "uri": "https://warwick-hotel-baha.firebaseio.com",
+      "host": "firestore.googleapis.com",
+      "dbName": "warwick-baha-lostfound",
+      "projectId": "warwick-baha-live",
+      "apiKey": "",
+      "authDomain": "warwick-baha-live.firebaseapp.com",
+      "status": "disconnected",
+      "isPrimary": false,
+      "isEnabled": true,
+      "ssl": true,
+      "realtimeSyncEnabled": true
+    },
+    {
+      "id": "db-sql",
+      "name": "PostgreSQL Database",
+      "type": "postgresql",
+      "description": "High-performance cloud SQL database (PostgreSQL, Supabase, Neon, AWS RDS) with real-time replication and live sync capabilities.",
+      "badge": "Real-Time Cloud DB",
+      "uri": "",
+      "host": "aws-0-eu-central-1.pooler.supabase.com",
+      "port": 5432,
+      "dbName": "hotel_records",
+      "username": "postgres",
+      "schema": "public",
+      "status": "disconnected",
+      "isPrimary": false,
+      "isEnabled": true,
+      "ssl": true,
+      "realtimeSyncEnabled": true
+    },
+    {
+      "id": "db-redis",
+      "name": "Redis Cloud / Upstash",
+      "type": "redis",
+      "description": "Ultra-fast distributed real-time key-value database and pub/sub engine for live hotel operations.",
+      "badge": "Real-Time Cloud DB",
+      "uri": "",
+      "host": "us1-ready-redis.upstash.io",
+      "port": 6379,
+      "dbName": "warwick_cache",
+      "status": "disconnected",
+      "isPrimary": false,
+      "isEnabled": true,
+      "ssl": true
+    },
+    {
+      "id": "db-supabase",
+      "name": "Supabase (Real-Time Postgres)",
+      "type": "supabase",
+      "description": "Real-time PostgreSQL cloud database with instant websocket subscriptions, authentication, and REST APIs.",
+      "badge": "Real-Time Cloud DB",
+      "uri": "",
+      "host": "app.supabase.co",
+      "dbName": "postgres",
+      "apiKey": "",
+      "status": "disconnected",
+      "isPrimary": false,
+      "isEnabled": true,
+      "ssl": true
+    }
+  ],
+  "syncLogs": [
+    {
+      "id": "log-init-1",
+      "timestamp": "2026-10-08T21:58:43.524Z",
+      "action": "Database Manager Initialized",
+      "engine": "mongodb",
+      "status": "success",
+      "details": "Active connected database set to mongodb. Single active database mode enforced.",
+      "durationMs": 5
+    }
+  ]
+}
