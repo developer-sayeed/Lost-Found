@@ -1,11 +1,10 @@
-# Warwick Hotel Baha — Lost & Found Management Portal & Guest Claim Hub
+#  Hospitality industry Lost & Found Management Portal & Guest Claim Hub
 
 A modern, enterprise-grade Lost and Found Management Platform and Public Guest Claim Tracking System built for luxury hospitality, resorts, and modern facility operations.
 
 ---
 
-## 🎯 Target Audience — Who Is This For? (কাদের জন্য)
-
+## 🎯 Target Audience — Who Is This For? 
 This system is tailored for five distinct user groups involved in hotel operations and guest services:
 
 1. **Hotel Guests & Visitors (Hotel Guests & Customers)**:
@@ -36,7 +35,7 @@ This system is tailored for five distinct user groups involved in hotel operatio
 
 ---
 
-## 🌟 Key Features & Modules — What's Inside? (এই ওয়েবসাইটে কি কি আছে)
+## 🌟 Key Features & Modules — What's Inside? 
 
 ### 1. 🏨 Public Guest Portal & Claim Tracking
 - **Public Found Catalog**: Browse categorized, non-sensitive descriptions of recovered items.
