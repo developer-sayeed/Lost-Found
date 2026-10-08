@@ -309,20 +309,20 @@ export const DatabaseHealthIndicator: React.FC = () => {
               </button>
             </div>
 
-            {/* If Admin: Link to Multi-Database Architecture */}
+            {/* If Admin: Link to Database Settings */}
             {isAdmin && (
               <button
                 type="button"
-                id="btn-goto-multi-db"
+                id="btn-goto-database-settings"
                 onClick={() => {
                   setIsOpen(false);
-                  setActiveTab('databases');
+                  setActiveTab('settings');
                 }}
                 className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-semibold rounded-xl border border-slate-200 transition-colors cursor-pointer"
               >
                 <span className="flex items-center space-x-1.5">
                   <Server className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Manage Multi-Database Cluster</span>
+                  <span>Open Database Settings</span>
                 </span>
                 <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
               </button>
