@@ -121,7 +121,8 @@ export const DashboardView: React.FC = () => {
     openItemQrModal,
     openReturnToStore
   } = useApp();
-  const { user, isAdmin, hasPermission } = useAuth();
+  const { user, isAdmin, hasPermission, isSuperAdmin, previewRole } = useAuth();
+  const isMasterAdmin = isSuperAdmin && !previewRole;
   const { t, isRTL, translateCategory, translateStatus } = useLanguage();
 
   // Dynamic time-based greeting calculation (Morning / Afternoon / Evening / Night)
@@ -748,7 +749,7 @@ export const DashboardView: React.FC = () => {
                             )}
                           </>
                         )}
-                        {isHandedOver && (isAdmin || hasPermission('handover')) && isWithinHandover24Hours(item) && (
+                        {isHandedOver && (isMasterAdmin || hasPermission('handover')) && isWithinHandover24Hours(item) && (
                           <button
                             id={`btn-dashboard-return-store-${item.id}`}
                             onClick={() => openReturnToStore(item)}

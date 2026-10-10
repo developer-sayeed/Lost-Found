@@ -226,7 +226,7 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-950 flex flex-col overflow-y-auto animate-fade-in print:bg-white print:static print:inset-auto print:overflow-visible">
+    <div className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-950 flex flex-col overflow-y-auto animate-fade-in print:bg-white print:static print:inset-auto print:overflow-visible">
       {/* Print specific styles */}
       <style>{`
         @media print {
@@ -294,14 +294,14 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
       `}</style>
 
       {/* Top Action Bar (Hidden during print) */}
-      <div className="no-print sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-3 sm:px-6 py-2.5 sm:py-3 shadow-xl">
+      <div className="no-print sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2.5 sm:py-3 shadow-md dark:shadow-xl">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
           {/* Left: Back button & Certificate info */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={onBack}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-xs shrink-0"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 shadow-xs shrink-0 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back</span>
@@ -309,38 +309,38 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
 
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 truncate">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30 shrink-0">
                   {certificate.certificateNumber || 'PRINT'}
                 </span>
-                <span className="text-xs font-bold text-white truncate max-w-[140px] xs:max-w-[200px] sm:max-w-md">
+                <span className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[140px] xs:max-w-[200px] sm:max-w-md">
                   {certificate.recipientName}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
                 Landscape A4 Ready • {certificate.title}
               </p>
             </div>
           </div>
 
           {/* Center: Zoom Controls (Responsive for mobile & desktop) */}
-          <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-slate-300">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
             <button
               type="button"
               onClick={() => setManualZoom(Math.max(0.3, Math.round((currentScale - 0.1) * 10) / 10))}
-              className="p-1 rounded-lg hover:bg-slate-700 hover:text-white transition"
+              className="p-1 rounded-lg hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-white transition cursor-pointer"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
 
-            <span className="text-[11px] sm:text-xs font-mono font-bold px-1 sm:px-2 min-w-[42px] text-center text-slate-200">
+            <span className="text-[11px] sm:text-xs font-mono font-bold px-1 sm:px-2 min-w-[42px] text-center text-slate-800 dark:text-slate-200">
               {Math.round(currentScale * 100)}%
             </span>
 
             <button
               type="button"
               onClick={() => setManualZoom(Math.min(1.4, Math.round((currentScale + 0.1) * 10) / 10))}
-              className="p-1 rounded-lg hover:bg-slate-700 hover:text-white transition"
+              className="p-1 rounded-lg hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-white transition cursor-pointer"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
@@ -349,8 +349,8 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
             <button
               type="button"
               onClick={() => setManualZoom(null)}
-              className={`px-1.5 py-0.5 text-[10px] font-semibold rounded transition ${
-                manualZoom === null ? 'bg-amber-500 text-slate-950 font-bold' : 'text-amber-400 hover:bg-slate-700'
+              className={`px-1.5 py-0.5 text-[10px] font-semibold rounded transition cursor-pointer ${
+                manualZoom === null ? 'bg-amber-500 text-slate-950 font-bold' : 'text-amber-700 dark:text-amber-400 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
               title="Fit to Screen"
             >
@@ -360,8 +360,8 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
             <button
               type="button"
               onClick={() => setManualZoom(1)}
-              className={`hidden xs:inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded transition ${
-                manualZoom === 1 ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:bg-slate-700'
+              className={`hidden xs:inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded transition cursor-pointer ${
+                manualZoom === 1 ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
               title="Actual Size"
             >
@@ -375,7 +375,7 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
               type="button"
               onClick={handlePrintNow}
               disabled={isPrintingNow}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs transition flex items-center gap-1.5 shadow-lg shadow-amber-500/25 active:scale-95 disabled:opacity-50"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {isPrintingNow ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
               <span className="hidden xs:inline">Direct Print</span>
@@ -385,10 +385,10 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
             <button
               type="button"
               onClick={handleOpenCleanPrintTab}
-              className="hidden sm:inline-flex px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition items-center gap-1.5 border border-slate-700 shadow-xs"
+              className="hidden sm:inline-flex px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold transition items-center gap-1.5 border border-slate-200 dark:border-slate-700 shadow-xs cursor-pointer"
               title="Open pure printable HTML in dedicated tab"
             >
-              <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
+              <ExternalLink className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>Clean Tab</span>
             </button>
 
@@ -398,10 +398,10 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
                   type="button"
                   onClick={handleDownloadPdf}
                   disabled={isExportingPdf}
-                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1 border border-slate-700 shadow-xs disabled:opacity-50"
+                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold transition flex items-center gap-1 border border-slate-200 dark:border-slate-700 shadow-xs disabled:opacity-50 cursor-pointer"
                   title="Download Landscape A4 PDF"
                 >
-                  <FileText className="w-3.5 h-3.5 text-red-400" />
+                  <FileText className="w-3.5 h-3.5 text-red-500" />
                   <span>PDF</span>
                 </button>
 
@@ -409,10 +409,10 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
                   type="button"
                   onClick={handleDownloadPng}
                   disabled={isExportingPng}
-                  className="hidden xs:inline-flex px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition items-center gap-1 border border-slate-700 shadow-xs disabled:opacity-50"
+                  className="hidden xs:inline-flex px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-semibold transition items-center gap-1 border border-slate-200 dark:border-slate-700 shadow-xs disabled:opacity-50 cursor-pointer"
                   title="Download High-Res PNG"
                 >
-                  <Download className="w-3.5 h-3.5 text-amber-400" />
+                  <Download className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   <span>PNG</span>
                 </button>
               </>
@@ -422,8 +422,8 @@ export const CertificatePrintPage: React.FC<CertificatePrintPageProps> = ({
       </div>
 
       {/* Helpful Hint Ribbon (Hidden during print) */}
-      <div className="no-print bg-amber-500/10 border-b border-amber-500/20 px-3 py-1.5 sm:py-2 text-center text-[11px] sm:text-xs text-amber-300 flex items-center justify-center gap-1.5">
-        <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+      <div className="no-print bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20 px-3 py-1.5 sm:py-2 text-center text-[11px] sm:text-xs text-amber-900 dark:text-amber-300 flex items-center justify-center gap-1.5">
+        <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
         <span className="truncate">
           Set Destination to <strong>Save as PDF</strong> or Color Printer • Layout: <strong>Landscape</strong> • Margins: <strong>None</strong>
         </span>

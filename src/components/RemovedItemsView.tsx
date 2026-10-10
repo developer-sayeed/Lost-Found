@@ -37,7 +37,7 @@ export const RemovedItemsView: React.FC = () => {
     openItemDetails,
     setActiveTab
   } = useApp();
-  const { user, hasPermission } = useAuth();
+  const { user, hasPermission, isSuperAdmin, previewRole, effectiveRole } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -86,9 +86,9 @@ export const RemovedItemsView: React.FC = () => {
     if (!isProcessing) setIsEmptyTrashModalOpen(false);
   }, { active: isEmptyTrashModalOpen, closeOnEsc: true });
 
-  const isSuperAdmin = user?.role === 'Super Admin';
-  const hasRemovedItemsAccess = isSuperAdmin || hasPermission('removed_items');
-  const canManageTrash = isSuperAdmin || hasPermission('removed_items') || hasPermission('delete');
+  const isMasterAdmin = isSuperAdmin && !previewRole;
+  const hasRemovedItemsAccess = isMasterAdmin || hasPermission('removed_items');
+  const canManageTrash = isMasterAdmin || hasPermission('removed_items') || hasPermission('delete');
 
   if (!hasRemovedItemsAccess) {
     return (

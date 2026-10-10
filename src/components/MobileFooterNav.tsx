@@ -5,8 +5,8 @@ import {
   PlusCircle,
   Clock,
   User as UserIcon,
-  Layers,
-  Sparkles
+  Award,
+  TrendingUp
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -20,10 +20,16 @@ export const MobileFooterNav: React.FC = () => {
     openStaffProfile,
     selectedStaffProfile
   } = useApp();
-  const { user } = useAuth();
+  const { user, hasPermission, isSuperAdmin, previewRole } = useAuth();
   const { t } = useLanguage();
 
+  const isMasterAdmin = isSuperAdmin && !previewRole;
   const isProfileActive = activeTab === 'profile' && !selectedStaffProfile;
+  const canViewItems = isMasterAdmin || hasPermission('view');
+  const canAddItem = isMasterAdmin || hasPermission('create');
+  const canDispatch = isMasterAdmin || hasPermission('dispatch');
+  const canCertificates = isMasterAdmin || hasPermission('certificates_view') || hasPermission('certificates');
+  const canPerformance = isMasterAdmin || hasPermission('performance');
 
   return (
     <nav
@@ -49,57 +55,111 @@ export const MobileFooterNav: React.FC = () => {
           <span className="text-[10px] tracking-tight">{t.dashboard}</span>
         </button>
 
-        {/* 2. Items List */}
-        <button
-          id="btn-mobile-nav-items"
-          type="button"
-          onClick={() => {
-            setActiveTab('items');
-          }}
-          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-            activeTab === 'items'
-              ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <Package className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px] tracking-tight">{t.totalItems}</span>
-        </button>
+        {/* 2. Items List (if permitted) */}
+        {canViewItems && (
+          <button
+            id="btn-mobile-nav-items"
+            type="button"
+            onClick={() => {
+              setActiveTab('items');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+              activeTab === 'items'
+                ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Package className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">{t.totalItems}</span>
+          </button>
+        )}
 
-        {/* 3. Center Highlighted Action: Add Item */}
-        <button
-          id="btn-mobile-nav-add-item"
-          type="button"
-          onClick={() => {
-            setIsAddModalOpen(true);
-          }}
-          className="flex flex-col items-center justify-center -mt-5 group"
-          title={t.addItem}
-        >
-          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-105 active:scale-95 transition-all border-4 border-white dark:border-slate-900">
-            <PlusCircle className="w-6 h-6" />
-          </div>
-          <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
-            {t.addItem}
-          </span>
-        </button>
+        {/* 3. Center Highlighted Action: Add Item (only if create permission granted) */}
+        {canAddItem ? (
+          <button
+            id="btn-mobile-nav-add-item"
+            type="button"
+            onClick={() => {
+              setIsAddModalOpen(true);
+            }}
+            className="flex flex-col items-center justify-center -mt-5 group"
+            title={t.addItem}
+          >
+            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-105 active:scale-95 transition-all border-4 border-white dark:border-slate-900">
+              <PlusCircle className="w-6 h-6" />
+            </div>
+            <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+              {t.addItem}
+            </span>
+          </button>
+        ) : canCertificates ? (
+          <button
+            id="btn-mobile-nav-certificates"
+            type="button"
+            onClick={() => {
+              setActiveTab('certificates');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+              activeTab === 'certificates'
+                ? 'text-amber-600 dark:text-amber-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Award className="w-5 h-5 mb-0.5 text-amber-500" />
+            <span className="text-[10px] tracking-tight">Awards</span>
+          </button>
+        ) : null}
 
-        {/* 4. Pending Dispatch */}
-        <button
-          id="btn-mobile-nav-dispatch"
-          type="button"
-          onClick={() => {
-            setActiveTab('dispatch');
-          }}
-          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-            activeTab === 'dispatch'
-              ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <Clock className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px] tracking-tight">{t.dispatch}</span>
-        </button>
+        {/* 4. Secondary Action: Dispatch, Performance, or Certificates */}
+        {canDispatch ? (
+          <button
+            id="btn-mobile-nav-dispatch"
+            type="button"
+            onClick={() => {
+              setActiveTab('dispatch');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+              activeTab === 'dispatch'
+                ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Clock className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">{t.dispatch}</span>
+          </button>
+        ) : canPerformance ? (
+          <button
+            id="btn-mobile-nav-performance"
+            type="button"
+            onClick={() => {
+              setActiveTab('performance');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+              activeTab === 'performance'
+                ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <TrendingUp className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">{t.performance}</span>
+          </button>
+        ) : canCertificates && canAddItem ? (
+          <button
+            id="btn-mobile-nav-certificates-sec"
+            type="button"
+            onClick={() => {
+              setActiveTab('certificates');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+              activeTab === 'certificates'
+                ? 'text-amber-600 dark:text-amber-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Award className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">Awards</span>
+          </button>
+        ) : null}
 
         {/* 5. User Profile */}
         <button

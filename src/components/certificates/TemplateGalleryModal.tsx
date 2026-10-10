@@ -381,28 +381,28 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 dark:bg-slate-950/85 backdrop-blur-xs animate-fade-in"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !editingTemplate && !deleteConfirmTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-slate-900 text-white rounded-2xl max-w-6xl w-full shadow-2xl border border-slate-800 overflow-hidden flex flex-col max-h-[94vh]">
+      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl max-w-6xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[94vh]">
         {/* Header */}
-        <div className="p-5 px-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-4">
+        <div className="p-5 px-6 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 flex items-center justify-center text-slate-950 shadow-md">
               <Crown className="w-6 h-6 text-slate-950" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-bold text-lg text-white">5-Star Certificate Template Gallery</h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white">5-Star Certificate Template Gallery</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-400/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-400/30">
                   25 Distinct Presets & Custom Templates
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Each preset has distinct luxury borders, typography, colors, and signatures. You can customize, edit, or delete any template.
               </p>
             </div>
@@ -444,7 +444,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                 });
                 setEditingTemplate({ isNew: true });
               }}
-              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Create Template</span>
@@ -453,7 +453,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
             <button
               id="btn-close-template-gallery"
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+              className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -461,7 +461,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
         </div>
 
         {/* Search & Category Filter Bar */}
-        <div className="bg-slate-900/95 border-b border-slate-800 px-6 py-3 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className="bg-white dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search Box */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -470,13 +470,13 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by preset name, title, department..."
-              className="w-full pl-9 pr-4 py-1.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+              className="w-full pl-9 pr-4 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -484,17 +484,17 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
           </div>
 
           {/* Categories */}
-          <div className="flex items-center gap-1.5 overflow-x-auto py-1">
-            <Filter className="w-3.5 h-3.5 text-amber-400 shrink-0 mr-1" />
+          <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
+            <Filter className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0 mr-1" />
             {categories.map((cat) => (
               <button
                 key={cat.key}
                 type="button"
                 onClick={() => setSelectedCategory(cat.key)}
-                className={`px-3 py-1 rounded-lg text-[11px] font-semibold shrink-0 transition-all ${
+                className={`px-3 py-1 rounded-lg text-[11px] font-semibold shrink-0 transition-all cursor-pointer ${
                   selectedCategory === cat.key
-                    ? 'bg-amber-500 text-slate-950 shadow-xs'
-                    : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs font-bold'
+                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {cat.label}
@@ -504,11 +504,11 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
         </div>
 
         {/* Templates Grid */}
-        <div className="flex-1 p-6 overflow-y-auto bg-slate-900/60">
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50/70 dark:bg-slate-900/60">
           {filteredPresets.length === 0 ? (
-            <div className="py-20 text-center text-slate-400 space-y-3">
-              <Award className="w-12 h-12 text-slate-600 mx-auto" />
-              <h4 className="text-sm font-semibold text-slate-300">No matching templates found</h4>
+            <div className="py-20 text-center text-slate-500 dark:text-slate-400 space-y-3">
+              <Award className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto" />
+              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No matching templates found</h4>
               <p className="text-xs">Try clearing your search query or selecting another category filter.</p>
               <button
                 type="button"
@@ -516,7 +516,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                   setSearchQuery('');
                   setSelectedCategory('all');
                 }}
-                className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-400 inline-flex items-center gap-1.5"
+                className="px-4 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-semibold text-amber-700 dark:text-amber-400 inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset Filters</span>
@@ -531,11 +531,11 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                 return (
                   <div
                     key={preset.id}
-                    className="bg-slate-800/90 rounded-2xl border border-slate-700 hover:border-amber-400/60 transition-all duration-200 overflow-hidden flex flex-col group shadow-lg hover:shadow-amber-500/5"
+                    className="bg-white dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-amber-500/60 dark:hover:border-amber-400/60 transition-all duration-200 overflow-hidden flex flex-col group shadow-sm hover:shadow-md"
                   >
                     {/* Thumbnail Stage */}
                     <div
-                      className="relative h-[220px] bg-slate-950 overflow-hidden flex items-center justify-center p-3 cursor-pointer group-hover:brightness-105 transition-all"
+                      className="relative h-[220px] bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center p-3 cursor-pointer group-hover:brightness-105 transition-all"
                       onClick={() => setInspectingPreset(preset)}
                     >
                       <div
@@ -560,8 +560,8 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
 
                       {/* Floating Badge Tag */}
                       <div className="absolute top-3 left-3 z-20">
-                        <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-900/90 text-amber-300 border border-amber-400/40 shadow-xs backdrop-blur-xs flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-amber-400" />
+                        <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white/95 dark:bg-slate-900/90 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-400/40 shadow-xs backdrop-blur-xs flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                           {preset.badgeLabel}
                         </span>
                       </div>
@@ -570,8 +570,8 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                       <div className="absolute top-3 right-3 z-20">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-semibold backdrop-blur-xs ${
                           isCustom
-                            ? 'bg-purple-900/90 text-purple-300 border border-purple-700'
-                            : 'bg-slate-800/90 text-slate-300 border border-slate-700'
+                            ? 'bg-purple-100 dark:bg-purple-900/90 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700'
+                            : 'bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                         }`}>
                           {isCustom ? 'Custom' : preset.category}
                         </span>
@@ -579,8 +579,8 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
 
                       {/* Inspect Overlay Prompt */}
                       <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                        <span className="px-3 py-1.5 rounded-xl bg-slate-900/90 text-white text-xs font-semibold shadow-md flex items-center gap-1.5 border border-slate-700">
-                          <Eye className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="px-3 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-white text-xs font-semibold shadow-md flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+                          <Eye className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                           Click to Inspect Full-Size
                         </span>
                       </div>
@@ -590,28 +590,28 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                     <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                       <div className="space-y-1.5">
                         <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-bold text-sm text-white group-hover:text-amber-300 transition-colors line-clamp-1">
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors line-clamp-1">
                             {preset.name}
                           </h4>
                         </div>
-                        <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                           {preset.description}
                         </p>
 
                         {/* Best Suited For */}
-                        <div className="p-2 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px]">
-                          <span className="font-semibold text-amber-400 block text-[10px]">Best Suited For:</span>
-                          <span className="text-slate-300 line-clamp-1">{preset.bestSuitedFor}</span>
+                        <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-[11px]">
+                          <span className="font-semibold text-amber-700 dark:text-amber-400 block text-[10px]">Best Suited For:</span>
+                          <span className="text-slate-600 dark:text-slate-300 line-clamp-1">{preset.bestSuitedFor}</span>
                         </div>
                       </div>
 
                       {/* Action Bar: Edit, Delete, Preview, Use */}
-                      <div className="pt-2 border-t border-slate-700/60 flex items-center gap-2">
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
                         {/* Edit Template Button */}
                         <button
                           type="button"
                           onClick={() => handleStartEdit(preset)}
-                          className="p-2 text-slate-300 hover:text-amber-400 rounded-xl hover:bg-slate-700 transition"
+                          className="p-2 text-slate-500 hover:text-amber-600 dark:text-slate-300 dark:hover:text-amber-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
                           title="Edit Template Properties & Layout"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -627,7 +627,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                               isCustom
                             })
                           }
-                          className="p-2 text-slate-400 hover:text-red-400 rounded-xl hover:bg-slate-700 transition"
+                          className="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
                           title={isCustom ? 'Delete custom template permanently' : 'Remove preset from gallery'}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -636,7 +636,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setInspectingPreset(preset)}
-                          className="px-2.5 py-1.5 text-slate-300 hover:text-white rounded-xl hover:bg-slate-700 text-xs flex items-center gap-1 transition"
+                          className="px-2.5 py-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-xs flex items-center gap-1 transition cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Preview</span>
@@ -648,7 +648,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                             onSelectPreset(preset);
                             onClose();
                           }}
-                          className="flex-1 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5"
+                          className="flex-1 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <span>Use Preset</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -663,15 +663,15 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 px-6 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 px-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             Showing {filteredPresets.length} of {allAvailablePresets.length} luxury hotel certificate presets
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="px-4 py-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             Close Gallery
           </button>
@@ -681,17 +681,17 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
       {/* Full-Screen Inspector Modal - Responsive Mobile Optimized */}
       {inspectingPreset && (
         <div
-          className="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-4 bg-slate-900/70 dark:bg-black/90 backdrop-blur-md animate-fade-in"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setInspectingPreset(null);
           }}
         >
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-full max-h-[98vh] sm:max-h-[96vh] flex flex-col overflow-hidden shadow-2xl">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-5xl w-full max-h-[98vh] sm:max-h-[96vh] flex flex-col overflow-hidden shadow-2xl">
             {/* Header */}
-            <div className="p-3 sm:px-6 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-2.5">
+            <div className="p-3 sm:px-6 py-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2.5">
               <div className="min-w-0 flex-1">
-                <h4 className="font-bold text-white text-xs sm:text-sm truncate">{inspectingPreset.name}</h4>
-                <p className="text-[11px] text-amber-400 truncate">{inspectingPreset.subtitle}</p>
+                <h4 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate">{inspectingPreset.name}</h4>
+                <p className="text-[11px] text-amber-700 dark:text-amber-400 truncate">{inspectingPreset.subtitle}</p>
               </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -701,10 +701,10 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                     handleStartEdit(inspectingPreset);
                     setInspectingPreset(null);
                   }}
-                  className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1 border border-slate-700"
+                  className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-1 border border-slate-200 dark:border-slate-700 cursor-pointer"
                   title="Customize Preset"
                 >
-                  <Edit2 className="w-3.5 h-3.5 text-amber-400" />
+                  <Edit2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   <span className="hidden xs:inline">Edit Template</span>
                 </button>
 
@@ -715,7 +715,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                     setInspectingPreset(null);
                     onClose();
                   }}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                   <span>Use Preset</span>
@@ -724,7 +724,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setInspectingPreset(null)}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800"
+                  className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                   aria-label="Close"
                 >
                   <X className="w-5 h-5" />
@@ -733,7 +733,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
             </div>
 
             {/* Stage Body */}
-            <div className="flex-1 p-2 sm:p-6 overflow-y-auto flex flex-col items-center justify-start bg-slate-950 min-h-0">
+            <div className="flex-1 p-2 sm:p-6 overflow-y-auto flex flex-col items-center justify-start bg-slate-100 dark:bg-slate-950 min-h-0">
               <CertificatePreviewStage
                 cert={getSampleCertificate(inspectingPreset)}
                 idPrefix="inspect-preview"
@@ -747,23 +747,23 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
       {/* Edit Template Modal Sheet */}
       {editingTemplate && (
         <div
-          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/70 dark:bg-black/85 backdrop-blur-md animate-fade-in"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setEditingTemplate(null);
           }}
         >
-          <div className="bg-slate-900 border border-slate-800 text-white rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="p-4 px-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+            <div className="p-4 px-6 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center border border-amber-300 dark:border-amber-500/30">
                   <Edit2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-white">
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">
                     {editingTemplate.isNew ? 'Create New Hotel Certificate Template' : `Edit Template: ${editForm.name}`}
                   </h4>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Customize titles, default citation text, colors, border style, and signatures
                   </p>
                 </div>
@@ -772,7 +772,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
               <button
                 type="button"
                 onClick={() => setEditingTemplate(null)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -783,22 +783,22 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
               {/* Name & Category */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="font-semibold text-slate-300 block mb-1">Template Name *</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Template Name *</label>
                   <input
                     type="text"
                     value={editForm.name}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                     placeholder="e.g. Front Desk Excellence Honor"
                   />
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-300 block mb-1">Category</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Category</label>
                   <select
                     value={editForm.category}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="Recognition & Appreciation">Recognition & Appreciation</option>
                     <option value="Monthly & Annual Awards">Monthly & Annual Awards</option>
@@ -815,23 +815,23 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
               {/* Default Title & Presentation Text */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="font-semibold text-slate-300 block mb-1">Award Certificate Title</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Award Certificate Title</label>
                   <input
                     type="text"
                     value={editForm.defaultTitle}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, defaultTitle: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500 font-serif"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 font-serif"
                     placeholder="e.g. CERTIFICATE OF APPRECIATION"
                   />
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-300 block mb-1">Presentation Header</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Presentation Header</label>
                   <input
                     type="text"
                     value={editForm.defaultPresentationText}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, defaultPresentationText: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                     placeholder="e.g. THIS CERTIFICATE IS PROUDLY PRESENTED TO"
                   />
                 </div>
@@ -839,50 +839,50 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
 
               {/* Default Citation */}
               <div>
-                <label className="font-semibold text-slate-300 block mb-1">Default Citation / Recognition Statement</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Default Citation / Recognition Statement</label>
                 <textarea
                   rows={3}
                   value={editForm.defaultCitation}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, defaultCitation: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500 leading-relaxed font-serif"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 leading-relaxed font-serif"
                   placeholder="In sincere appreciation of outstanding dedication and hospitality service..."
                 />
               </div>
 
               {/* Visual Colors & Border Style */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800">
                 <div>
-                  <label className="font-semibold text-slate-400 block mb-1 text-[11px]">Primary Navy/Dark</label>
+                  <label className="font-semibold text-slate-600 dark:text-slate-400 block mb-1 text-[11px]">Primary Navy/Dark</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={editForm.primaryColor}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, primaryColor: e.target.value }))}
-                      className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                      className="w-8 h-8 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer"
                     />
-                    <span className="font-mono text-[11px] text-slate-300">{editForm.primaryColor}</span>
+                    <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">{editForm.primaryColor}</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-400 block mb-1 text-[11px]">Gold/Accent Color</label>
+                  <label className="font-semibold text-slate-600 dark:text-slate-400 block mb-1 text-[11px]">Gold/Accent Color</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={editForm.accentColor}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, accentColor: e.target.value, borderColor: e.target.value }))}
-                      className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                      className="w-8 h-8 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer"
                     />
-                    <span className="font-mono text-[11px] text-slate-300">{editForm.accentColor}</span>
+                    <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">{editForm.accentColor}</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-400 block mb-1 text-[11px]">Border Style</label>
+                  <label className="font-semibold text-slate-600 dark:text-slate-400 block mb-1 text-[11px]">Border Style</label>
                   <select
                     value={editForm.borderStyle}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, borderStyle: e.target.value as CertificateBorderStyle }))}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                   >
                     <option value="ornate_gold">Ornate 24K Gold</option>
                     <option value="baroque_filigree">Baroque Filigree</option>
@@ -900,11 +900,11 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
               {/* Seal & Font Style */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="font-semibold text-slate-300 block mb-1">Medallion / Seal Badge</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Medallion / Seal Badge</label>
                   <select
                     value={editForm.badgeStyle}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, badgeStyle: e.target.value as CertificateBadgeStyle }))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="gold_seal">24K Embossed Gold Seal</option>
                     <option value="rosette">Pleated Rosette Ribbon</option>
@@ -916,11 +916,11 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-300 block mb-1">Typography Font Family</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Typography Font Family</label>
                   <select
                     value={editForm.fontFamily}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, fontFamily: e.target.value as any }))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="Playfair Display">Playfair Display (Timeless Serif)</option>
                     <option value="Cinzel">Cinzel (Roman Imperial Capital)</option>
@@ -930,25 +930,25 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
               </div>
 
               {/* Signatories */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <div>
-                  <label className="font-semibold text-slate-300 block mb-1">Left Signatory Title</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Left Signatory Title</label>
                   <input
                     type="text"
                     value={editForm.signatoryLeftTitle}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, signatoryLeftTitle: e.target.value }))}
-                    className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                     placeholder="e.g. Human Resources Director"
                   />
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-300 block mb-1">Right Signatory Title</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Right Signatory Title</label>
                   <input
                     type="text"
                     value={editForm.signatoryRightTitle}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, signatoryRightTitle: e.target.value }))}
-                    className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                     placeholder="e.g. General Manager"
                   />
                 </div>
@@ -956,11 +956,11 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 px-6 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+            <div className="p-4 px-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setEditingTemplate(null)}
-                className="px-4 py-2 text-slate-300 hover:text-white rounded-xl hover:bg-slate-800 transition"
+                className="px-4 py-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -968,7 +968,7 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
               <button
                 type="button"
                 onClick={handleSaveEditedTemplate}
-                className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center gap-1.5"
+                className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 <span>Save Template</span>
@@ -980,20 +980,20 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmTarget && (
-        <div className="fixed inset-0 z-80 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 text-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div className="w-11 h-11 rounded-full bg-red-950/50 border border-red-800 text-red-400 flex items-center justify-center mx-auto">
+        <div className="fixed inset-0 z-80 flex items-center justify-center p-4 bg-slate-900/70 dark:bg-black/80 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="w-11 h-11 rounded-full bg-red-100 dark:bg-red-950/50 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
               <Trash2 className="w-5 h-5" />
             </div>
 
             <div className="text-center space-y-1">
-              <h4 className="font-bold text-base text-white">
+              <h4 className="font-bold text-base text-slate-900 dark:text-white">
                 Delete "{deleteConfirmTarget.name}"?
               </h4>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {deleteConfirmTarget.isCustom
                   ? 'This custom certificate template will be permanently removed from your database.'
-                  : 'This preset will be hidden from your active template gallery. You can restore it anytime with "Restore All Presets".'}
+                  : 'This preset will be hidden from your active template gallery. You can restore it anytime.'}
               </p>
             </div>
 
@@ -1001,14 +1001,14 @@ export const TemplateGalleryModal: React.FC<TemplateGalleryModalProps> = ({
               <button
                 type="button"
                 onClick={() => setDeleteConfirmTarget(null)}
-                className="flex-1 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
+                className="flex-1 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleDeleteTemplate}
-                className="flex-1 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition shadow-xs"
+                className="flex-1 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition shadow-xs cursor-pointer"
               >
                 Confirm Delete
               </button>

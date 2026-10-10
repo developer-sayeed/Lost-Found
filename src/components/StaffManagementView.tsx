@@ -176,7 +176,7 @@ const ROLE_META: Record<UserRole, {
 
 export const StaffManagementView: React.FC = () => {
   const { staff, items, setIsStaffModalOpen, setEditingStaff, updateStaff, deleteStaff, openStaffProfile, settings, updateSettings } = useApp();
-  const { user, hasPermission } = useAuth();
+  const { user, hasPermission, previewRole, setPreviewRole, effectiveRole } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('All');
@@ -279,6 +279,8 @@ export const StaffManagementView: React.FC = () => {
   const [matrixSearch, setMatrixSearch] = useState('');
   const [matrixCategoryFilter, setMatrixCategoryFilter] = useState<string>('All');
   const [isMatrixExpanded, setIsMatrixExpanded] = useState(true);
+  const [matrixLayout, setMatrixLayout] = useState<'cards' | 'table'>('cards');
+  const [activeMobileRole, setActiveMobileRole] = useState<UserRole>('Employee');
   const [staffOverrideFilter, setStaffOverrideFilter] = useState<'All' | 'Custom' | 'Default'>('All');
   const [staffPermSearch, setStaffPermSearch] = useState('');
   const [staffRoleFilterInPerms, setStaffRoleFilterInPerms] = useState('All');
@@ -320,9 +322,12 @@ export const StaffManagementView: React.FC = () => {
       ? currentPerms.filter(p => p !== permId)
       : [...currentPerms, permId];
 
-    const currentMap = settings?.rolePermissions || {};
-    const updatedRolePermissions: Partial<Record<UserRole, PermissionKey[]>> = {
-      ...currentMap,
+    const baseMap: Record<UserRole, PermissionKey[]> = {
+      ...DEFAULT_ROLE_PERMISSIONS,
+      ...(settings?.rolePermissions || {})
+    };
+    const updatedRolePermissions: Record<UserRole, PermissionKey[]> = {
+      ...baseMap,
       [role]: newPerms
     };
 
@@ -345,9 +350,12 @@ export const StaffManagementView: React.FC = () => {
   // Grant all permissions for a specific role
   const handleGrantAllForRole = async (role: UserRole) => {
     if (!canManageAccess) return;
-    const currentMap = settings?.rolePermissions || {};
-    const updatedRolePermissions: Partial<Record<UserRole, PermissionKey[]>> = {
-      ...currentMap,
+    const baseMap: Record<UserRole, PermissionKey[]> = {
+      ...DEFAULT_ROLE_PERMISSIONS,
+      ...(settings?.rolePermissions || {})
+    };
+    const updatedRolePermissions: Record<UserRole, PermissionKey[]> = {
+      ...baseMap,
       [role]: ALL_PERMISSIONS.map(p => p.id)
     };
     setIsSavingMatrix(true);
@@ -364,9 +372,12 @@ export const StaffManagementView: React.FC = () => {
   // Revoke all permissions for a specific role
   const handleRevokeAllForRole = async (role: UserRole) => {
     if (!canManageAccess) return;
-    const currentMap = settings?.rolePermissions || {};
-    const updatedRolePermissions: Partial<Record<UserRole, PermissionKey[]>> = {
-      ...currentMap,
+    const baseMap: Record<UserRole, PermissionKey[]> = {
+      ...DEFAULT_ROLE_PERMISSIONS,
+      ...(settings?.rolePermissions || {})
+    };
+    const updatedRolePermissions: Record<UserRole, PermissionKey[]> = {
+      ...baseMap,
       [role]: []
     };
     setIsSavingMatrix(true);
@@ -383,11 +394,14 @@ export const StaffManagementView: React.FC = () => {
   // Reset a specific role back to standard default
   const handleResetRoleToDefault = async (role: UserRole) => {
     if (!canManageAccess) return;
-    const currentMap = { ...(settings?.rolePermissions || {}) };
-    delete currentMap[role];
+    const baseMap: Record<UserRole, PermissionKey[]> = {
+      ...DEFAULT_ROLE_PERMISSIONS,
+      ...(settings?.rolePermissions || {})
+    };
+    baseMap[role] = DEFAULT_ROLE_PERMISSIONS[role] || [];
     setIsSavingMatrix(true);
     try {
-      await updateSettings({ rolePermissions: currentMap });
+      await updateSettings({ rolePermissions: baseMap });
       toast.success(`Reset role "${role}" to standard baseline defaults.`);
     } catch (err: any) {
       toast.error(err.message || 'Failed to reset role');
@@ -1557,22 +1571,80 @@ export const StaffManagementView: React.FC = () => {
 
             {isMatrixExpanded && (
               <div className="p-4 sm:p-6 space-y-4">
+                {/* Live Role Simulation Bar */}
+                {canManageAccess && (
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-indigo-900/50 shadow-xs">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 border border-indigo-400/30">
+                          <Eye className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white flex items-center gap-2 flex-wrap">
+                            <span>Live Role Simulator &amp; Real-Time Tester</span>
+                            {previewRole ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-amber-400 text-slate-950 font-black animate-pulse">
+                                Simulating: {previewRole}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                                Normal Admin Mode
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            Click any role to test the entire portal (sidebar, buttons &amp; modules) as that role in real time.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewRole(null)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                            previewRole === null
+                              ? 'bg-white text-slate-900 shadow-xs'
+                              : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                          }`}
+                        >
+                          Actual User
+                        </button>
+                        {SYSTEM_ROLES.map(r => (
+                          <button
+                            key={`sim-${r}`}
+                            type="button"
+                            onClick={() => setPreviewRole(previewRole === r ? null : r)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                              previewRole === r
+                                ? 'bg-amber-400 text-slate-950 shadow-md ring-2 ring-amber-300'
+                                : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                            }`}
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Admin Guidance / Tip Banner */}
                 <div className="flex items-center justify-between p-2.5 px-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 text-xs text-indigo-900">
                   <div className="flex items-center space-x-2">
                     <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
                     <span>
-                      <strong>Interactive Permission Matrix:</strong> Administrators can mark or unmark any function for any role. Click any checkbox to toggle access, or use <strong>All</strong> / <strong>None</strong> on role headers.
+                      <strong>Interactive Permission Matrix:</strong> Administrators can mark or unmark any function for any role. Changes apply across the entire portal in real time.
                     </span>
                   </div>
                   {isSavingMatrix && (
                     <span className="text-[11px] font-bold text-indigo-600 animate-pulse flex items-center space-x-1 shrink-0 ml-2">
-                      <span>Saving...</span>
+                      <span>Syncing...</span>
                     </span>
                   )}
                 </div>
 
-                {/* Matrix Filter & Search Bar */}
+                {/* Matrix Filter, Search Bar & Layout Switcher */}
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                   <div className="relative flex-1 max-w-md">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 transform -translate-y-1/2" />
@@ -1604,177 +1676,386 @@ export const StaffManagementView: React.FC = () => {
                       ))}
                     </div>
 
-                    {/* Role Filter Dropdown */}
-                    <select
-                      value={matrixRoleFilter}
-                      onChange={e => setMatrixRoleFilter(e.target.value)}
-                      className="w-full sm:w-auto px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer min-h-[34px]"
-                    >
-                      <option value="All">All Roles Highlight</option>
-                      {SYSTEM_ROLES.map(r => (
-                        <option key={r} value={r}>{r}</option>
-                      ))}
-                    </select>
+                    {/* Layout Switcher (Mobile Role Cards vs Table View) */}
+                    <div className="flex items-center space-x-1 bg-white p-1 rounded-lg border border-slate-200 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setMatrixLayout('cards')}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                          matrixLayout === 'cards'
+                            ? 'bg-indigo-600 text-white shadow-2xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                        title="Touch-friendly role cards view (ideal for mobile)"
+                      >
+                        <span>📱 Cards</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMatrixLayout('table')}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                          matrixLayout === 'table'
+                            ? 'bg-indigo-600 text-white shadow-2xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                        title="Full multi-column matrix table"
+                      >
+                        <span>📊 Table</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Mobile horizontal swipe & sticky heading notice */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[11px] text-indigo-700 bg-indigo-50/90 px-3 py-1.5 rounded-lg border border-indigo-100 font-medium">
-                  <span className="flex items-center space-x-1.5">
-                    <span className="text-indigo-600 font-bold">📌 Sticky Headings Active:</span>
-                    <span>Role column headers remain sticky at top when scrolling down, and permission labels stay sticky on left when swiping horizontally.</span>
-                  </span>
-                  <span className="text-indigo-600 font-semibold text-[10px] hidden md:inline shrink-0">
-                    8 Roles • {filteredPermissionsForMatrix.length} Functions
-                  </span>
-                </div>
+                {/* ------------------------------------------------------------- */}
+                {/* View Mode 1: Mobile-Optimized Role Cards View                */}
+                {/* ------------------------------------------------------------- */}
+                {matrixLayout === 'cards' && (
+                  <div className="space-y-4">
+                    {/* Role Selector Tabs (Horizontal Scroll on Mobile) */}
+                    <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar">
+                      {SYSTEM_ROLES.map(role => {
+                        const meta = ROLE_META[role];
+                        const rolePerms = getRoleBaselinePermissions(role);
+                        const isSelected = activeMobileRole === role;
+                        const isCustom = isRoleCustomized(role);
 
-                {/* Matrix Table with Sticky Headers */}
-                <div className="overflow-auto max-h-[620px] rounded-xl border border-slate-200 shadow-2xs relative">
-                  <table className="w-full text-left text-xs border-separate border-spacing-0">
-                    <thead className="sticky top-0 z-20">
-                      <tr className="bg-slate-50 text-slate-600 uppercase tracking-wider font-semibold text-[11px] select-none">
-                        <th className="py-3 px-4 w-1/3 min-w-[220px] sm:min-w-[260px] sticky top-0 left-0 bg-slate-50 z-30 shadow-[2px_2px_5px_-2px_rgba(0,0,0,0.08)] border-b border-r border-slate-200">
-                          Function / Permission
-                        </th>
-                        {SYSTEM_ROLES.map(role => {
-                          const meta = ROLE_META[role];
-                          const isFiltered = matrixRoleFilter === 'All' || matrixRoleFilter === role;
-                          const rolePerms = getRoleBaselinePermissions(role);
-                          const isCustom = isRoleCustomized(role);
-
-                          return (
-                            <th
-                              key={role}
-                              className={`py-3 px-2 text-center transition-opacity min-w-[100px] sticky top-0 bg-slate-50 z-20 border-b border-slate-200 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.06)] ${
-                                isFiltered ? 'opacity-100' : 'opacity-40'
+                        return (
+                          <button
+                            key={`tab-${role}`}
+                            type="button"
+                            onClick={() => setActiveMobileRole(role)}
+                            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center space-x-2 shrink-0 border ${
+                              isSelected
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span>{role}</span>
+                            <span
+                              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                                isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'
                               }`}
                             >
-                              <div className="flex flex-col items-center justify-center space-y-1">
-                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${meta.badgeBg} ${meta.badgeText} border ${meta.borderColor} whitespace-nowrap`}>
-                                  {role}
+                              {rolePerms.length}
+                            </span>
+                            {isCustom && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Custom Baseline Active" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Active Role Control & Quick Action Header */}
+                    {(() => {
+                      const meta = ROLE_META[activeMobileRole];
+                      const rolePerms = getRoleBaselinePermissions(activeMobileRole);
+                      const isCustom = isRoleCustomized(activeMobileRole);
+
+                      return (
+                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center space-x-2.5">
+                              <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${meta.badgeBg} ${meta.badgeText} border ${meta.borderColor}`}>
+                                {activeMobileRole}
+                              </span>
+                              <div>
+                                <span className="text-xs font-bold text-slate-800">
+                                  {rolePerms.length} of {ALL_PERMISSIONS.length} Permissions Active
                                 </span>
-                                <div className="text-[10px] font-mono text-slate-500 font-semibold">
-                                  {rolePerms.length} / {ALL_PERMISSIONS.length}
-                                </div>
-                                {canManageAccess && (
-                                  <div className="flex items-center space-x-1 pt-0.5">
-                                    <button
-                                      type="button"
-                                      disabled={isSavingMatrix}
-                                      onClick={() => handleGrantAllForRole(role)}
-                                      title={`Grant all permissions to ${role}`}
-                                      className="text-[9px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
-                                    >
-                                      All
-                                    </button>
-                                    <button
-                                      type="button"
-                                      disabled={isSavingMatrix}
-                                      onClick={() => handleRevokeAllForRole(role)}
-                                      title={`Revoke all permissions from ${role}`}
-                                      className="text-[9px] font-semibold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
-                                    >
-                                      None
-                                    </button>
-                                    {isCustom && (
-                                      <button
-                                        type="button"
-                                        disabled={isSavingMatrix}
-                                        onClick={() => handleResetRoleToDefault(role)}
-                                        title={`Reset ${role} to default`}
-                                        className="text-[9px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-1 py-0.5 rounded cursor-pointer transition-colors"
-                                      >
-                                        ↺
-                                      </button>
-                                    )}
-                                  </div>
+                                {isCustom && (
+                                  <span className="ml-2 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                    Customized
+                                  </span>
                                 )}
                               </div>
-                            </th>
-                          );
-                        })}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {filteredPermissionsForMatrix.length === 0 ? (
-                        <tr>
-                          <td colSpan={1 + SYSTEM_ROLES.length} className="py-8 text-center text-slate-400">
-                            No permissions match your filter criteria.
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredPermissionsForMatrix.map((perm, idx) => {
-                          return (
-                            <tr key={perm.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                              <td className={`py-3 px-4 sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-b border-r border-slate-200/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
-                                <div className="flex items-start space-x-2.5">
-                                  <span className="text-base mt-0.5">
-                                    {perm.category === 'Items' && '📦'}
-                                    {perm.category === 'Operations' && '🔄'}
-                                    {perm.category === 'Certificates' && '📜'}
-                                    {perm.category === 'Administration' && '⚙️'}
-                                  </span>
-                                  <div className="min-w-0">
-                                    <div className="flex items-center space-x-2">
-                                      <p className="font-bold text-slate-900 leading-tight">{perm.label}</p>
-                                      <span className="font-mono text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                                        {perm.id}
-                                      </span>
-                                    </div>
-                                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                                      {perm.description}
-                                    </p>
-                                  </div>
-                                </div>
-                              </td>
+                            </div>
 
-                              {SYSTEM_ROLES.map(role => {
-                                const rolePerms = getRoleBaselinePermissions(role);
-                                const isMarked = rolePerms.includes(perm.id);
-                                const isFiltered = matrixRoleFilter === 'All' || matrixRoleFilter === role;
-
-                                return (
-                                  <td
-                                    key={role}
-                                    className={`py-2.5 px-2 text-center align-middle transition-opacity border-b border-slate-100 ${
-                                      isFiltered ? 'opacity-100' : 'opacity-40'
-                                    }`}
+                            {canManageAccess && (
+                              <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleGrantAllForRole(activeMobileRole)}
+                                  className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold transition cursor-pointer"
+                                >
+                                  Grant All
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRevokeAllForRole(activeMobileRole)}
+                                  className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-bold transition cursor-pointer"
+                                >
+                                  Revoke All
+                                </button>
+                                {isCustom && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleResetRoleToDefault(activeMobileRole)}
+                                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-bold transition cursor-pointer"
                                   >
-                                    <div className="flex justify-center items-center">
-                                      <button
-                                        type="button"
-                                        disabled={!canManageAccess || isSavingMatrix}
-                                        onClick={() => handleToggleRolePermission(role, perm.id)}
-                                        title={
-                                          canManageAccess
-                                            ? `${isMarked ? 'Click to unmark (revoke)' : 'Click to mark (grant)'} "${perm.label}" for role "${role}"`
-                                            : `Baseline permission for ${role}`
-                                        }
-                                        aria-label={`${isMarked ? 'Revoke' : 'Grant'} ${perm.label} for ${role}`}
-                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                                          isMarked
-                                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 shadow-2xs hover:scale-105 active:scale-90'
-                                            : 'bg-slate-100 hover:bg-slate-200 text-slate-300 hover:text-slate-600 border border-slate-200 active:scale-90'
-                                        } ${!canManageAccess ? 'cursor-not-allowed opacity-75' : ''}`}
-                                      >
-                                        {isMarked ? (
-                                          <Check className="w-4 h-4 stroke-[3]" />
-                                        ) : (
-                                          <Minus className="w-3.5 h-3.5" />
-                                        )}
-                                      </button>
-                                    </div>
-                                  </td>
-                                );
-                              })}
-                            </tr>
+                                    ↺ Defaults
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewRole(previewRole === activeMobileRole ? null : activeMobileRole)}
+                                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                                    previewRole === activeMobileRole
+                                      ? 'bg-amber-400 text-slate-950 shadow-xs ring-1 ring-amber-500'
+                                      : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                  }`}
+                                >
+                                  {previewRole === activeMobileRole ? '✓ Simulating Now' : `🎭 Test ${activeMobileRole}`}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Permissions Grid (Categorized Cards with 44px+ Touch Targets) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
+                      {filteredPermissionsForMatrix.length === 0 ? (
+                        <div className="col-span-full py-12 text-center text-slate-400 text-xs">
+                          No permissions match your search or category filter.
+                        </div>
+                      ) : (
+                        filteredPermissionsForMatrix.map(perm => {
+                          const rolePerms = getRoleBaselinePermissions(activeMobileRole);
+                          const isMarked = rolePerms.includes(perm.id);
+
+                          return (
+                            <div
+                              key={`card-${activeMobileRole}-${perm.id}`}
+                              onClick={() => {
+                                if (canManageAccess) {
+                                  handleToggleRolePermission(activeMobileRole, perm.id);
+                                }
+                              }}
+                              className={`p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                                isMarked
+                                  ? 'bg-emerald-50/50 hover:bg-emerald-50 border-emerald-200/90 shadow-2xs'
+                                  : 'bg-white hover:bg-slate-50 border-slate-200/80'
+                              }`}
+                            >
+                              <div className="flex items-start space-x-2.5 min-w-0">
+                                <span className="text-xl shrink-0 mt-0.5">
+                                  {perm.category === 'Items' && '📦'}
+                                  {perm.category === 'Operations' && '🔄'}
+                                  {perm.category === 'Certificates' && '📜'}
+                                  {perm.category === 'Administration' && '⚙️'}
+                                </span>
+                                <div className="min-w-0">
+                                  <div className="flex items-center space-x-1.5 flex-wrap gap-y-0.5">
+                                    <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                                      {perm.label}
+                                    </h4>
+                                    <span className="font-mono text-[9px] text-slate-400 bg-slate-100 px-1 py-0.2 rounded">
+                                      {perm.id}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-slate-500 mt-0.5 leading-snug line-clamp-2">
+                                    {perm.description}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Toggle Touch Switch */}
+                              <div className="shrink-0 pl-2">
+                                <button
+                                  type="button"
+                                  disabled={!canManageAccess}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleRolePermission(activeMobileRole, perm.id);
+                                  }}
+                                  aria-label={`${isMarked ? 'Revoke' : 'Grant'} ${perm.label} for ${activeMobileRole}`}
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                                    isMarked
+                                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300/50 scale-105'
+                                      : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'
+                                  }`}
+                                >
+                                  {isMarked ? (
+                                    <Check className="w-5 h-5 stroke-[3]" />
+                                  ) : (
+                                    <Minus className="w-4 h-4 stroke-[2.5]" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
                           );
                         })
                       )}
-                    </tbody>
-                  </table>
-                </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ------------------------------------------------------------- */}
+                {/* View Mode 2: Multi-Column Matrix Table                       */}
+                {/* ------------------------------------------------------------- */}
+                {matrixLayout === 'table' && (
+                  <>
+                    {/* Sticky heading tip */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[11px] text-indigo-700 bg-indigo-50/90 px-3 py-1.5 rounded-lg border border-indigo-100 font-medium">
+                      <span className="flex items-center space-x-1.5">
+                        <span className="text-indigo-600 font-bold">📌 Matrix Table:</span>
+                        <span>Role column headers are sticky at top, and functions are sticky on left. Swipe horizontally on mobile to view all roles.</span>
+                      </span>
+                      <span className="text-indigo-600 font-semibold text-[10px] hidden md:inline shrink-0">
+                        8 Roles • {filteredPermissionsForMatrix.length} Functions
+                      </span>
+                    </div>
+
+                    {/* Matrix Table with Sticky Headers */}
+                    <div className="overflow-auto max-h-[620px] rounded-xl border border-slate-200 shadow-2xs relative">
+                      <table className="w-full text-left text-xs border-separate border-spacing-0">
+                        <thead className="sticky top-0 z-20">
+                          <tr className="bg-slate-50 text-slate-600 uppercase tracking-wider font-semibold text-[11px] select-none">
+                            <th className="py-3 px-4 w-1/3 min-w-[220px] sm:min-w-[260px] sticky top-0 left-0 bg-slate-50 z-30 shadow-[2px_2px_5px_-2px_rgba(0,0,0,0.08)] border-b border-r border-slate-200">
+                              Function / Permission
+                            </th>
+                            {SYSTEM_ROLES.map(role => {
+                              const meta = ROLE_META[role];
+                              const isFiltered = matrixRoleFilter === 'All' || matrixRoleFilter === role;
+                              const rolePerms = getRoleBaselinePermissions(role);
+                              const isCustom = isRoleCustomized(role);
+
+                              return (
+                                <th
+                                  key={role}
+                                  className={`py-3 px-2 text-center transition-opacity min-w-[100px] sticky top-0 bg-slate-50 z-20 border-b border-slate-200 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.06)] ${
+                                    isFiltered ? 'opacity-100' : 'opacity-40'
+                                  }`}
+                                >
+                                  <div className="flex flex-col items-center justify-center space-y-1">
+                                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${meta.badgeBg} ${meta.badgeText} border ${meta.borderColor} whitespace-nowrap`}>
+                                      {role}
+                                    </span>
+                                    <div className="text-[10px] font-mono text-slate-500 font-semibold">
+                                      {rolePerms.length} / {ALL_PERMISSIONS.length}
+                                    </div>
+                                    {canManageAccess && (
+                                      <div className="flex items-center space-x-1 pt-0.5">
+                                        <button
+                                          type="button"
+                                          disabled={isSavingMatrix}
+                                          onClick={() => handleGrantAllForRole(role)}
+                                          title={`Grant all permissions to ${role}`}
+                                          className="text-[9px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                                        >
+                                          All
+                                        </button>
+                                        <button
+                                          type="button"
+                                          disabled={isSavingMatrix}
+                                          onClick={() => handleRevokeAllForRole(role)}
+                                          title={`Revoke all permissions from ${role}`}
+                                          className="text-[9px] font-semibold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                                        >
+                                          None
+                                        </button>
+                                        {isCustom && (
+                                          <button
+                                            type="button"
+                                            disabled={isSavingMatrix}
+                                            onClick={() => handleResetRoleToDefault(role)}
+                                            title={`Reset ${role} to default`}
+                                            className="text-[9px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-1 py-0.5 rounded cursor-pointer transition-colors"
+                                          >
+                                            ↺
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </th>
+                              );
+                            })}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {filteredPermissionsForMatrix.length === 0 ? (
+                            <tr>
+                              <td colSpan={1 + SYSTEM_ROLES.length} className="py-8 text-center text-slate-400">
+                                No permissions match your filter criteria.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredPermissionsForMatrix.map((perm, idx) => {
+                              return (
+                                <tr key={perm.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
+                                  <td className={`py-3 px-4 sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-b border-r border-slate-200/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
+                                    <div className="flex items-start space-x-2.5">
+                                      <span className="text-base mt-0.5">
+                                        {perm.category === 'Items' && '📦'}
+                                        {perm.category === 'Operations' && '🔄'}
+                                        {perm.category === 'Certificates' && '📜'}
+                                        {perm.category === 'Administration' && '⚙️'}
+                                      </span>
+                                      <div className="min-w-0">
+                                        <div className="flex items-center space-x-2">
+                                          <p className="font-bold text-slate-900 leading-tight">{perm.label}</p>
+                                          <span className="font-mono text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                            {perm.id}
+                                          </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                                          {perm.description}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  {SYSTEM_ROLES.map(role => {
+                                    const rolePerms = getRoleBaselinePermissions(role);
+                                    const isMarked = rolePerms.includes(perm.id);
+                                    const isFiltered = matrixRoleFilter === 'All' || matrixRoleFilter === role;
+
+                                    return (
+                                      <td
+                                        key={role}
+                                        className={`py-2.5 px-2 text-center align-middle transition-opacity border-b border-slate-100 ${
+                                          isFiltered ? 'opacity-100' : 'opacity-40'
+                                        }`}
+                                      >
+                                        <div className="flex justify-center items-center">
+                                          <button
+                                            type="button"
+                                            disabled={!canManageAccess}
+                                            onClick={() => handleToggleRolePermission(role, perm.id)}
+                                            title={
+                                              canManageAccess
+                                                ? `${isMarked ? 'Click to unmark (revoke)' : 'Click to mark (grant)'} "${perm.label}" for role "${role}"`
+                                                : `Baseline permission for ${role}`
+                                            }
+                                            aria-label={`${isMarked ? 'Revoke' : 'Grant'} ${perm.label} for ${role}`}
+                                            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                                              isMarked
+                                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 shadow-2xs hover:scale-105 active:scale-90'
+                                                : 'bg-slate-100 hover:bg-slate-200 text-slate-300 hover:text-slate-600 border border-slate-200 active:scale-90'
+                                            } ${!canManageAccess ? 'cursor-not-allowed opacity-75' : ''}`}
+                                          >
+                                            {isMarked ? (
+                                              <Check className="w-4 h-4 stroke-[3]" />
+                                            ) : (
+                                              <Minus className="w-3.5 h-3.5" />
+                                            )}
+                                          </button>
+                                        </div>
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

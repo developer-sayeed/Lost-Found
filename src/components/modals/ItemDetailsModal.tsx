@@ -43,7 +43,8 @@ export const ItemDetailsModal: React.FC = () => {
     openReturnToStore,
     openDelete
   } = useApp();
-  const { user, isAdmin, hasPermission } = useAuth();
+  const { user, isAdmin, hasPermission, isSuperAdmin, previewRole, effectiveRole } = useAuth();
+  const isMasterAdmin = isSuperAdmin && !previewRole;
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -67,7 +68,7 @@ export const ItemDetailsModal: React.FC = () => {
 
   if (!isDetailsModalOpen || !selectedItem) return null;
 
-  const isAdminTier = ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(user?.role || '');
+  const isAdminTier = ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(effectiveRole || user?.role || '');
   const isPendingApproval = selectedItem.status === 'Pending Approval' || (selectedItem.isApproved === false && selectedItem.approvalStatus === 'pending');
   const isStored = selectedItem.status === 'Stored';
   const isHandedOver = selectedItem.status === 'Handed Over';
@@ -479,7 +480,7 @@ export const ItemDetailsModal: React.FC = () => {
             )}
 
             {/* Return to Store within 24h grace period */}
-            {isHandedOver && (isAdmin || hasPermission('handover')) && isWithinHandover24Hours(selectedItem) && (
+            {isHandedOver && (isMasterAdmin || hasPermission('handover')) && isWithinHandover24Hours(selectedItem) && (
               <button
                 type="button"
                 id="btn-details-return-store-action"

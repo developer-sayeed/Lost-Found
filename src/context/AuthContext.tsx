@@ -4,6 +4,9 @@ import { api } from '../lib/api';
 
 interface AuthContextType {
   user: User | null;
+  effectiveRole: UserRole | undefined;
+  previewRole: UserRole | null;
+  setPreviewRole: (role: UserRole | null) => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
@@ -123,74 +126,116 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
+  const [permissionsVersion, setPermissionsVersion] = useState<number>(0);
+  const [previewRole, setPreviewRole] = useState<UserRole | null>(null);
+
+  // Real-time synchronization of permissions across matrix updates & tabs
+  useEffect(() => {
+    const handlePermissionsChanged = () => {
+      setPermissionsVersion(v => v + 1);
+    };
+    window.addEventListener('warwick_permissions_updated', handlePermissionsChanged);
+    window.addEventListener('storage', handlePermissionsChanged);
+    return () => {
+      window.removeEventListener('warwick_permissions_updated', handlePermissionsChanged);
+      window.removeEventListener('storage', handlePermissionsChanged);
+    };
+  }, []);
+
   const clearError = () => setError(null);
 
   const getUserPermissions = (targetUser?: User | null): PermissionKey[] => {
-    const u = targetUser || user;
-    if (!u) return [];
-
-    if (u.role === 'Super Admin') {
-      return ALL_PERMISSIONS.map(p => p.id);
-    }
+    const effectiveTargetRole = targetUser ? targetUser.role : (previewRole || user?.role);
+    if (!effectiveTargetRole) return [];
 
     // 1. Role baseline permissions (from customized settings matrix or default)
-    let rolePerms: PermissionKey[] = DEFAULT_ROLE_PERMISSIONS[u.role] || [];
+    let rolePerms: PermissionKey[] = DEFAULT_ROLE_PERMISSIONS[effectiveTargetRole] || [];
     try {
-      const rawSettings = localStorage.getItem('warwick_offline_cached_settings');
-      if (rawSettings) {
-        const parsed = JSON.parse(rawSettings);
-        if (parsed?.rolePermissions?.[u.role] && Array.isArray(parsed.rolePermissions[u.role])) {
-          rolePerms = parsed.rolePermissions[u.role];
+      let foundInMatrix = false;
+      // Check fast-sync cache first
+      const rawMatrix = localStorage.getItem('warwick_role_permissions');
+      if (rawMatrix) {
+        const parsedMatrix = JSON.parse(rawMatrix);
+        if (parsedMatrix && effectiveTargetRole in parsedMatrix && Array.isArray(parsedMatrix[effectiveTargetRole])) {
+          rolePerms = parsedMatrix[effectiveTargetRole];
+          foundInMatrix = true;
         }
       }
-    } catch {}
-
-    // 2. User specific custom/upgraded permissions
-    let userSpecificPerms: PermissionKey[] = [];
-    if (u.permissions && Array.isArray(u.permissions)) {
-      userSpecificPerms = u.permissions;
-    }
-
-    // 3. Also check if this user is in cached staff list with upgraded permissions
-    try {
-      const rawStaff = localStorage.getItem('warwick_offline_cached_staff');
-      if (rawStaff) {
-        const parsedStaff = JSON.parse(rawStaff);
-        if (Array.isArray(parsedStaff)) {
-          const matched = parsedStaff.find(
-            (s: any) =>
-              (s.id && s.id === u.id) ||
-              (s.userId && (s.userId === u.userId || s.userId === u.id)) ||
-              (s.staffId && (s.staffId === u.staffId || s.staffId === u.id)) ||
-              (s.email && u.email && s.email.toLowerCase() === u.email.toLowerCase())
-          );
-          if (matched && Array.isArray(matched.permissions) && matched.permissions.length > 0) {
-            userSpecificPerms = Array.from(new Set([...userSpecificPerms, ...matched.permissions]));
+      if (!foundInMatrix) {
+        const rawSettings = localStorage.getItem('warwick_offline_cached_settings');
+        if (rawSettings) {
+          const parsed = JSON.parse(rawSettings);
+          if (parsed?.rolePermissions && effectiveTargetRole in parsed.rolePermissions && Array.isArray(parsed.rolePermissions[effectiveTargetRole])) {
+            rolePerms = parsed.rolePermissions[effectiveTargetRole];
           }
         }
       }
     } catch {}
 
-    // Combine role baseline and upgraded user-specific permissions
-    return Array.from(new Set([...rolePerms, ...userSpecificPerms]));
+    // Super Admin: if specifically customized in matrix, respect custom matrix; otherwise default all permissions
+    if (effectiveTargetRole === 'Super Admin' && !previewRole) {
+      if (rolePerms && rolePerms.length > 0 && rolePerms.length < ALL_PERMISSIONS.length) {
+        return rolePerms;
+      }
+      return ALL_PERMISSIONS.map(p => p.id);
+    }
+
+    // 2. Check if this specific user has an explicit individual custom staff override (only if not previewing another role)
+    if (!previewRole) {
+      const u = targetUser || user;
+      if (u) {
+        try {
+          const rawStaff = localStorage.getItem('warwick_offline_cached_staff');
+          if (rawStaff) {
+            const parsedStaff = JSON.parse(rawStaff);
+            if (Array.isArray(parsedStaff)) {
+              const matched = parsedStaff.find(
+                (s: any) =>
+                  (s.id && s.id === u.id) ||
+                  (s.userId && (s.userId === u.userId || s.userId === u.id)) ||
+                  (s.staffId && (s.staffId === u.staffId || s.staffId === u.id)) ||
+                  (s.email && u.email && s.email.toLowerCase() === u.email.toLowerCase())
+              );
+              if (matched && matched.isCustomPermissions && Array.isArray(matched.permissions)) {
+                return matched.permissions;
+              }
+            }
+          }
+        } catch {}
+      }
+    }
+
+    return rolePerms;
   };
 
   const hasPermission = (permission: PermissionKey): boolean => {
     if (!user) return false;
-    // Super Admin has master access to all features unless specifically restricted
-    if (user.role === 'Super Admin') return true;
+    const currentRole = previewRole || user.role;
 
-    const activePerms = getUserPermissions(user);
+    // Super Admin without preview mode has master access unless specifically restricted in matrix
+    if (currentRole === 'Super Admin' && !previewRole) {
+      const activePerms = getUserPermissions();
+      if (activePerms.length < ALL_PERMISSIONS.length) {
+        return activePerms.includes(permission);
+      }
+      return true;
+    }
 
+    const activePerms = getUserPermissions(previewRole ? { ...user, role: previewRole } : user);
+
+    // Direct check: is the permission explicitly marked in active permissions?
     if (activePerms.includes(permission)) return true;
 
-    // Backward compatibility mappings for certificate permissions
+    // Certificates master permission grants view, create, edit, print, save (NEVER delete)
+    // NOTE: 'certificates_delete' STRICTLY requires explicit 'certificates_delete' permission!
     if (permission === 'certificates_view' && activePerms.includes('certificates')) return true;
+    if (permission === 'certificates_print' && activePerms.includes('certificates')) return true;
     if (permission === 'certificates_create' && activePerms.includes('certificates')) return true;
     if (permission === 'certificates_edit' && activePerms.includes('certificates')) return true;
-    if (permission === 'certificates_delete' && activePerms.includes('certificates')) return true;
-    if (permission === 'certificates_print' && (activePerms.includes('certificates') || activePerms.includes('print'))) return true;
     if (permission === 'certificates_save' && activePerms.includes('certificates')) return true;
+
+    // Removed items / Trash alias
+    if (permission === 'removed_items' && (activePerms.includes('removed_items') || activePerms.includes('delete'))) return true;
 
     return false;
   };
@@ -288,13 +333,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await api.changePassword(params, user);
   };
 
-  const isAdmin = Boolean(user && (user.role === 'Super Admin' || user.role === 'Admin' || user.role === 'Manager'));
-  const isSuperAdmin = Boolean(user && user.role === 'Super Admin');
+  const effectiveRole = previewRole || user?.role;
+  const isAdmin = Boolean(effectiveRole && (effectiveRole === 'Super Admin' || effectiveRole === 'Admin' || effectiveRole === 'Manager'));
+  const isSuperAdmin = Boolean(effectiveRole === 'Super Admin');
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        effectiveRole,
+        previewRole,
+        setPreviewRole,
         isAuthenticated: !!user,
         isAdmin,
         isSuperAdmin,

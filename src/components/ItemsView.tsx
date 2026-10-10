@@ -73,9 +73,10 @@ export const ItemsView: React.FC = () => {
     openReturnToStore,
     batchDeleteItems
   } = useApp();
-  const { user, isAdmin, hasPermission } = useAuth();
+  const { user, isAdmin, hasPermission, effectiveRole, isSuperAdmin, previewRole } = useAuth();
   const { t, isRTL, translateCategory, translateStatus } = useLanguage();
-  const isAdminTier = ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(user?.role || '');
+  const currentRole = effectiveRole || user?.role || '';
+  const isAdminTier = ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(currentRole);
 
   // Data Table States
   const [currentPage, setCurrentPage] = useState(1);
@@ -1009,7 +1010,7 @@ export const ItemsView: React.FC = () => {
                             </>
                           )}
 
-                          {isHandedOver && (isAdmin || hasPermission('handover')) && isWithinHandover24Hours(item) && (
+                          {isHandedOver && ((isSuperAdmin && !previewRole) || hasPermission('handover')) && isWithinHandover24Hours(item) && (
                             <button
                               id={`btn-items-return-store-${item.id}`}
                               onClick={() => openReturnToStore(item)}

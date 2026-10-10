@@ -131,11 +131,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     isSyncPaused,
     simulateOfflineToggle
   } = useApp();
-  const { user, changePassword, autoLogoutMinutes, setAutoLogoutMinutes, hasPermission } = useAuth();
+  const { user, changePassword, autoLogoutMinutes, setAutoLogoutMinutes, hasPermission, previewRole, effectiveRole } = useAuth();
 
-  const isSuperAdmin = user?.role === 'Super Admin';
-  const isManager = ['Manager', 'Admin'].includes(user?.role || '');
-  const canAccessHotel = isSuperAdmin || isManager || hasPermission('settings');
+  const currentRole = effectiveRole || user?.role || '';
+  const isMasterAdmin = (currentRole === 'Super Admin') && !previewRole;
+  const isSuperAdmin = currentRole === 'Super Admin';
+  const isManager = ['Manager', 'Admin', 'Super Admin'].includes(currentRole);
+  const canAccessHotel = isMasterAdmin || hasPermission('settings') || hasPermission('manage_staff_access');
 
   const [activeTab, setActiveTab] = useState<
     'hotel' | 'certificate' | 'categories' | 'security' | 'database' | 'google_drive' | 'sync' | 'import_data' | 'alerts_validation' | 'login_page' | 'shortcuts'
@@ -254,8 +256,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   const [showNewPresetModal, setShowNewPresetModal] = useState(false);
   const [presetFilterCategory, setPresetFilterCategory] = useState<'all' | 'luxury' | 'modern' | 'heritage' | 'custom'>('all');
   const [isDarkMode, setIsDarkMode] = useState(Boolean(settings.isDarkMode));
-  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(
-    settings.themeMode || (settings.isDarkMode ? 'dark' : 'light')
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>(
+    settings.themeMode === 'dark' || settings.isDarkMode ? 'dark' : 'light'
   );
   const [customColors, setCustomColors] = useState<string[]>(
     settings.customColors && settings.customColors.length > 0
@@ -295,7 +297,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     setActivePresetId(settings.activePresetId || 'preset-royal-navy');
     setCustomPresets(settings.customPresets || []);
     setIsDarkMode(Boolean(settings.isDarkMode));
-    setThemeMode(settings.themeMode || (settings.isDarkMode ? 'dark' : 'light'));
+    setThemeMode(settings.themeMode === 'dark' || settings.isDarkMode ? 'dark' : 'light');
     setFaviconPreview(settings.faviconUrl || '/icon.svg');
     if (settings.customColors && settings.customColors.length > 0) {
       setCustomColors(settings.customColors);
@@ -476,7 +478,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     updateSettings({ customColors: updated });
   };
 
-  const handleInstantThemeModeChange = async (mode: 'light' | 'dark' | 'system') => {
+  const handleInstantThemeModeChange = async (mode: 'light' | 'dark') => {
     setThemeMode(mode);
     const darkEnabled = mode === 'dark';
     setIsDarkMode(darkEnabled);

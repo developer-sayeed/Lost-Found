@@ -80,8 +80,8 @@ export const ThemePresetStudio: React.FC = () => {
   const [newCustomHex, setNewCustomHex] = useState('#0284c7');
 
   // UI state
-  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(
-    settings.themeMode || (settings.isDarkMode ? 'dark' : 'light')
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>(
+    settings.themeMode === 'dark' || settings.isDarkMode ? 'dark' : 'light'
   );
   const [isDarkMode, setIsDarkMode] = useState(Boolean(settings.isDarkMode));
   const [presetFilter, setPresetFilter] = useState<'all' | 'luxury' | 'modern' | 'heritage' | 'custom'>('all');
@@ -107,7 +107,7 @@ export const ThemePresetStudio: React.FC = () => {
     if (settings.customColors && settings.customColors.length > 0) {
       setCustomColors(settings.customColors);
     }
-    setThemeMode(settings.themeMode || (settings.isDarkMode ? 'dark' : 'light'));
+    setThemeMode(settings.themeMode === 'dark' || settings.isDarkMode ? 'dark' : 'light');
     setIsDarkMode(Boolean(settings.isDarkMode));
   }, [settings]);
 
@@ -132,7 +132,7 @@ export const ThemePresetStudio: React.FC = () => {
   });
 
   // Handle instant theme mode toggle
-  const handleInstantThemeModeChange = async (mode: 'light' | 'dark' | 'system') => {
+  const handleInstantThemeModeChange = async (mode: 'light' | 'dark') => {
     setThemeMode(mode);
     const darkEnabled = mode === 'dark';
     setIsDarkMode(darkEnabled);
@@ -438,14 +438,14 @@ export const ThemePresetStudio: React.FC = () => {
             <h3 className="text-sm font-bold">Theme Appearance & Contrast Mode</h3>
           </div>
           <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">
-            {themeMode === 'dark' ? 'Dark Mode Active' : themeMode === 'system' ? 'Auto Mode' : 'Light Mode Active'}
+            {themeMode === 'dark' ? 'Dark Mode Active' : 'Light Mode Active (Default)'}
           </span>
         </div>
         <p className="text-xs text-slate-500">
-          Switch between high-contrast dark theme and crisp light theme. Updates all CSS variables and UI elements in real time.
+          Switch between crisp light mode (white default) and high-contrast dark theme. Updates all CSS variables and UI elements in real time.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
           {/* Light Mode */}
           <button
             type="button"
@@ -463,7 +463,7 @@ export const ThemePresetStudio: React.FC = () => {
               </div>
               {themeMode === 'light' && <Check className="w-4 h-4 text-indigo-600" />}
             </div>
-            <div className="text-xs font-bold text-slate-900">Crisp Light Mode</div>
+            <div className="text-xs font-bold text-slate-900">Crisp Light Mode (White Default)</div>
             <p className="text-[11px] text-slate-500 mt-1">
               Warm slate neutrals with clean high-contrast daytime readability.
             </p>
@@ -489,29 +489,6 @@ export const ThemePresetStudio: React.FC = () => {
             <div className="text-xs font-bold text-slate-900">High-Contrast Dark Theme</div>
             <p className="text-[11px] text-slate-500 mt-1">
               Deep obsidian canvas with high-contrast text and glowing accents.
-            </p>
-          </button>
-
-          {/* System Default */}
-          <button
-            type="button"
-            id="btn-mode-system"
-            onClick={() => handleInstantThemeModeChange('system')}
-            className={`p-4 rounded-xl text-left border transition-all ${
-              themeMode === 'system'
-                ? 'border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-500/20 shadow-2xs'
-                : 'border-slate-200 bg-white hover:bg-slate-50'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-                <Monitor className="w-4 h-4" />
-              </div>
-              {themeMode === 'system' && <Check className="w-4 h-4 text-indigo-600" />}
-            </div>
-            <div className="text-xs font-bold text-slate-900">System Match</div>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Automatically syncs with your operating system dark/light preference.
             </p>
           </button>
         </div>

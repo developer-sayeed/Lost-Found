@@ -282,13 +282,11 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     'dispatch',
     'print',
     'performance',
-    'certificates',
     'certificates_view',
     'certificates_create',
     'certificates_edit',
     'certificates_print',
     'certificates_save',
-    'audit_logs',
     'staff_management',
     'view_staff_profile',
     'settings'
@@ -300,11 +298,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     'dispatch',
     'print',
     'performance',
-    'certificates',
     'certificates_view',
-    'certificates_create',
-    'certificates_print',
-    'audit_logs'
+    'certificates_print'
   ],
   'Employee': [
     'view',
@@ -478,6 +473,7 @@ export interface StaffMember {
   itemsFoundCount: number;
   handoversCount: number;
   permissions?: PermissionKey[];
+  isCustomPermissions?: boolean;
   createdAt: string;
   lastLogin?: string;
   lastActive?: string;
@@ -571,7 +567,7 @@ export interface HotelSettings {
   customPresets?: ThemePreset[];
   customColors?: string[];
   isDarkMode?: boolean;
-  themeMode?: 'light' | 'dark' | 'system';
+  themeMode?: 'light' | 'dark';
   autoLogoutMinutes?: number;
   categories?: CategoryConfig[];
   showDepartmentProcessingShare?: boolean;
@@ -681,7 +677,7 @@ export interface FullSystemBackupPackage {
     additionalLinks?: HotelLink[];
     categories?: CategoryConfig[];
     customColors?: string[];
-    themeMode?: 'light' | 'dark' | 'system';
+    themeMode?: 'light' | 'dark';
     brandName?: string;
   };
   stats: {
@@ -859,6 +855,7 @@ export interface User {
   position?: string;
   emergencyContact?: string;
   permissions?: PermissionKey[];
+  isCustomPermissions?: boolean;
   password?: string;
   authProvider: 'email' | 'google';
   lastActive?: string;

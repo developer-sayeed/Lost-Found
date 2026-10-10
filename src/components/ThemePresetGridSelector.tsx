@@ -146,8 +146,8 @@ export const ThemePresetGridSelector: React.FC<ThemePresetGridSelectorProps> = (
   const [previewClickFeedback, setPreviewClickFeedback] = useState<string | null>(null);
 
   // UI state
-  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(
-    settings.themeMode || (settings.isDarkMode ? 'dark' : 'light')
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>(
+    settings.themeMode === 'dark' || settings.isDarkMode ? 'dark' : 'light'
   );
   const [isDarkMode, setIsDarkMode] = useState(Boolean(settings.isDarkMode));
   const [presetFilter, setPresetFilter] = useState<'all' | 'luxury' | 'modern' | 'heritage' | 'custom'>('all');
@@ -176,7 +176,7 @@ export const ThemePresetGridSelector: React.FC<ThemePresetGridSelectorProps> = (
     if (settings.customColors && settings.customColors.length > 0) {
       setCustomColors(settings.customColors);
     }
-    setThemeMode(settings.themeMode || (settings.isDarkMode ? 'dark' : 'light'));
+    setThemeMode(settings.themeMode === 'dark' || settings.isDarkMode ? 'dark' : 'light');
     setIsDarkMode(Boolean(settings.isDarkMode));
 
     setHeadingColors({
@@ -605,8 +605,8 @@ export const ThemePresetGridSelector: React.FC<ThemePresetGridSelectorProps> = (
     }
   };
 
-  // Instant light/dark/system appearance toggle
-  const handleInstantThemeModeChange = async (mode: 'light' | 'dark' | 'system') => {
+  // Instant light/dark appearance toggle
+  const handleInstantThemeModeChange = async (mode: 'light' | 'dark') => {
     setThemeMode(mode);
     const darkEnabled = mode === 'dark';
     setIsDarkMode(darkEnabled);
@@ -1641,7 +1641,7 @@ export const ThemePresetGridSelector: React.FC<ThemePresetGridSelectorProps> = (
             {/* Appearance Mode */}
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-2">Display Contrast Mode</label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => handleInstantThemeModeChange('light')}
@@ -1655,7 +1655,7 @@ export const ThemePresetGridSelector: React.FC<ThemePresetGridSelectorProps> = (
                     <Sun className="w-4 h-4 text-amber-500" />
                     {themeMode === 'light' && <Check className="w-3.5 h-3.5 text-indigo-600" />}
                   </div>
-                  <span className="text-xs font-bold text-slate-900">Crisp Light Mode</span>
+                  <span className="text-xs font-bold text-slate-900">Crisp Light Mode (White Default)</span>
                 </button>
 
                 <button
@@ -1672,22 +1672,6 @@ export const ThemePresetGridSelector: React.FC<ThemePresetGridSelectorProps> = (
                     {themeMode === 'dark' && <Check className="w-3.5 h-3.5 text-indigo-600" />}
                   </div>
                   <span className="text-xs font-bold text-slate-900">High-Contrast Dark</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleInstantThemeModeChange('system')}
-                  className={`p-3 rounded-xl border text-left transition-all ${
-                    themeMode === 'system'
-                      ? 'border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-500/20'
-                      : 'border-slate-200 bg-white hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <Monitor className="w-4 h-4 text-slate-600" />
-                    {themeMode === 'system' && <Check className="w-3.5 h-3.5 text-indigo-600" />}
-                  </div>
-                  <span className="text-xs font-bold text-slate-900">System Auto</span>
                 </button>
               </div>
             </div>

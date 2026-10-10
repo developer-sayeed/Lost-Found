@@ -44,11 +44,12 @@ export const Sidebar: React.FC = () => {
     openCommandPalette,
     openShortcutsModal
   } = useApp();
-  const { user, logout, hasPermission } = useAuth();
+  const { user, logout, hasPermission, isSuperAdmin, previewRole, effectiveRole } = useAuth();
   const { t, isRTL, translateRole } = useLanguage();
   const isMac = isMacOS();
 
-  const isAdminTier = ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(user?.role || '');
+  const currentRole = effectiveRole || user?.role || '';
+  const isAdminTier = ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(currentRole);
   const pendingApprovalCount = activeItems.filter(i => i.status === 'Pending Approval' || (i.isApproved === false && i.approvalStatus === 'pending')).length;
 
   const allNavItems = [
@@ -63,31 +64,20 @@ export const Sidebar: React.FC = () => {
     { id: 'settings' as const, label: t.settings, icon: Settings, requiredPerm: 'settings' as PermissionKey },
   ];
 
-  // Filter items based on whether user has the permission
+  // Filter items strictly based on whether user has the permission
+  const isMasterAdmin = isSuperAdmin && !previewRole;
   const navItems = allNavItems.filter(item => {
-    if (user?.role === 'Super Admin') return true;
+    if (isMasterAdmin) return true;
     if (item.id === 'dashboard') return true;
-    if (item.id === 'settings') return true; // Accessible for profile & security, with internal tab restrictions
-    if (item.id === 'audit_logs') {
-      return user?.role === 'Admin' || hasPermission('audit_logs');
-    }
-    if (item.id === 'performance') {
-      return ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(user?.role || '') || hasPermission('performance');
-    }
-    if (item.id === 'certificates') {
-      return (
-        user?.role === 'Admin' ||
-        hasPermission('certificates_view') ||
-        hasPermission('certificates')
-      );
-    }
-    if (item.id === 'dispatch') {
-      return hasPermission('dispatch') || hasPermission('view');
-    }
-    if (item.id === 'removed') {
-      return hasPermission('removed_items');
-    }
-    return hasPermission(item.requiredPerm);
+    if (item.id === 'items') return hasPermission('view');
+    if (item.id === 'dispatch') return hasPermission('dispatch');
+    if (item.id === 'staff') return hasPermission('staff_management');
+    if (item.id === 'performance') return hasPermission('performance');
+    if (item.id === 'certificates') return hasPermission('certificates_view') || hasPermission('certificates');
+    if (item.id === 'audit_logs') return hasPermission('audit_logs');
+    if (item.id === 'removed') return hasPermission('removed_items');
+    if (item.id === 'settings') return hasPermission('settings') || hasPermission('manage_staff_access');
+    return false;
   });
 
   const handleNavClick = (tabId: ActiveTab) => {

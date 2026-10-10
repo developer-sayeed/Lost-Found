@@ -64,11 +64,12 @@ function getPageNumbers(current: number, total: number): (number | string)[] {
 
 export const AuditLogsView: React.FC = () => {
   const { items, openItemDetails } = useApp();
-  const { user, hasPermission } = useAuth();
+  const { user, hasPermission, isSuperAdmin, previewRole } = useAuth();
   const { t } = useLanguage();
 
-  // Admin / Audit access check (Super Admin, Admin, or staff granted audit_logs permission)
-  const isAdmin = user?.role === 'Super Admin' || user?.role === 'Admin' || hasPermission('audit_logs');
+  // Dynamic audit access check (Super Admin master or any role granted audit_logs permission in matrix)
+  const isMasterAdmin = isSuperAdmin && !previewRole;
+  const isAdmin = isMasterAdmin || hasPermission('audit_logs');
 
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);

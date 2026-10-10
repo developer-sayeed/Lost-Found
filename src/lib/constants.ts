@@ -1,4 +1,4 @@
-import { LostItem, StaffMember, HotelSettings, User, CategoryConfig, DEFAULT_TOAST_CONFIG, DEFAULT_VALIDATION_MESSAGES, AuditLog } from '../types';
+import { LostItem, StaffMember, HotelSettings, User, CategoryConfig, DEFAULT_TOAST_CONFIG, DEFAULT_VALIDATION_MESSAGES, AuditLog, DEFAULT_ROLE_PERMISSIONS } from '../types';
 
 export const DEFAULT_ITEM_CATEGORIES: CategoryConfig[] = [
   {
@@ -118,7 +118,8 @@ export const INITIAL_HOTEL_SETTINGS: HotelSettings = {
   toastConfig: DEFAULT_TOAST_CONFIG,
   validationMessages: DEFAULT_VALIDATION_MESSAGES,
   certificatePrintBehavior: 'direct',
-  certificateEnablePrintPreview: false
+  certificateEnablePrintPreview: false,
+  rolePermissions: DEFAULT_ROLE_PERMISSIONS
 };
 
 export const INITIAL_STAFF: StaffMember[] = [

@@ -40,8 +40,10 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const MainLayout: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, hasPermission, isSuperAdmin, previewRole, setPreviewRole, effectiveRole } = useAuth();
   const { activeTab, setActiveTab, settings } = useApp();
+
+  const isMasterAdmin = isSuperAdmin && !previewRole;
 
   // Initialize global desktop keyboard shortcut manager
   useKeyboardShortcuts();
@@ -51,11 +53,10 @@ const MainLayout: React.FC = () => {
     if (settings) {
       applyDynamicTheme(settings);
 
-      // Dark Mode & High Contrast Theme handling
-      const isDark =
-        settings.isDarkMode === true ||
-        settings.themeMode === 'dark' ||
-        (settings.themeMode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      // Dark Mode handling: System dark mode is removed per user request.
+      // By default the application runs strictly in Light / White Mode.
+      // Dark Mode is only activated when explicitly chosen by the user (isDarkMode === true or themeMode === 'dark').
+      const isDark = Boolean(settings.isDarkMode === true || settings.themeMode === 'dark');
 
       if (isDark) {
         document.documentElement.classList.add('dark');
@@ -70,6 +71,12 @@ const MainLayout: React.FC = () => {
         document.documentElement.style.setProperty('--theme-text-primary', '#0f172a');
         document.documentElement.style.setProperty('--theme-border', '#e2e8f0');
       }
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.setProperty('--theme-bg-canvas', '#f8fafc');
+      document.documentElement.style.setProperty('--theme-bg-surface', '#ffffff');
+      document.documentElement.style.setProperty('--theme-text-primary', '#0f172a');
+      document.documentElement.style.setProperty('--theme-border', '#e2e8f0');
     }
   }, [
     settings?.fontFamily,
@@ -95,49 +102,75 @@ const MainLayout: React.FC = () => {
     );
   }
 
+  const renderAccessRestricted = (moduleName: string) => (
+    <div className="p-8 max-w-md mx-auto mt-16 bg-white dark:bg-slate-900 rounded-2xl border border-red-200 dark:border-red-900/40 text-center shadow-sm">
+      <div className="w-12 h-12 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4">
+        <ShieldAlert className="w-6 h-6" />
+      </div>
+      <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Access Restricted</h2>
+      <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed mb-6">
+        You do not currently have permission to access the <strong>{moduleName}</strong> module. Please contact an administrator to grant access via the Security Permission Matrix.
+      </p>
+      <button
+        type="button"
+        onClick={() => setActiveTab('dashboard')}
+        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+      >
+        Return to Dashboard
+      </button>
+    </div>
+  );
+
   const renderActiveView = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardView />;
       case 'items':
+        if (!isMasterAdmin && !hasPermission('view')) {
+          return renderAccessRestricted('Lost & Found Items');
+        }
         return <ItemsView />;
       case 'dispatch':
+        if (!isMasterAdmin && !hasPermission('dispatch')) {
+          return renderAccessRestricted('Pending Dispatch');
+        }
         return <PendingDispatchView />;
       case 'staff':
+        if (!isMasterAdmin && !hasPermission('staff_management')) {
+          return renderAccessRestricted('Staff Management');
+        }
         return <StaffManagementView />;
       case 'performance':
+        if (!isMasterAdmin && !hasPermission('performance')) {
+          return renderAccessRestricted('Staff Performance Analytics');
+        }
         return <StaffPerformanceView />;
       case 'certificates':
+        if (!isMasterAdmin && !hasPermission('certificates_view') && !hasPermission('certificates')) {
+          return renderAccessRestricted('Certificates & Awards');
+        }
         return <CertificatesView />;
       case 'audit_logs':
-        if (user?.role !== 'Super Admin' && user?.role !== 'Admin') {
-          return (
-            <div className="p-8 max-w-md mx-auto mt-16 bg-white rounded-2xl border border-red-200 text-center shadow-sm">
-              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShieldAlert className="w-6 h-6" />
-              </div>
-              <h2 className="text-lg font-bold text-slate-900 mb-2">Access Restricted</h2>
-              <p className="text-slate-600 text-xs leading-relaxed mb-6">
-                Only Administrators and Super Admins have permission to view the Audit & Activity Logs.
-              </p>
-              <button
-                type="button"
-                onClick={() => setActiveTab('dashboard')}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors"
-              >
-                Return to Dashboard
-              </button>
-            </div>
-          );
+        if (!isMasterAdmin && !hasPermission('audit_logs')) {
+          return renderAccessRestricted('Audit & Activity Logs');
         }
         return <AuditLogsView />;
       case 'databases':
+        if (!isMasterAdmin && !hasPermission('settings')) {
+          return renderAccessRestricted('Database Settings');
+        }
         return <SettingsView initialTab="database" />;
       case 'settings':
+        if (!isMasterAdmin && !hasPermission('settings') && !hasPermission('manage_staff_access')) {
+          return renderAccessRestricted('System Settings');
+        }
         return <SettingsView />;
       case 'profile':
         return <UserProfileView />;
       case 'removed':
+        if (!isMasterAdmin && !hasPermission('removed_items')) {
+          return renderAccessRestricted('Removed Items');
+        }
         return <RemovedItemsView />;
       default:
         return <DashboardView />;
@@ -153,6 +186,26 @@ const MainLayout: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         <Header />
         <NetworkStatusBanner />
+
+        {/* Live Role Simulation Warning / Switcher Banner */}
+        {previewRole && (
+          <div className="bg-amber-500 text-slate-950 px-4 py-2 text-xs font-bold flex items-center justify-between shadow-sm sticky top-0 z-30 animate-fadeIn">
+            <div className="flex items-center space-x-2">
+              <span className="text-base">🎭</span>
+              <span>
+                Simulating Role: <span className="underline decoration-2 font-black">{previewRole}</span> — All navigation, modules, item actions &amp; buttons strictly reflect active permissions for <strong>{previewRole}</strong>.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPreviewRole(null)}
+              className="px-3 py-1 bg-slate-950 hover:bg-slate-900 text-white rounded-lg text-[11px] font-bold transition-all shadow-xs cursor-pointer ml-3 shrink-0"
+            >
+              Exit Simulator
+            </button>
+          </div>
+        )}
+
         <main className="flex-1 pb-16">
           {renderActiveView()}
         </main>

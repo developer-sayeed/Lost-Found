@@ -47,47 +47,40 @@ import {
 } from './CertificateActions';
 
 export const CertificatesView: React.FC = () => {
-  const { user, hasPermission } = useAuth();
+  const { user, hasPermission, isSuperAdmin, previewRole, effectiveRole } = useAuth();
   const { t } = useLanguage();
   const { settings, updateSettings } = useApp();
 
+  const isMasterAdmin = isSuperAdmin && !previewRole;
+
   // Granular Permission Checks
   const canViewCertificates =
-    user?.role === 'Super Admin' ||
-    user?.role === 'Admin' ||
+    isMasterAdmin ||
     hasPermission('certificates_view') ||
+    hasPermission('certificates_print') ||
     hasPermission('certificates');
 
   const canAddCertificates =
-    user?.role === 'Super Admin' ||
-    user?.role === 'Admin' ||
-    hasPermission('certificates_create') ||
-    hasPermission('certificates');
+    isMasterAdmin ||
+    hasPermission('certificates_create');
 
   const canEditCertificates =
-    user?.role === 'Super Admin' ||
-    user?.role === 'Admin' ||
-    hasPermission('certificates_edit') ||
-    hasPermission('certificates');
+    isMasterAdmin ||
+    hasPermission('certificates_edit');
 
   const canDeleteCertificates =
-    user?.role === 'Super Admin' ||
-    user?.role === 'Admin' ||
-    hasPermission('certificates_delete') ||
-    hasPermission('certificates');
+    isMasterAdmin ||
+    hasPermission('certificates_delete');
 
   const canPrintCertificates =
-    user?.role === 'Super Admin' ||
-    user?.role === 'Admin' ||
+    isMasterAdmin ||
     hasPermission('certificates_print') ||
-    hasPermission('certificates') ||
+    hasPermission('certificates_view') ||
     hasPermission('print');
 
   const canSaveCertificates =
-    user?.role === 'Super Admin' ||
-    user?.role === 'Admin' ||
-    hasPermission('certificates_save') ||
-    hasPermission('certificates');
+    isMasterAdmin ||
+    hasPermission('certificates_save');
 
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [customTemplates, setCustomTemplates] = useState<CustomCertificateTemplate[]>([]);
@@ -384,11 +377,41 @@ export const CertificatesView: React.FC = () => {
   )).length;
   const customCount = certificates.filter(c => c && ((c.template && c.template.startsWith('tpl-custom-')) || c.template === 'custom' || Boolean(c.customBackgroundImage))).length;
 
+  // Filter user's personal awarded certificates
+  const myCertificates = useMemo(() => {
+    if (!user) return [];
+    const uName = (user.name || '').toLowerCase().trim();
+    const uStaffId = (user.staffId || user.userId || user.id || '').toLowerCase().trim();
+    return certificates.filter(c => {
+      if (!c) return false;
+      const rName = (c.recipientName || '').toLowerCase().trim();
+      const rStaffId = (c.recipientStaffId || '').toLowerCase().trim();
+      if (uStaffId && rStaffId && uStaffId === rStaffId) return true;
+      if (uName && rName && (rName === uName || rName.includes(uName) || uName.includes(rName))) return true;
+      return false;
+    });
+  }, [certificates, user]);
+
   // Filtered in-memory list
   const filteredCertificates = useMemo(() => {
     const q = (searchQuery || '').toLowerCase().trim();
+    const isRegularStaffViewOnly = !canAddCertificates && !isMasterAdmin;
+
     return certificates.filter(cert => {
       if (!cert) return false;
+
+      // Regular staff with view-only permission: if filtering by personal certs or if only personal certs wanted
+      if (isRegularStaffViewOnly && selectedTemplateFilter === 'my_certs') {
+        const uName = (user?.name || '').toLowerCase().trim();
+        const uStaffId = (user?.staffId || user?.userId || user?.id || '').toLowerCase().trim();
+        const rName = (cert.recipientName || '').toLowerCase().trim();
+        const rStaffId = (cert.recipientStaffId || '').toLowerCase().trim();
+        const isMine =
+          (uStaffId && rStaffId && uStaffId === rStaffId) ||
+          (uName && rName && (rName === uName || rName.includes(uName) || uName.includes(rName)));
+        if (!isMine) return false;
+      }
+
       const matchSearch =
         !q ||
         (cert.recipientName && cert.recipientName.toLowerCase().includes(q)) ||
@@ -400,7 +423,16 @@ export const CertificatesView: React.FC = () => {
         (cert.awardDate && cert.awardDate.toLowerCase().includes(q));
 
       let matchTemplate = true;
-      if (selectedTemplateFilter === 'employee_of_month') {
+      if (selectedTemplateFilter === 'my_certs') {
+        const uName = (user?.name || '').toLowerCase().trim();
+        const uStaffId = (user?.staffId || user?.userId || user?.id || '').toLowerCase().trim();
+        const rName = (cert.recipientName || '').toLowerCase().trim();
+        const rStaffId = (cert.recipientStaffId || '').toLowerCase().trim();
+        const isMine =
+          (uStaffId && rStaffId && uStaffId === rStaffId) ||
+          (uName && rName && (rName === uName || rName.includes(uName) || uName.includes(rName)));
+        matchTemplate = Boolean(isMine);
+      } else if (selectedTemplateFilter === 'employee_of_month') {
         matchTemplate = cert.template === 'employee_of_month' || cert.template === 'star_eom';
       } else if (selectedTemplateFilter === 'appreciation') {
         matchTemplate = cert.template === 'appreciation' || cert.template === 'star_appreciation';
@@ -418,7 +450,7 @@ export const CertificatesView: React.FC = () => {
 
       return matchSearch && matchTemplate;
     });
-  }, [certificates, searchQuery, selectedTemplateFilter]);
+  }, [certificates, searchQuery, selectedTemplateFilter, user, canAddCertificates, isMasterAdmin]);
 
   // Non-authorized screen
   if (!canViewCertificates) {
@@ -518,60 +550,61 @@ export const CertificatesView: React.FC = () => {
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 5-Star Template Gallery Callout Banner */}
+      {/* 5-Star Template Gallery Callout Banner - Available only to users with Add / Create permission */}
       {/* ------------------------------------------------------------- */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-[#0b1b2d] to-slate-900 text-white p-5 border border-amber-500/30 shadow-md">
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-bold shrink-0 shadow-md">
-              <Crown className="w-6 h-6 text-slate-950" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-white">5-Star Standard Template Gallery</h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                  5 Presets
-                </span>
+      {/* 5-Star Template Gallery Callout Banner - Available only to users with Add / Create permission */}
+      {canAddCertificates && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-50 via-amber-100/40 to-slate-50 dark:from-slate-900 dark:via-[#0b1b2d] dark:to-slate-900 text-slate-900 dark:text-white p-5 border border-amber-200 dark:border-amber-500/30 shadow-xs">
+          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-400/10 via-transparent to-transparent pointer-events-none" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-bold shrink-0 shadow-md">
+                <Crown className="w-6 h-6 text-slate-950" />
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Explore pre-configured 5-star hotel layouts: Employee of the Month, Roman Appreciation, Sovereign Leadership, Hospitality Hero & Long Service Milestone.
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">5-Star Standard Template Gallery</h3>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200/60 text-amber-900 dark:bg-amber-400/20 dark:text-amber-300 border border-amber-300/60 dark:border-amber-400/30">
+                    5 Presets
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  Explore pre-configured 5-star hotel layouts: Employee of the Month, Roman Appreciation, Sovereign Leadership, Hospitality Hero & Long Service Milestone.
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              id="btn-open-template-gallery"
-              type="button"
-              onClick={() => setIsGalleryOpen(true)}
-              className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Browse Gallery</span>
-            </button>
-            <button
-              id="btn-open-certificate-settings"
-              type="button"
-              onClick={() => setIsSettingsOpen(true)}
-              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-xl border border-slate-700 transition-all flex items-center gap-1.5"
-            >
-              <Building2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>Brand & Logo</span>
-            </button>
-            {canAddCertificates && (
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                id="btn-open-template-gallery"
+                type="button"
+                onClick={() => setIsGalleryOpen(true)}
+                className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Browse Gallery</span>
+              </button>
+              <button
+                id="btn-open-certificate-settings"
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+                className="px-3 py-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs transition-all flex items-center gap-1.5"
+              >
+                <Building2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>Brand & Logo</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setIsAddTemplateOpen(true)}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-xl border border-slate-700 transition-all flex items-center gap-1.5"
+                className="px-3 py-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs transition-all flex items-center gap-1.5"
               >
-                <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
+                <ImageIcon className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>Upload Template</span>
               </button>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ------------------------------------------------------------- */}
       {/* Search, Filters & Action Toolbar */}
@@ -603,6 +636,20 @@ export const CertificatesView: React.FC = () => {
             >
               All ({totalCount})
             </button>
+            {myCertificates.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedTemplateFilter('my_certs')}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition whitespace-nowrap flex items-center gap-1 ${
+                  selectedTemplateFilter === 'my_certs'
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-2xs'
+                    : 'text-amber-800 dark:text-amber-300 hover:text-amber-950 dark:hover:text-amber-100 font-semibold'
+                }`}
+              >
+                <Award className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                <span>My Certificates ({myCertificates.length})</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setSelectedTemplateFilter('employee_of_month')}
@@ -756,19 +803,25 @@ export const CertificatesView: React.FC = () => {
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-5">
             {searchQuery
               ? `No certificates matched "${searchQuery}". Try a different keyword.`
-              : 'No certificates have been issued yet. Click "Generate Certificate" to create one.'}
+              : selectedTemplateFilter === 'my_certs'
+              ? 'No certificates have been awarded to your account yet. When certificates are awarded, they will appear here.'
+              : canAddCertificates
+              ? 'No certificates have been issued yet. Click "Generate Certificate" to create one.'
+              : 'No certificates have been issued yet. When certificates are awarded, you can view and print them here.'}
           </p>
-          <button
-            type="button"
-            onClick={() => {
-              setEditingCert(null);
-              setIsGeneratorOpen(true);
-            }}
-            className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Generate Certificate
-          </button>
+          {canAddCertificates && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingCert(null);
+                setIsGeneratorOpen(true);
+              }}
+              className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Generate Certificate
+            </button>
+          )}
         </div>
       ) : viewMode === 'grid' ? (
         /* Grid Card View - Responsive: 1 Col Mobile, 2 Col Tablet, 3 Col MD, 4 Col LG, 5 Col >=1280px (XL & 2XL) */

@@ -287,10 +287,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isConnectingMongo, setIsConnectingMongo] = useState<boolean>(false);
   const [settings, setSettings] = useState<HotelSettings>(() => {
     const cached = offlineStorage.loadSettings();
-    return cached || {
+    const initial: HotelSettings = cached || {
       ...INITIAL_HOTEL_SETTINGS,
       categories: INITIAL_HOTEL_SETTINGS.categories || DEFAULT_ITEM_CATEGORIES
     };
+    if (initial.themeMode === ('system' as any)) {
+      initial.themeMode = 'light';
+      initial.isDarkMode = false;
+    }
+    return initial;
   });
 
   // Multi-Database System Architecture State
@@ -1066,6 +1071,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ? settingsRes.settings.categories
             : DEFAULT_ITEM_CATEGORIES
         };
+        if (nextSettings.themeMode === ('system' as any)) {
+          nextSettings.themeMode = 'light';
+          nextSettings.isDarkMode = false;
+        }
         setSettings(nextSettings);
         offlineStorage.saveSettings(nextSettings);
       }
@@ -1510,24 +1519,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSettings = async (newSettings: Partial<HotelSettings>) => {
-    // Optimistically apply dynamic theme immediately so user experiences real-time feedback
-    if (typeof document !== 'undefined') {
-      applyDynamicTheme({ ...settings, ...newSettings });
+    // Immediate optimistic local update for zero-lag UI responsiveness
+    const optimisticMerged = {
+      ...settings,
+      ...newSettings,
+      categories: (newSettings.categories && newSettings.categories.length > 0)
+        ? newSettings.categories
+        : (settings.categories || DEFAULT_ITEM_CATEGORIES)
+    };
+
+    setSettings(optimisticMerged);
+    offlineStorage.saveSettings(optimisticMerged);
+
+    if (newSettings.rolePermissions && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('warwick_role_permissions', JSON.stringify(newSettings.rolePermissions));
+      } catch {}
+      window.dispatchEvent(new CustomEvent('warwick_permissions_updated', { detail: { rolePermissions: newSettings.rolePermissions } }));
     }
+
+    if (typeof document !== 'undefined') {
+      applyDynamicTheme(optimisticMerged);
+    }
+
     setIsSyncing(true);
     try {
       const updated = await api.updateSettings(newSettings, user);
       const merged = {
+        ...optimisticMerged,
         ...updated,
         categories: (updated.categories && updated.categories.length > 0)
           ? updated.categories
-          : (newSettings.categories || settings.categories || DEFAULT_ITEM_CATEGORIES)
+          : optimisticMerged.categories
       };
       setSettings(prev => ({
         ...prev,
         ...merged
       }));
       offlineStorage.saveSettings(merged);
+      if (typeof window !== 'undefined') {
+        if (merged.rolePermissions) {
+          try {
+            localStorage.setItem('warwick_role_permissions', JSON.stringify(merged.rolePermissions));
+          } catch {}
+        }
+        window.dispatchEvent(new CustomEvent('warwick_permissions_updated', { detail: { rolePermissions: merged.rolePermissions } }));
+      }
       if (typeof document !== 'undefined') {
         applyDynamicTheme(merged);
       }
@@ -2192,6 +2229,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setStaff(prev => {
       const nextStaff = prev.map(s => (s.id === id || (s as any)._id === id || s.userId === id || s.staffId === id ? { ...s, ...updated } : s));
       offlineStorage.saveStaff(nextStaff);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('warwick_permissions_updated', { detail: { updatedStaff: updated } }));
+      }
       return nextStaff;
     });
 
