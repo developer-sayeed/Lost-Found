@@ -150,7 +150,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   const [connectedDevicesSubTab, setConnectedDevicesSubTab] = useState<'terminals' | 'blocked_devices' | 'security_activity'>('terminals');
 
   // Device Filter & Block Modal States
-  const [deviceFilter, setDeviceFilter] = useState<'all' | 'online' | 'recent'>('all');
+  const [deviceFilter, setDeviceFilter] = useState<'all' | 'online' | 'mobile' | 'desktop' | 'recent'>('all');
   const [deviceSearch, setDeviceSearch] = useState<string>('');
   const [deviceToBlock, setDeviceToBlock] = useState<DeviceSession | null>(null);
   const [blockType, setBlockType] = useState<'temporary' | 'permanent'>('temporary');
@@ -313,24 +313,48 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     }
   }, [activeTab, fetchSessions, fetchBlockedDevices]);
 
-  const onlineSessions = React.useMemo(() => {
+  // Real-time authentic sessions within last 24 hours
+  const valid24hSessions = React.useMemo(() => {
+    const cutoff24h = Date.now() - 24 * 3600 * 1000;
     return sessions.filter(s => {
+      if (!s || !s.lastSeen) return false;
+      // Strip legacy dummy mock session device IDs
+      if (s.deviceId === 'dev-desktop-01' || s.deviceId === 'dev-mobile-02' || s.deviceId === 'dev-tablet-03') return false;
+      const seenTime = new Date(s.lastSeen).getTime();
+      return !isNaN(seenTime) && seenTime > cutoff24h;
+    });
+  }, [sessions]);
+
+  const onlineSessions = React.useMemo(() => {
+    return valid24hSessions.filter(s => {
       const diffSecs = Math.floor((Date.now() - new Date(s.lastSeen).getTime()) / 1000);
       return diffSecs < 180; // Within 3 minutes
     });
-  }, [sessions]);
+  }, [valid24hSessions]);
+
+  const mobileSessions = React.useMemo(() => {
+    return valid24hSessions.filter(s => s.deviceType === 'Mobile');
+  }, [valid24hSessions]);
+
+  const desktopSessions = React.useMemo(() => {
+    return valid24hSessions.filter(s => s.deviceType === 'Desktop' || s.deviceType === 'Tablet' || !s.deviceType);
+  }, [valid24hSessions]);
 
   const idleSessions = React.useMemo(() => {
-    return sessions.filter(s => {
+    return valid24hSessions.filter(s => {
       const diffSecs = Math.floor((Date.now() - new Date(s.lastSeen).getTime()) / 1000);
       return diffSecs >= 180;
     });
-  }, [sessions]);
+  }, [valid24hSessions]);
 
   const displayedSessions = React.useMemo(() => {
-    let list = sessions;
+    let list = valid24hSessions;
     if (deviceFilter === 'online') {
       list = onlineSessions;
+    } else if (deviceFilter === 'mobile') {
+      list = mobileSessions;
+    } else if (deviceFilter === 'desktop') {
+      list = desktopSessions;
     } else if (deviceFilter === 'recent') {
       list = idleSessions;
     }
@@ -347,7 +371,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       );
     }
     return list;
-  }, [sessions, onlineSessions, idleSessions, deviceFilter, deviceSearch]);
+  }, [valid24hSessions, onlineSessions, mobileSessions, desktopSessions, idleSessions, deviceFilter, deviceSearch]);
 
   const handleOpenBlockModal = (session: DeviceSession) => {
     setDeviceToBlock(session);
@@ -2299,7 +2323,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                   <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
                     connectedDevicesSubTab === 'terminals' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'
                   }`}>
-                    {sessions.length || 1}
+                    {valid24hSessions.length}
                   </span>
                   {onlineSessions.length > 0 && (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
@@ -2461,23 +2485,42 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       <span className="text-xs font-semibold text-emerald-700">active terminal{onlineSessions.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="text-[11px] text-emerald-700 mt-1">
-                      Active heartbeat in the last 3 minutes
+                      Live heartbeat within last 3 minutes
                     </div>
                   </div>
 
-                  {/* Connected Terminals Total */}
+                  {/* Mobile Devices Logged In (Last 24 Hours) */}
+                  <div className="p-4 rounded-2xl bg-sky-50/70 border border-sky-200">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-semibold text-sky-800 uppercase tracking-wider flex items-center space-x-1.5">
+                        <Smartphone className="w-3.5 h-3.5 text-sky-600" />
+                        <span>Mobiles (24 Hours)</span>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-200/60 text-sky-800">24h Logins</span>
+                    </div>
+                    <div className="text-2xl font-extrabold text-sky-900 mt-1.5 flex items-baseline space-x-2">
+                      <span>{mobileSessions.length}</span>
+                      <span className="text-xs font-semibold text-sky-700">mobile device{mobileSessions.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="text-[11px] text-sky-700 mt-1">
+                      Logged in from smartphone within 24h
+                    </div>
+                  </div>
+
+                  {/* Connected Terminals Total (24 Hours) */}
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
                     <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                        Total Sessions
+                      <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                        Total Active (24h)
                       </div>
                       <Laptop className="w-4 h-4 text-slate-400" />
                     </div>
-                    <div className="text-2xl font-extrabold text-slate-900 mt-1.5">
-                      {sessions.length || 1}
+                    <div className="text-2xl font-extrabold text-slate-900 mt-1.5 flex items-baseline space-x-2">
+                      <span>{valid24hSessions.length}</span>
+                      <span className="text-xs font-semibold text-slate-500">device{valid24hSessions.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="text-[11px] text-slate-500 mt-1">
-                      Registered authorized login sessions
+                      Real user logins in last 24 hours
                     </div>
                   </div>
 
@@ -2496,23 +2539,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       Prohibited from system access
                     </div>
                   </div>
-
-                  {/* System Cache State */}
-                  <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/70">
-                    <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider flex items-center space-x-1">
-                        <Zap className="w-3 h-3 text-amber-600" />
-                        <span>Build Sync</span>
-                      </div>
-                      <CheckCircle2 className="w-4 h-4 text-amber-600" />
-                    </div>
-                    <div className="text-sm font-bold text-amber-900 mt-1.5">
-                      v{settings.version || 1} Live Synced
-                    </div>
-                    <div className="text-[11px] text-amber-700/80 mt-1 truncate">
-                      Last sync: {new Date(settings.lastSyncedAt).toLocaleTimeString()}
-                    </div>
-                  </div>
                 </div>
 
                 {/* Filter Controls & Search */}
@@ -2527,7 +2553,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
-                      All Connected Devices ({sessions.length})
+                      All Real Logins ({valid24hSessions.length})
                     </button>
 
                     <button
@@ -2545,6 +2571,32 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
                     <button
                       type="button"
+                      onClick={() => setDeviceFilter('mobile')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        deviceFilter === 'mobile'
+                          ? 'bg-sky-600 text-white shadow-2xs'
+                          : 'bg-sky-50 text-sky-800 border border-sky-200 hover:bg-sky-100'
+                      }`}
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>Mobiles ({mobileSessions.length})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDeviceFilter('desktop')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        deviceFilter === 'desktop'
+                          ? 'bg-indigo-600 text-white shadow-2xs'
+                          : 'bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100'
+                      }`}
+                    >
+                      <Laptop className="w-3.5 h-3.5" />
+                      <span>Desktop ({desktopSessions.length})</span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => setDeviceFilter('recent')}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                         deviceFilter === 'recent'
@@ -2552,7 +2604,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
-                      Idle / Inactive ({idleSessions.length})
+                      Idle ({idleSessions.length})
                     </button>
                   </div>
 
@@ -2592,7 +2644,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       <p className="text-xs text-slate-500">
                         {deviceFilter === 'online'
                           ? 'No devices currently online in the last 3 minutes.'
-                          : 'No terminal sessions match the current filter or search criteria.'}
+                          : deviceFilter === 'mobile'
+                          ? 'No mobile smartphone logins recorded in the last 24 hours.'
+                          : deviceFilter === 'desktop'
+                          ? 'No desktop terminals recorded in the last 24 hours.'
+                          : 'No real authenticated login sessions in the last 24 hours match the current criteria.'}
                       </p>
                     </div>
                   ) : (
@@ -2758,7 +2814,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
                               {/* Connection & Device ID */}
                               <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/80">
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Device Identifier</span>
+                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Device Identifier &amp; Login Time</span>
                                 <div className="flex items-center justify-between mt-0.5">
                                   <span className="font-mono text-slate-700 text-xs font-semibold truncate">
                                     {session.deviceId}
@@ -2776,9 +2832,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                                     )}
                                   </button>
                                 </div>
-                                <span className="text-[10px] text-slate-400 block">
-                                  {isOnlineNow ? '🟢 Active Heartbeat' : '⚪ Standby'}
-                                </span>
+                                <div className="flex items-center justify-between text-[10px] text-slate-500 mt-0.5">
+                                  <span>{isOnlineNow ? '🟢 Active Heartbeat' : '⚪ Standby (within 24h)'}</span>
+                                  {session.loginAt && (
+                                    <span className="text-slate-400">
+                                      In: {new Date(session.loginAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>

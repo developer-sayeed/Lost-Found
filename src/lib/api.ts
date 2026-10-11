@@ -484,7 +484,16 @@ export const api = {
   },
 
   // Active Device Sessions
-  async getSessions(user?: User | null): Promise<{ sessions: DeviceSession[]; total: number; currentDeviceId: string }> {
+  async getSessions(user?: User | null): Promise<{
+    sessions: DeviceSession[];
+    total: number;
+    onlineCount?: number;
+    mobileCount?: number;
+    tabletCount?: number;
+    desktopCount?: number;
+    timeWindowHours?: number;
+    currentDeviceId: string;
+  }> {
     try {
       const res = await fetch('/api/sessions', {
         headers: getAuthHeaders(user)
@@ -495,51 +504,44 @@ export const api = {
     } catch (e) {
       console.warn('Get sessions error:', e);
     }
+    const currentId = getDeviceId();
+    const nowIso = new Date().toISOString();
     return {
-      sessions: [
+      sessions: user ? [
         {
-          deviceId: getDeviceId(),
-          userName: user?.name || 'Staff Member',
-          userEmail: user?.email || '',
-          role: user?.role || 'Staff',
-          deviceType: 'Desktop',
-          browser: 'Google Chrome',
-          os: 'Windows 11',
-          ip: '192.168.1.45',
-          lastSeen: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          isCurrent: true
-        },
-        {
-          deviceId: 'dev-hk-mobile',
-          userName: 'Weal Salem',
-          userEmail: 'weal@warwickbaha.com',
-          role: 'Housekeeping',
-          deviceType: 'Mobile',
-          browser: 'Apple Safari',
-          os: 'iOS (iPhone 15 Pro)',
-          ip: '192.168.1.88',
-          lastSeen: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-          createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-          isCurrent: false
-        },
-        {
-          deviceId: 'dev-reception-tab',
-          userName: 'Alhanouf Alghamdi',
-          userEmail: 'alhanouf@warwickbaha.com',
-          role: 'Receptionist',
-          deviceType: 'Tablet',
-          browser: 'Google Chrome',
-          os: 'iPadOS',
-          ip: '192.168.1.102',
-          lastSeen: new Date(Date.now() - 7 * 60 * 1000).toISOString(),
-          createdAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
-          isCurrent: false
+          deviceId: currentId,
+          userName: user.name || 'Current User',
+          userEmail: user.email || '',
+          role: user.role || 'Staff',
+          deviceType: /mobile|iphone|android/i.test(navigator.userAgent) ? 'Mobile' : /ipad|tablet/i.test(navigator.userAgent) ? 'Tablet' : 'Desktop',
+          browser: 'Current Browser',
+          os: navigator.userAgent.includes('Win') ? 'Windows' : navigator.userAgent.includes('Mac') ? 'macOS' : navigator.userAgent.includes('Android') ? 'Android' : navigator.userAgent.includes('iPhone') ? 'iOS' : 'Desktop OS',
+          ip: 'Current Terminal',
+          lastSeen: nowIso,
+          loginAt: nowIso,
+          createdAt: nowIso,
+          isCurrent: true,
+          isOnlineNow: true,
+          hoursAgo: 0
         }
-      ],
-      total: 3,
-      currentDeviceId: getDeviceId()
+      ] : [],
+      total: user ? 1 : 0,
+      onlineCount: user ? 1 : 0,
+      mobileCount: /mobile|iphone|android/i.test(navigator.userAgent) ? 1 : 0,
+      tabletCount: /ipad|tablet/i.test(navigator.userAgent) ? 1 : 0,
+      desktopCount: !/mobile|iphone|android|ipad|tablet/i.test(navigator.userAgent) ? 1 : 0,
+      timeWindowHours: 24,
+      currentDeviceId: currentId
     };
+  },
+
+  async pingSession(user?: User | null): Promise<void> {
+    try {
+      await fetch('/api/sessions/ping', {
+        method: 'POST',
+        headers: getAuthHeaders(user)
+      });
+    } catch {}
   },
 
   async deleteSession(deviceId: string, user?: User | null): Promise<{ success: boolean; message: string; sessions: DeviceSession[] }> {

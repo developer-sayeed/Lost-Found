@@ -1180,13 +1180,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch {}
 
-    // Calm 60-second heartbeat for notifications, active only when window is visible and online
+    // Calm 60-second heartbeat for notifications and real-time active session ping
     const interval = setInterval(async () => {
       if (document.hidden || !effectiveOnline) {
         return;
       }
       try {
         await fetchNotifications();
+        if (user) {
+          await api.pingSession(user);
+        }
       } catch (e) {
         // silent
       }

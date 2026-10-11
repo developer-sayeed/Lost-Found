@@ -107,50 +107,7 @@ function getInitialFreshDatabase(): DatabaseSchema {
       }
     ],
     blockedDevices: [],
-    activeSessions: [
-      {
-        deviceId: 'dev-desktop-01',
-        userId: 'usr-1',
-        userName: 'MD ABU SAYEED RIDAY',
-        userEmail: 'abusayeedriday@gmail.com',
-        role: 'Super Admin',
-        deviceType: 'Desktop',
-        browser: 'Google Chrome',
-        os: 'Windows 11',
-        ip: '192.168.1.45',
-        lastSeen: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0'
-      },
-      {
-        deviceId: 'dev-mobile-02',
-        userId: 'staff-2',
-        userName: 'Weal Salem',
-        userEmail: 'weal@warwickbaha.com',
-        role: 'Housekeeping',
-        deviceType: 'Mobile',
-        browser: 'Apple Safari',
-        os: 'iOS (iPhone 15 Pro)',
-        ip: '192.168.1.88',
-        lastSeen: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-        createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'
-      },
-      {
-        deviceId: 'dev-tablet-03',
-        userId: 'staff-3',
-        userName: 'Alhanouf Alghamdi',
-        userEmail: 'alhanouf@warwickbaha.com',
-        role: 'Receptionist',
-        deviceType: 'Tablet',
-        browser: 'Google Chrome',
-        os: 'iPadOS',
-        ip: '192.168.1.102',
-        lastSeen: new Date(Date.now() - 7 * 60 * 1000).toISOString(),
-        createdAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
-        userAgent: 'Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15'
-      }
-    ],
+    activeSessions: [],
     certificates: [
       {
         id: 'cert-1788765369001',
@@ -226,6 +183,18 @@ function loadDatabase(): DatabaseSchema {
       }
       if (!Array.isArray(parsed.blockedDevices)) {
         parsed.blockedDevices = [];
+      }
+      if (!Array.isArray(parsed.activeSessions)) {
+        parsed.activeSessions = [];
+      } else {
+        const cutoff24h = Date.now() - 24 * 3600 * 1000;
+        parsed.activeSessions = parsed.activeSessions.filter((s: any) => {
+          if (!s || !s.deviceId || !s.lastSeen) return false;
+          // Filter out dummy/mock sessions
+          if (s.deviceId === 'dev-desktop-01' || s.deviceId === 'dev-mobile-02' || s.deviceId === 'dev-tablet-03') return false;
+          const seenTime = new Date(s.lastSeen).getTime();
+          return !isNaN(seenTime) && seenTime > cutoff24h;
+        });
       }
       return parsed;
     } catch (err) {
@@ -677,10 +646,24 @@ async function startServer() {
     }
 
     if (deviceId && userEmail && req.path.startsWith('/api') && !blockCheck.blocked) {
+      const nowIso = new Date().toISOString();
+      const cutoff24h = Date.now() - 24 * 3600 * 1000;
       const { browser, os, deviceType } = parseUserAgentInfo(ua);
+
+      // Clean up any stale sessions (>24h)
+      db.activeSessions = db.activeSessions.filter((s: any) => {
+        if (!s || !s.deviceId || !s.lastSeen) return false;
+        if (s.deviceId === 'dev-desktop-01' || s.deviceId === 'dev-mobile-02' || s.deviceId === 'dev-tablet-03') return false;
+        const seenTime = new Date(s.lastSeen).getTime();
+        return !isNaN(seenTime) && seenTime > cutoff24h;
+      });
+
       const existingIdx = db.activeSessions.findIndex((s: any) => s.deviceId === deviceId);
       if (existingIdx >= 0) {
-        db.activeSessions[existingIdx].lastSeen = new Date().toISOString();
+        db.activeSessions[existingIdx].lastSeen = nowIso;
+        if (!db.activeSessions[existingIdx].loginAt) {
+          db.activeSessions[existingIdx].loginAt = db.activeSessions[existingIdx].createdAt || nowIso;
+        }
         if (userName) db.activeSessions[existingIdx].userName = userName;
         db.activeSessions[existingIdx].userEmail = userEmail;
         if (role) db.activeSessions[existingIdx].role = role;
@@ -698,8 +681,9 @@ async function startServer() {
           browser,
           os,
           ip,
-          lastSeen: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
+          lastSeen: nowIso,
+          loginAt: nowIso,
+          createdAt: nowIso,
           userAgent: ua.substring(0, 100)
         });
       }
@@ -1960,9 +1944,19 @@ async function startServer() {
     if (!deviceId) {
       deviceId = (req.headers['x-device-id'] as string) || `dev-${Math.random().toString(36).substring(2, 8)}`;
     }
+    const loginNowIso = new Date().toISOString();
+    const cutoff24hLogin = Date.now() - 24 * 3600 * 1000;
+    db.activeSessions = db.activeSessions.filter((s: any) => {
+      if (!s || !s.deviceId || !s.lastSeen) return false;
+      if (s.deviceId === 'dev-desktop-01' || s.deviceId === 'dev-mobile-02' || s.deviceId === 'dev-tablet-03') return false;
+      const seen = new Date(s.lastSeen).getTime();
+      return !isNaN(seen) && seen > cutoff24hLogin;
+    });
+
     const existingSessionIdx = db.activeSessions.findIndex(s => s.deviceId === deviceId);
     if (existingSessionIdx >= 0) {
-      db.activeSessions[existingSessionIdx].lastSeen = new Date().toISOString();
+      db.activeSessions[existingSessionIdx].lastSeen = loginNowIso;
+      db.activeSessions[existingSessionIdx].loginAt = loginNowIso;
       db.activeSessions[existingSessionIdx].userId = sessionUser.id;
       db.activeSessions[existingSessionIdx].userName = sessionUser.name;
       db.activeSessions[existingSessionIdx].userEmail = sessionUser.email;
@@ -1978,8 +1972,10 @@ async function startServer() {
         userName: sessionUser.name,
         userEmail: sessionUser.email,
         role: sessionUser.role,
-        lastSeen: new Date().toISOString(),
-        userAgent: req.headers['user-agent']?.substring(0, 50) || 'Web Browser',
+        lastSeen: loginNowIso,
+        loginAt: loginNowIso,
+        createdAt: loginNowIso,
+        userAgent: req.headers['user-agent']?.substring(0, 100) || 'Web Browser',
         browser,
         os,
         deviceType: deviceType as any,
@@ -2359,13 +2355,14 @@ async function startServer() {
 
     const now = new Date().toISOString();
 
-    // 1. Purge obsolete inactive sessions (> 48 hours)
-    const cutoff48h = Date.now() - 48 * 3600 * 1000;
+    // 1. Purge obsolete inactive sessions (> 24 hours) and dummy seeds
+    const cutoff24h = Date.now() - 24 * 3600 * 1000;
     const initialSessionCount = db.activeSessions.length;
     db.activeSessions = db.activeSessions.filter(s => {
-      if (!s.lastSeen) return true;
+      if (!s || !s.deviceId || !s.lastSeen) return false;
+      if (s.deviceId === 'dev-desktop-01' || s.deviceId === 'dev-mobile-02' || s.deviceId === 'dev-tablet-03') return false;
       const seenTime = new Date(s.lastSeen).getTime();
-      return seenTime > cutoff48h;
+      return !isNaN(seenTime) && seenTime > cutoff24h;
     });
 
     // 2. Increment cache bust version & timestamp
@@ -2428,14 +2425,34 @@ async function startServer() {
   });
 
   // ----------------------------------------------------
-  // API: Real-Time Active Device Sessions
+  // API: Real-Time Active Device Sessions (Strict 24-Hour Real User Filter)
   // ----------------------------------------------------
   app.get('/api/sessions', (req, res) => {
     const currentDeviceId = req.headers['x-device-id'] as string;
-    const sessions = db.activeSessions.map((s: any) => ({
-      ...s,
-      isCurrent: Boolean(s.deviceId && currentDeviceId && s.deviceId === currentDeviceId)
-    }));
+    const cutoff24h = Date.now() - 24 * 3600 * 1000;
+    const now = Date.now();
+
+    // Filter to strictly real authentic user sessions active within the last 24 hours
+    db.activeSessions = (db.activeSessions || []).filter((s: any) => {
+      if (!s || !s.deviceId || !s.lastSeen) return false;
+      // Strip out legacy mock/seeded terminal IDs
+      if (s.deviceId === 'dev-desktop-01' || s.deviceId === 'dev-mobile-02' || s.deviceId === 'dev-tablet-03') return false;
+      const seenTime = new Date(s.lastSeen).getTime();
+      return !isNaN(seenTime) && seenTime > cutoff24h;
+    });
+
+    const sessions = db.activeSessions.map((s: any) => {
+      const lastSeenMs = new Date(s.lastSeen).getTime();
+      const diffSecs = Math.floor((now - lastSeenMs) / 1000);
+      const diffHours = Math.round(((now - lastSeenMs) / (3600 * 1000)) * 10) / 10;
+      return {
+        ...s,
+        isCurrent: Boolean(s.deviceId && currentDeviceId && s.deviceId === currentDeviceId),
+        isOnlineNow: diffSecs < 180, // Active heartbeat within 3 minutes
+        hoursAgo: Math.max(0, diffHours),
+        loginAt: s.loginAt || s.createdAt || s.lastSeen
+      };
+    });
 
     // Sort: current device first, then most recently active
     sessions.sort((a: any, b: any) => {
@@ -2444,11 +2461,85 @@ async function startServer() {
       return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
     });
 
+    const mobileCount = sessions.filter((s: any) => s.deviceType === 'Mobile').length;
+    const tabletCount = sessions.filter((s: any) => s.deviceType === 'Tablet').length;
+    const desktopCount = sessions.filter((s: any) => s.deviceType === 'Desktop' || !s.deviceType).length;
+    const onlineCount = sessions.filter((s: any) => s.isOnlineNow).length;
+
+    db.settings.syncedDevicesCount = Math.max(sessions.length, 1);
+
     return res.json({
       success: true,
       sessions,
       total: sessions.length,
+      onlineCount,
+      mobileCount,
+      tabletCount,
+      desktopCount,
+      timeWindowHours: 24,
       currentDeviceId
+    });
+  });
+
+  // Dedicated lightweight heartbeat endpoint to keep active device session fresh in real-time
+  app.post('/api/sessions/ping', (req, res) => {
+    const deviceId = req.headers['x-device-id'] as string;
+    const userName = (req.headers['x-user-name'] as string) || '';
+    const userEmail = (req.headers['x-user-email'] as string) || '';
+    const role = (req.headers['x-user-role'] as string) || '';
+    const ua = req.headers['user-agent'] || '';
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '192.168.1.45';
+
+    if (!deviceId || !userEmail) {
+      return res.json({ success: false, message: 'Unauthenticated device ping ignored' });
+    }
+
+    const { browser, os, deviceType } = parseUserAgentInfo(ua);
+    const nowIso = new Date().toISOString();
+    const cutoff24h = Date.now() - 24 * 3600 * 1000;
+
+    // Prune stale sessions (> 24 hours)
+    db.activeSessions = (db.activeSessions || []).filter((s: any) => {
+      if (!s || !s.deviceId || !s.lastSeen) return false;
+      if (s.deviceId === 'dev-desktop-01' || s.deviceId === 'dev-mobile-02' || s.deviceId === 'dev-tablet-03') return false;
+      const seenTime = new Date(s.lastSeen).getTime();
+      return !isNaN(seenTime) && seenTime > cutoff24h;
+    });
+
+    const existingIdx = db.activeSessions.findIndex((s: any) => s.deviceId === deviceId);
+    if (existingIdx >= 0) {
+      db.activeSessions[existingIdx].lastSeen = nowIso;
+      if (userName) db.activeSessions[existingIdx].userName = userName;
+      db.activeSessions[existingIdx].userEmail = userEmail;
+      if (role) db.activeSessions[existingIdx].role = role;
+      db.activeSessions[existingIdx].browser = browser;
+      db.activeSessions[existingIdx].os = os;
+      db.activeSessions[existingIdx].deviceType = deviceType;
+      db.activeSessions[existingIdx].ip = ip;
+    } else {
+      db.activeSessions.unshift({
+        deviceId,
+        userName: userName || 'Authenticated User',
+        userEmail,
+        role: role || 'Staff',
+        deviceType,
+        browser,
+        os,
+        ip,
+        lastSeen: nowIso,
+        loginAt: nowIso,
+        createdAt: nowIso,
+        userAgent: ua.substring(0, 100)
+      });
+    }
+
+    db.settings.syncedDevicesCount = Math.max(db.activeSessions.length, 1);
+    saveDatabase();
+
+    return res.json({
+      success: true,
+      lastSeen: nowIso,
+      totalActive24h: db.activeSessions.length
     });
   });
 

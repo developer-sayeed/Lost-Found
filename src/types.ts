@@ -803,9 +803,12 @@ export interface DeviceSession {
   os?: string;
   ip?: string;
   lastSeen: string;
+  loginAt?: string;
   createdAt?: string;
   userAgent?: string;
   isCurrent?: boolean;
+  isOnlineNow?: boolean;
+  hoursAgo?: number;
 }
 
 export interface SecurityActivityLog {
