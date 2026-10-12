@@ -4,7 +4,7 @@ import fs from 'fs';
 import { GoogleGenAI, Type } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
 import { INITIAL_HOTEL_SETTINGS, INITIAL_ITEMS, INITIAL_STAFF, INITIAL_AUDIT_LOGS, DEFAULT_ITEM_CATEGORIES } from './src/lib/constants.ts';
-import { LostItem, StaffMember, HotelSettings, User, UserRole, PermissionKey, StaffDepartment, AuditLog, DEFAULT_ROLE_PERMISSIONS, ALL_PERMISSIONS, DeviceSession, SecurityActivityLog, BlockedDevice, AppNotification, Certificate, CustomCertificateTemplate, RecentUserSignature } from './src/types.ts';
+import { LostItem, StaffMember, HotelSettings, User, UserRole, PermissionKey, StaffDepartment, AuditLog, DEFAULT_ROLE_PERMISSIONS, ALL_PERMISSIONS, DeviceSession, SecurityActivityLog, BlockedDevice, AppNotification, Certificate, CustomCertificateTemplate, RecentUserSignature, GuestInquiry } from './src/types.ts';
 import { mongoService } from './server/mongodb.ts';
 import { multiDbService } from './server/multiDatabase.ts';
 
@@ -58,104 +58,24 @@ function getInitialFreshDatabase(): DatabaseSchema {
       name: 'MD ABU SAYEED RIDAY',
       email: 'abusayeedriday@gmail.com',
       role: 'Super Admin',
-      department: 'Housekeeping',
-      phone: '0571858601',
+      department: 'Security',
+      phone: '0558594605',
       authProvider: 'email',
       password: '587710',
-      lastActive: new Date().toISOString()
-    },
-    {
-      id: 'usr-2',
-      name: 'MD ABU SAYEED RIDAY',
-      email: 'mdriday256@gmail.com',
-      role: 'Super Admin',
-      department: 'Housekeeping',
-      phone: '0571858601',
-      authProvider: 'google',
-      password: '587710',
-      lastActive: new Date().toISOString()
-    },
-    {
-      id: 'usr-3',
-      name: 'Samir El Kassas',
-      email: 'samir@warwickbaha.com',
-      role: 'Employee',
-      department: 'Manager',
-      phone: '0540363898',
-      authProvider: 'email',
-      password: 'Warwick#2026',
       lastActive: new Date().toISOString()
     }
   ];
 
   return {
     settings: JSON.parse(JSON.stringify(INITIAL_HOTEL_SETTINGS)),
-    items: JSON.parse(JSON.stringify(INITIAL_ITEMS)),
-    staff: JSON.parse(JSON.stringify(INITIAL_STAFF)),
+    items: [],
+    staff: [],
     users: initialUsers,
     auditLogs: [],
-    notifications: [
-      {
-        id: 'notif-welcome-1',
-        title: 'Warwick Notification Center Live',
-        message: 'Storage requests, item approvals, handovers, dispatches, and hotel staff notices are broadcast in real time.',
-        type: 'system',
-        priority: 'normal',
-        createdAt: new Date().toISOString(),
-        read: false,
-        readBy: []
-      }
-    ],
+    notifications: [],
     blockedDevices: [],
     activeSessions: [],
-    certificates: [
-      {
-        id: 'cert-1788765369001',
-        certificateNumber: 'WRW-CERT-2026-001',
-        template: 'employee_of_month',
-        title: 'Employee of the Month',
-        recipientName: 'MD ABU SAYEED RIDAY',
-        recipientPosition: 'Housekeeping Supervisor',
-        recipientDepartment: 'Housekeeping',
-        awardPeriod: 'June 2026',
-        citationText: 'For outstanding dedication, hard work, and excellent performance. Your commitment and positive contribution to the team are truly appreciated. Congratulations on being selected as Employee of the Month!',
-        location: 'Al Baha, Saudi Arabia',
-        awardDate: 'June 2026',
-        signatory1Title: 'Housekeeping',
-        signatory1Name: '',
-        signatory2Title: 'General Manager',
-        signatory2Name: '',
-        notes: 'Awarded for exceptional leadership in guest service and department organization.',
-        issuedBy: 'Super Admin',
-        issuedByRole: 'Super Admin',
-        issuedAt: '2026-06-30T10:00:00.000Z',
-        createdAt: '2026-06-30T10:00:00.000Z',
-        updatedAt: '2026-06-30T10:00:00.000Z'
-      },
-      {
-        id: 'cert-1788765369002',
-        certificateNumber: 'WRW-CERT-2026-002',
-        template: 'appreciation',
-        title: 'Certificate of Appreciation',
-        recipientName: 'MD ABU SAYEED RIDAY',
-        recipientPosition: 'Housekeeping Supervisor',
-        recipientDepartment: 'Housekeeping',
-        awardPeriod: 'June 2026',
-        citationText: 'This certificate is proudly presented to Md Abu Sayeed Riday, Housekeeping Supervisor, in recognition of your exceptional dedication, leadership, and hard work during the successful opening of our hotel. Your professionalism, commitment, and valuable contribution played an important role in achieving this memorable milestone and will always be sincerely appreciated.',
-        location: 'Al Baha, Saudi Arabia',
-        awardDate: '15 June 2026',
-        signatory1Title: 'Housekeeping Manager',
-        signatory1Name: '',
-        signatory2Title: 'General Manager',
-        signatory2Name: '',
-        notes: 'Commemoration of hotel grand opening milestone contribution.',
-        issuedBy: 'Super Admin',
-        issuedByRole: 'Super Admin',
-        issuedAt: '2026-06-15T10:00:00.000Z',
-        createdAt: '2026-06-15T10:00:00.000Z',
-        updatedAt: '2026-06-15T10:00:00.000Z'
-      }
-    ]
+    certificates: []
   };
 }
 
@@ -167,10 +87,10 @@ function loadDatabase(): DatabaseSchema {
       const data = fs.readFileSync(DB_FILE, 'utf-8');
       const parsed = JSON.parse(data);
       if (!Array.isArray(parsed.notifications)) {
-        parsed.notifications = freshDb.notifications;
+        parsed.notifications = [];
       }
-      if (!Array.isArray(parsed.certificates) || parsed.certificates.length === 0) {
-        parsed.certificates = freshDb.certificates;
+      if (!Array.isArray(parsed.certificates)) {
+        parsed.certificates = [];
       }
       if (!Array.isArray(parsed.certificateTemplates)) {
         parsed.certificateTemplates = [];
@@ -6400,13 +6320,24 @@ async function startServer() {
     return res.json({ success: true, settings: updated });
   });
 
-  app.get('/api/inquiries', (req, res) => {
-    res.json({ success: true, inquiries: multiDbService.getInquiries() });
+  app.get('/api/inquiries', async (req, res) => {
+    let inquiries: GuestInquiry[] = [];
+    if (mongoService.isLive) {
+      inquiries = await mongoService.getInquiries();
+    }
+    if (!inquiries || inquiries.length === 0) {
+      inquiries = multiDbService.getInquiries();
+    }
+    res.json({ success: true, inquiries });
   });
 
   app.post('/api/public/inquiries', async (req, res) => {
     try {
       const inquiry = multiDbService.createInquiry(req.body);
+
+      if (mongoService.isLive) {
+        await mongoService.insertInquiry(inquiry).catch(e => console.warn('Mongo insertInquiry error:', e.message));
+      }
 
       // Create staff notification
       await createNotificationHelper({
@@ -6429,9 +6360,17 @@ async function startServer() {
     }
   });
 
-  app.get('/api/public/inquiries/track/:code', (req, res) => {
+  app.get('/api/public/inquiries/track/:code', async (req, res) => {
     const { code } = req.params;
-    const inquiry = multiDbService.getInquiryByTrackingCode(code);
+    let inquiry: GuestInquiry | undefined = undefined;
+    if (mongoService.isLive) {
+      const list = await mongoService.getInquiries();
+      const trimmed = code.trim().toUpperCase();
+      inquiry = list.find(i => i.trackingCode.toUpperCase() === trimmed || i.id === code || (i.matchedItemCode && i.matchedItemCode.toUpperCase() === trimmed));
+    }
+    if (!inquiry) {
+      inquiry = multiDbService.getInquiryByTrackingCode(code);
+    }
     if (!inquiry) {
       return res.status(404).json({
         success: false,
@@ -6445,15 +6384,21 @@ async function startServer() {
     const { id } = req.params;
     try {
       const updated = multiDbService.updateInquiry(id, req.body);
+      if (mongoService.isLive) {
+        await mongoService.updateInquiry(id, req.body).catch(e => console.warn('Mongo updateInquiry error:', e.message));
+      }
       return res.json({ success: true, inquiry: updated });
     } catch (err: any) {
       return res.status(400).json({ error: err.message });
     }
   });
 
-  app.delete('/api/inquiries/:id', (req, res) => {
+  app.delete('/api/inquiries/:id', async (req, res) => {
     const { id } = req.params;
     const deleted = multiDbService.deleteInquiry(id);
+    if (mongoService.isLive) {
+      await mongoService.deleteInquiry(id).catch(e => console.warn('Mongo deleteInquiry error:', e.message));
+    }
     return res.json({ success: deleted });
   });
 

@@ -195,10 +195,17 @@ export const GoogleDriveBackupManager: React.FC = () => {
       const files = await listGoogleDriveBackups(accessToken, folderId);
       setDriveFiles(files);
     } catch (err: any) {
-      console.error('Google Drive sign-in failed:', err);
-      setAuthError(err.message || 'Failed to authenticate with Google Drive.');
-      if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
-        setShowTokenInput(true);
+      if (err?.code === 'auth/popup-closed-by-user' || err?.isUserCancelled) {
+        setStatusMessage({
+          type: 'info',
+          text: 'Google Sign-in popup was closed. Click "Connect Google Account" whenever you are ready.'
+        });
+      } else {
+        console.warn('Google Drive sign-in notice:', err?.message || err);
+        setAuthError(err.message || 'Failed to authenticate with Google Drive.');
+        if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
+          setShowTokenInput(true);
+        }
       }
     } finally {
       setIsConnecting(false);

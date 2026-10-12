@@ -1,7 +1,7 @@
 import { MongoClient, Db, Collection, ObjectId } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
-import { LostItem, StaffMember, HotelSettings, User, AuditLog, AppNotification, Certificate } from '../src/types.ts';
+import { LostItem, StaffMember, HotelSettings, User, AuditLog, AppNotification, Certificate, GuestInquiry } from '../src/types.ts';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -1121,6 +1121,98 @@ class MongoService {
       return res.deletedCount > 0;
     } catch (e) {
       console.warn('[MongoDB] deleteCertificate error:', e);
+      return false;
+    }
+  }
+
+  // ==========================================
+  // CRUD: GUEST INQUIRIES (Collection 'inquiries')
+  // ==========================================
+  private normalizeInquiry(doc: any): GuestInquiry {
+    if (!doc) return {} as GuestInquiry;
+    const rawId = doc.id || (doc._id ? doc._id.toString() : `inq-${Date.now()}`);
+    return {
+      id: String(rawId),
+      trackingCode: doc.trackingCode || '',
+      guestName: doc.guestName || 'Anonymous Guest',
+      guestEmail: doc.guestEmail || '',
+      guestPhone: doc.guestPhone || '',
+      roomNumber: doc.roomNumber || '',
+      stayDate: doc.stayDate || '',
+      category: doc.category || 'Personal Belongings',
+      itemName: doc.itemName || 'Unspecified Item',
+      description: doc.description || '',
+      brand: doc.brand || '',
+      color: doc.color || '',
+      locationLost: doc.locationLost || '',
+      dateLost: doc.dateLost || new Date().toISOString().split('T')[0],
+      photoUrl: doc.photoUrl || '',
+      status: doc.status || 'Received',
+      matchedItemId: doc.matchedItemId,
+      matchedItemCode: doc.matchedItemCode,
+      staffNotes: doc.staffNotes,
+      reviewedBy: doc.reviewedBy,
+      createdAt: doc.createdAt || new Date().toISOString(),
+      updatedAt: doc.updatedAt || new Date().toISOString()
+    };
+  }
+
+  public async getInquiries(): Promise<GuestInquiry[]> {
+    if (!this.isLive) return [];
+    try {
+      const col = this.db!.collection('inquiries');
+      const docs = await col.find({}).sort({ createdAt: -1 }).toArray();
+      return docs.map(d => this.normalizeInquiry(d));
+    } catch (e: any) {
+      console.warn('[MongoDB] getInquiries error:', e.message);
+      return [];
+    }
+  }
+
+  public async insertInquiry(inquiry: GuestInquiry): Promise<GuestInquiry> {
+    if (!this.isLive) return inquiry;
+    try {
+      const col = this.db!.collection('inquiries');
+      const clean = { ...inquiry };
+      delete (clean as any)._id;
+      await col.updateOne(
+        { $or: [{ id: inquiry.id }, { trackingCode: inquiry.trackingCode }] },
+        { $set: clean },
+        { upsert: true }
+      );
+      return inquiry;
+    } catch (e: any) {
+      console.warn('[MongoDB] insertInquiry error:', e.message);
+      return inquiry;
+    }
+  }
+
+  public async updateInquiry(idOrCode: string, updates: Partial<GuestInquiry>): Promise<GuestInquiry | null> {
+    if (!this.isLive) return null;
+    try {
+      const col = this.db!.collection('inquiries');
+      const clean = { ...updates };
+      delete (clean as any)._id;
+      await col.updateOne(
+        { $or: [{ id: idOrCode }, { trackingCode: idOrCode }] },
+        { $set: clean }
+      );
+      const updatedDoc = await col.findOne({ $or: [{ id: idOrCode }, { trackingCode: idOrCode }] });
+      return updatedDoc ? this.normalizeInquiry(updatedDoc) : null;
+    } catch (e: any) {
+      console.warn('[MongoDB] updateInquiry error:', e.message);
+      return null;
+    }
+  }
+
+  public async deleteInquiry(idOrCode: string): Promise<boolean> {
+    if (!this.isLive) return false;
+    try {
+      const col = this.db!.collection('inquiries');
+      const res = await col.deleteOne({ $or: [{ id: idOrCode }, { trackingCode: idOrCode }] });
+      return (res.deletedCount || 0) > 0;
+    } catch (e: any) {
+      console.warn('[MongoDB] deleteInquiry error:', e.message);
       return false;
     }
   }

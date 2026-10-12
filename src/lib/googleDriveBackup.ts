@@ -258,7 +258,21 @@ export const signInWithGoogleDrive = async (): Promise<{
   const currentHost = typeof window !== 'undefined' ? window.location.hostname || 'localhost' : 'localhost';
 
   try {
-    // Attempt 1: Standard Firebase Auth popup
+    // Attempt 1: Google Identity Services token client using configured OAuth Client ID
+    // (This works directly with Google Cloud OAuth Client ID and authorized origins without Firebase domain issues)
+    if (firebaseConfig.oAuthClientId) {
+      try {
+        const gisResult = await requestAccessTokenViaGis();
+        return gisResult;
+      } catch (gisErr: any) {
+        if (gisErr?.code === 'auth/popup-closed-by-user' || gisErr?.message?.includes('popup_closed_by_user')) {
+          throw gisErr;
+        }
+        console.warn('[Google Drive Auth] Primary GIS token client failed, attempting Firebase popup:', gisErr?.message || gisErr);
+      }
+    }
+
+    // Attempt 2: Standard Firebase Auth popup
     const result = await signInWithPopup(auth, provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
 
@@ -288,6 +302,25 @@ export const signInWithGoogleDrive = async (): Promise<{
     const errorCode = error?.code || '';
     const errorMsg = error?.message || '';
 
+    // Handle user closing popup window gracefully
+    if (errorCode === 'auth/popup-closed-by-user' || errorMsg.includes('popup-closed-by-user')) {
+      const userClosedErr: any = new Error(
+        'Sign-in was cancelled because the Google sign-in window was closed before completing authorization.'
+      );
+      userClosedErr.code = 'auth/popup-closed-by-user';
+      userClosedErr.isUserCancelled = true;
+      throw userClosedErr;
+    }
+
+    // Handle popup blocked by browser
+    if (errorCode === 'auth/popup-blocked' || errorMsg.includes('popup-blocked')) {
+      const popupBlockedErr: any = new Error(
+        'The sign-in popup was blocked by your browser. Please allow popups for this site and try again.'
+      );
+      popupBlockedErr.code = 'auth/popup-blocked';
+      throw popupBlockedErr;
+    }
+
     // If unauthorized-domain occurs (e.g. localhost or custom dev domain not added to Firebase Authorized Domains)
     if (errorCode === 'auth/unauthorized-domain' || errorMsg.includes('unauthorized-domain')) {
       console.warn(`[Google Drive Auth] Firebase domain authorization needed for "${currentHost}". Trying GIS fallback...`);
@@ -307,7 +340,7 @@ export const signInWithGoogleDrive = async (): Promise<{
       }
     }
 
-    console.error('[Google Drive Auth] Sign in error:', error);
+    console.warn('[Google Drive Auth] Sign in failed:', error?.message || error);
     throw error;
   } finally {
     isSigningIn = false;
