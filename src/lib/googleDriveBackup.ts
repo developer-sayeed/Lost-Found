@@ -14,11 +14,14 @@ import { GoogleDriveBackupFile, FullSystemBackupPackage } from '../types';
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const auth = getAuth(app);
 
-// Configure Google Auth Provider with Google Drive File scope
+// Configure Google Auth Provider with full Google Drive backup scopes
 const provider = new GoogleAuthProvider();
 provider.addScope('https://www.googleapis.com/auth/drive.file');
+provider.addScope('https://www.googleapis.com/auth/drive.appdata');
+provider.addScope('https://www.googleapis.com/auth/drive');
 provider.setCustomParameters({
-  prompt: 'consent'
+  prompt: 'consent',
+  access_type: 'offline'
 });
 
 // In-memory access token cache
@@ -159,7 +162,7 @@ export const requestAccessTokenViaGis = async (): Promise<{ user: any; accessTok
     try {
       const tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: clientId,
-        scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+        scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
         callback: async (response: any) => {
           if (response.error) {
             reject(new Error(response.error_description || response.error));
