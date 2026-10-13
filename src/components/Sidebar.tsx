@@ -27,6 +27,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { PermissionKey, ActiveTab } from '../types';
 import { isMacOS } from '../hooks/useKeyboardShortcuts';
+import { UserAvatar } from '../lib/avatarHelper';
 
 export const Sidebar: React.FC = () => {
   const {
@@ -297,9 +298,12 @@ export const Sidebar: React.FC = () => {
                 className="w-full flex items-center space-x-3 rtl:space-x-reverse mb-2.5 text-left rtl:text-right group hover:opacity-90 transition-opacity"
                 title={t.myProfile}
               >
-                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs flex-shrink-0 group-hover:bg-indigo-700 transition-colors">
-                  {user?.name ? user.name[0].toUpperCase() : 'S'}
-                </div>
+                <UserAvatar
+                  name={user?.name || 'Staff Member'}
+                  avatarUrl={(user as any)?.avatar}
+                  sizeClassName="w-8 h-8"
+                  className="shadow-2xs flex-shrink-0"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
                     {user?.name || 'Staff Member'}
@@ -328,12 +332,12 @@ export const Sidebar: React.FC = () => {
             </>
           ) : (
             <div className="flex flex-col items-center space-y-2">
-              <div
-                className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs"
-                title={`${user?.name} (${translateRole(user?.role)})`}
-              >
-                {user?.name ? user.name[0].toUpperCase() : 'M'}
-              </div>
+              <UserAvatar
+                name={user?.name || 'Staff Member'}
+                avatarUrl={(user as any)?.avatar}
+                sizeClassName="w-8 h-8"
+                className="shadow-2xs"
+              />
               <button
                 onClick={() => logout()}
                 title={t.logout}

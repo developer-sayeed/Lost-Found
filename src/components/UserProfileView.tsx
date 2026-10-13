@@ -49,6 +49,7 @@ import {
 } from '../lib/validationSchema';
 import { LostItem, StaffMember, User } from '../types';
 import { toast } from 'react-toastify';
+import { UserAvatar } from '../lib/avatarHelper';
 
 export const UserProfileView: React.FC = () => {
   const { user, updateProfile, hasPermission } = useAuth();
@@ -514,12 +515,12 @@ export const UserProfileView: React.FC = () => {
         <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white">
           <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 w-full xl:w-auto">
-              <div
-                className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-indigo-500/20 border-2 border-indigo-400/40 flex items-center justify-center text-xl sm:text-3xl font-bold !text-white shadow-inner flex-shrink-0"
-                style={{ color: '#ffffff' }}
-              >
-                {displayName ? displayName[0].toUpperCase() : 'U'}
-              </div>
+              <UserAvatar
+                name={displayName || 'User'}
+                avatarUrl={currentStaffMatch?.avatar || (user as any)?.avatar}
+                sizeClassName="w-14 h-14 sm:w-20 sm:h-20"
+                className="rounded-xl sm:rounded-2xl border-2 border-indigo-400/40 shadow-xl flex-shrink-0"
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1

@@ -50,6 +50,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { LostItem, StaffMember } from '../types';
 import { Badge } from './Badge';
 import { StaffPerformancePrintModal } from './modals/StaffPerformancePrintModal';
+import { UserAvatar } from '../lib/avatarHelper';
 
 type DateRangeFilter = 'last7' | 'last14' | 'last30' | 'last60' | 'last90' | 'all';
 type MetricViewMode = 'stacked' | 'total' | 'logged' | 'handover';
@@ -1314,9 +1315,12 @@ export const StaffPerformanceView: React.FC = () => {
                       {/* Staff Member Details */}
                       <td className="py-3.5 px-3.5">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                            {s.staffName ? s.staffName[0].toUpperCase() : 'S'}
-                          </div>
+                          <UserAvatar
+                            name={s.staffName}
+                            avatarUrl={s.avatar}
+                            sizeClassName="w-8 h-8"
+                            className="shadow-2xs"
+                          />
                           <div className="min-w-0">
                             <div className="font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
                               {s.staffName}
@@ -1454,9 +1458,12 @@ export const StaffPerformanceView: React.FC = () => {
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                  {inspectingStaff.staffName[0].toUpperCase()}
-                </div>
+                <UserAvatar
+                  name={inspectingStaff.staffName}
+                  avatarUrl={inspectingStaff.avatar}
+                  sizeClassName="w-10 h-10"
+                  className="shadow-xs"
+                />
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <span>{inspectingStaff.staffName}</span>

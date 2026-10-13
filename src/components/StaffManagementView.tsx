@@ -49,6 +49,7 @@ import {
 import { useClickOutside } from '../hooks/useClickOutside';
 import { toast } from 'react-toastify';
 import { StaffPasswordModal } from './modals/StaffPasswordModal';
+import { UserAvatar } from '../lib/avatarHelper';
 
 type SortField = 'name' | 'department' | 'role' | 'itemsCount' | 'status';
 type SortOrder = 'asc' | 'desc';
@@ -1001,22 +1002,22 @@ export const StaffManagementView: React.FC = () => {
                   {/* Card Header: Avatar, Name, Email, Status */}
                   <div className="flex items-start justify-between gap-2.5">
                     <div className="flex items-center space-x-3 min-w-0">
-                      <div
+                      <button
+                        type="button"
                         onClick={() => {
                           if (canViewOtherProfiles || isCurrentUser) {
                             openStaffProfile(member);
                           }
                         }}
-                        className={`w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0 ${
-                          canViewOtherProfiles || isCurrentUser ? 'cursor-pointer hover:bg-indigo-100' : ''
-                        }`}
+                        className={`shrink-0 ${canViewOtherProfiles || isCurrentUser ? 'cursor-pointer' : ''}`}
                       >
-                        {member.avatar ? (
-                          <img src={member.avatar} alt={member.name} className="w-full h-full rounded-xl object-cover" />
-                        ) : (
-                          member.name[0]
-                        )}
-                      </div>
+                        <UserAvatar
+                          name={member.name}
+                          avatarUrl={member.avatar}
+                          sizeClassName="w-10 h-10"
+                          className="hover:ring-2 hover:ring-indigo-400 transition-all"
+                        />
+                      </button>
                       <div className="min-w-0">
                         <div className="flex items-center space-x-1.5 flex-wrap">
                           <button
@@ -1240,22 +1241,22 @@ export const StaffManagementView: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-5">
                         <div className="flex items-center space-x-3">
-                          <div 
+                          <button 
+                            type="button"
                             onClick={() => {
                               if (canViewOtherProfiles || isCurrentUser) {
                                 openStaffProfile(member);
                               }
                             }}
-                            className={`w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs ${
-                              canViewOtherProfiles || isCurrentUser ? 'cursor-pointer hover:bg-indigo-100' : ''
-                            } transition-colors`}
+                            className={`shrink-0 ${canViewOtherProfiles || isCurrentUser ? 'cursor-pointer' : ''}`}
                           >
-                            {member.avatar ? (
-                              <img src={member.avatar} alt={member.name} className="w-full h-full rounded-xl object-cover" />
-                            ) : (
-                              member.name[0]
-                            )}
-                          </div>
+                            <UserAvatar
+                              name={member.name}
+                              avatarUrl={member.avatar}
+                              sizeClassName="w-9 h-9"
+                              className="hover:ring-2 hover:ring-indigo-400 transition-all"
+                            />
+                          </button>
                           <div>
                             {canViewOtherProfiles || isCurrentUser ? (
                               <button

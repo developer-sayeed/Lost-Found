@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { AppNotification } from '../types';
 import { PWAInstallButton } from './pwa/PWAInstallButton';
+import { GoogleTranslateBar } from './GoogleTranslateBar';
+import { UserAvatar } from '../lib/avatarHelper';
 
 export const Header: React.FC = () => {
   const {
@@ -326,33 +328,8 @@ export const Header: React.FC = () => {
 
       {/* Center/Right Controls & Profile */}
       <div className="flex items-center space-x-2 sm:space-x-3 rtl:space-x-reverse">
-        {/* Language Switcher (English / العربية) */}
-        <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setLanguage('en')}
-            className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-              language === 'en'
-                ? 'bg-white text-indigo-700 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-            title="English Interface"
-          >
-            EN
-          </button>
-          <button
-            type="button"
-            onClick={() => setLanguage('ar')}
-            className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-              language === 'ar'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-            title="الواجهة العربية (Arabic)"
-          >
-            عربي
-          </button>
-        </div>
+        {/* Free Google Website Translator Engine */}
+        <GoogleTranslateBar variant="header" />
 
         {/* Quick QR Scanner Button */}
         <button
@@ -579,12 +556,11 @@ export const Header: React.FC = () => {
               {translateRole(user?.role)}
             </p>
           </div>
-          <div
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-600 group-hover:bg-indigo-700 transition-colors text-white flex items-center justify-center font-bold text-xs shadow-2xs border border-indigo-100 flex-shrink-0"
-            title={`${user?.name} (${translateRole(user?.role)})`}
-          >
-            {getInitials(user?.name)}
-          </div>
+          <UserAvatar
+            name={user?.name || 'MD ABU SAYEED RIDAY'}
+            sizeClassName="w-8 h-8 sm:w-9 sm:h-9"
+            className="group-hover:ring-2 group-hover:ring-indigo-400 transition-all border border-indigo-100"
+          />
         </button>
       </div>
     </header>

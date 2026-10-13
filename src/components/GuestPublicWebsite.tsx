@@ -22,6 +22,7 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { GuestInquiry, GuestInquiryStatus } from '../types';
+import { GoogleTranslateBar } from './GoogleTranslateBar';
 
 export const GuestPublicWebsite: React.FC = () => {
   const {
@@ -269,6 +270,8 @@ export const GuestPublicWebsite: React.FC = () => {
                 <span>Guest Inquiries ({inquiries.length})</span>
               </button>
             )}
+            {/* Free Google Website Translator Engine */}
+            <GoogleTranslateBar variant="compact" />
           </div>
         </div>
       </header>
