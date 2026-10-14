@@ -11,6 +11,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { Link, useLocation } from 'react-router-dom';
 
 export const MobileFooterNav: React.FC = () => {
   const {
@@ -31,6 +32,9 @@ export const MobileFooterNav: React.FC = () => {
   const canCertificates = isMasterAdmin || hasPermission('certificates_view') || hasPermission('certificates');
   const canPerformance = isMasterAdmin || hasPermission('performance');
 
+  const location = useLocation();
+  const currentPath = location.pathname;
+
   return (
     <nav
       id="mobile-bottom-footer-nav"
@@ -39,39 +43,35 @@ export const MobileFooterNav: React.FC = () => {
     >
       <div className="flex items-center justify-around max-w-lg mx-auto">
         {/* 1. Home / Dashboard */}
-        <button
+        <Link
           id="btn-mobile-nav-home"
-          type="button"
-          onClick={() => {
-            setActiveTab('dashboard');
-          }}
+          to="/dashboard"
+          onClick={() => setActiveTab('dashboard')}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-            activeTab === 'dashboard'
+            currentPath === '/' || currentPath === '/dashboard'
               ? 'text-indigo-600 dark:text-indigo-400 font-bold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <Home className="w-5 h-5 mb-0.5" />
           <span className="text-[10px] tracking-tight">{t.dashboard}</span>
-        </button>
+        </Link>
 
         {/* 2. Items List (if permitted) */}
         {canViewItems && (
-          <button
+          <Link
             id="btn-mobile-nav-items"
-            type="button"
-            onClick={() => {
-              setActiveTab('items');
-            }}
+            to="/items"
+            onClick={() => setActiveTab('items')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-              activeTab === 'items'
+              currentPath === '/items'
                 ? 'text-indigo-600 dark:text-indigo-400 font-bold'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Package className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] tracking-tight">{t.totalItems}</span>
-          </button>
+          </Link>
         )}
 
         {/* 3. Center Highlighted Action: Add Item (only if create permission granted) */}
@@ -93,83 +93,75 @@ export const MobileFooterNav: React.FC = () => {
             </span>
           </button>
         ) : canCertificates ? (
-          <button
+          <Link
             id="btn-mobile-nav-certificates"
-            type="button"
-            onClick={() => {
-              setActiveTab('certificates');
-            }}
+            to="/certificates"
+            onClick={() => setActiveTab('certificates')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-              activeTab === 'certificates'
+              currentPath === '/certificates'
                 ? 'text-amber-600 dark:text-amber-400 font-bold'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Award className="w-5 h-5 mb-0.5 text-amber-500" />
             <span className="text-[10px] tracking-tight">Awards</span>
-          </button>
+          </Link>
         ) : null}
 
         {/* 4. Secondary Action: Dispatch, Performance, or Certificates */}
         {canDispatch ? (
-          <button
+          <Link
             id="btn-mobile-nav-dispatch"
-            type="button"
-            onClick={() => {
-              setActiveTab('dispatch');
-            }}
+            to="/dispatch"
+            onClick={() => setActiveTab('dispatch')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-              activeTab === 'dispatch'
+              currentPath === '/dispatch'
                 ? 'text-indigo-600 dark:text-indigo-400 font-bold'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Clock className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] tracking-tight">{t.dispatch}</span>
-          </button>
+          </Link>
         ) : canPerformance ? (
-          <button
+          <Link
             id="btn-mobile-nav-performance"
-            type="button"
-            onClick={() => {
-              setActiveTab('performance');
-            }}
+            to="/performance"
+            onClick={() => setActiveTab('performance')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-              activeTab === 'performance'
+              currentPath === '/performance'
                 ? 'text-indigo-600 dark:text-indigo-400 font-bold'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <TrendingUp className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] tracking-tight">{t.performance}</span>
-          </button>
+          </Link>
         ) : canCertificates && canAddItem ? (
-          <button
+          <Link
             id="btn-mobile-nav-certificates-sec"
-            type="button"
-            onClick={() => {
-              setActiveTab('certificates');
-            }}
+            to="/certificates"
+            onClick={() => setActiveTab('certificates')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-              activeTab === 'certificates'
+              currentPath === '/certificates'
                 ? 'text-amber-600 dark:text-amber-400 font-bold'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Award className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] tracking-tight">Awards</span>
-          </button>
+          </Link>
         ) : null}
 
         {/* 5. User Profile */}
-        <button
+        <Link
           id="btn-mobile-nav-profile"
-          type="button"
+          to="/profile"
           onClick={() => {
             openStaffProfile(null);
           }}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-            isProfileActive
+            currentPath === '/profile'
               ? 'text-indigo-600 dark:text-indigo-400 font-bold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
@@ -179,7 +171,7 @@ export const MobileFooterNav: React.FC = () => {
             <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-emerald-500 border border-white dark:border-slate-900" />
           </div>
           <span className="text-[10px] tracking-tight">{t.myProfile}</span>
-        </button>
+        </Link>
       </div>
     </nav>
   );

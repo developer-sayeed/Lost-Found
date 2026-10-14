@@ -56,11 +56,11 @@ export const NetworkStatusBanner: React.FC = () => {
     try {
       const online = await checkConnection();
       if (!online) {
-        setCheckResultMsg(isRTL ? 'لا يزال الاتصال غير متاح' : 'Still offline');
+        setCheckResultMsg('Still offline');
         setTimeout(() => setCheckResultMsg(null), 3000);
       }
     } catch {
-      setCheckResultMsg(isRTL ? 'تعذر الاتصال بالخادم' : 'Connection failed');
+      setCheckResultMsg('Connection failed');
       setTimeout(() => setCheckResultMsg(null), 3000);
     } finally {
       setIsChecking(false);
@@ -71,9 +71,9 @@ export const NetworkStatusBanner: React.FC = () => {
   const getOfflineDurationText = () => {
     if (!offlineSince) return null;
     const seconds = Math.floor((Date.now() - offlineSince.getTime()) / 1000);
-    if (seconds < 60) return isRTL ? 'منذ لحظات' : 'just now';
+    if (seconds < 60) return 'just now';
     const minutes = Math.floor(seconds / 60);
-    return isRTL ? `منذ ${minutes} دقيقة` : `${minutes}m ago`;
+    return `${minutes}m ago`;
   };
 
   const isVisible = (isSyncPaused && !isDismissed) || showRestoredNotice;
@@ -122,7 +122,7 @@ export const NetworkStatusBanner: React.FC = () => {
                         {showRestoredNotice ? (
                           <>
                             <Radio className="w-3 h-3 text-emerald-600 animate-pulse" />
-                            <span>{isRTL ? 'استؤنفت المزامنة' : 'Sync Resumed'}</span>
+                            <span>Sync Resumed</span>
                           </>
                         ) : (
                           <>
@@ -145,14 +145,14 @@ export const NetworkStatusBanner: React.FC = () => {
 
                 {/* Right side: Action Controls (Retry & Minimize) */}
                 {!showRestoredNotice && (
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse self-end sm:self-center shrink-0">
+                  <div className="flex items-center space-x-2 self-end sm:self-center shrink-0">
                     {/* Check Connection Button */}
                     <button
                       type="button"
                       id="btn-retry-network-connection"
                       onClick={handleCheckConnection}
                       disabled={isChecking}
-                      className="inline-flex items-center space-x-1.5 rtl:space-x-reverse px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 hover:bg-amber-100/50 dark:hover:bg-slate-700 text-amber-900 dark:text-amber-200 border border-amber-200/80 dark:border-amber-800/50 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+                      className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 hover:bg-amber-100/50 dark:hover:bg-slate-700 text-amber-900 dark:text-amber-200 border border-amber-200/80 dark:border-amber-800/50 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
                       title={t.offlineCheckConnection}
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin text-amber-600' : 'text-amber-700 dark:text-amber-300'}`} />
@@ -167,7 +167,7 @@ export const NetworkStatusBanner: React.FC = () => {
                       id="btn-dismiss-offline-banner"
                       onClick={() => setIsDismissed(true)}
                       className="p-1.5 rounded-lg text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-white hover:bg-amber-100/60 dark:hover:bg-slate-800 transition-colors"
-                      title={isRTL ? 'تصغير الإشعار' : 'Minimize banner'}
+                      title="Minimize banner"
                       aria-label="Dismiss offline banner"
                     >
                       <X className="w-4 h-4" />
@@ -188,22 +188,22 @@ export const NetworkStatusBanner: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-20 md:bottom-6 right-4 rtl:right-auto rtl:left-4 z-40"
+            className="fixed bottom-20 md:bottom-6 right-4 z-40"
           >
             <button
               type="button"
               id="btn-restore-offline-banner"
               onClick={() => setIsDismissed(false)}
-              className="group flex items-center space-x-2 rtl:space-x-reverse px-3 py-2 rounded-full bg-slate-900/90 hover:bg-slate-900 text-amber-300 backdrop-blur-md border border-amber-500/30 shadow-lg text-xs font-semibold transition-all hover:scale-102 cursor-pointer"
-              title={isRTL ? 'انقر لتوسيع إشعار انقطاع الاتصال' : 'Click to view connection details'}
+              className="group flex items-center space-x-2 px-3 py-2 rounded-full bg-slate-900/90 hover:bg-slate-900 text-amber-300 backdrop-blur-md border border-amber-500/30 shadow-lg text-xs font-semibold transition-all hover:scale-102 cursor-pointer"
+              title="Click to view connection details"
             >
               <div className="relative">
                 <WifiOff className="w-3.5 h-3.5 text-amber-400" />
                 <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
               </div>
-              <span>{isRTL ? 'غير متصل • المزامنة متوقفة' : 'Offline • Sync Paused'}</span>
+              <span>Offline • Sync Paused</span>
               <span className="text-[10px] text-slate-400 group-hover:text-white transition-colors">
-                ({isRTL ? 'توسيع' : 'Details'})
+                (Details)
               </span>
             </button>
           </motion.div>

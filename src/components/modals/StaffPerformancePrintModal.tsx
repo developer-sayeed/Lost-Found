@@ -177,7 +177,7 @@ export const StaffPerformancePrintModal: React.FC<StaffPerformancePrintModalProp
       if (printWindow && printWindow.document) {
         printWindow.document.write(`
           <!DOCTYPE html>
-          <html lang="en" dir="${isRTL ? 'rtl' : 'ltr'}">
+          <html lang="en" dir="ltr">
             <head>
               <meta charset="utf-8">
               <title>Staff Performance Audit - ${hotelName}</title>

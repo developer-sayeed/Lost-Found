@@ -26,6 +26,7 @@ import { AppNotification } from '../types';
 import { PWAInstallButton } from './pwa/PWAInstallButton';
 import { GoogleTranslateBar } from './GoogleTranslateBar';
 import { UserAvatar } from '../lib/avatarHelper';
+import { BreadcrumbNavigation } from './BreadcrumbNavigation';
 
 export const Header: React.FC = () => {
   const {
@@ -287,39 +288,11 @@ export const Header: React.FC = () => {
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Desktop Sidebar Toggle Button */}
-        <button
-          type="button"
-          onClick={toggleSidebarCollapse}
-          className="hidden md:flex items-center space-x-1.5 rtl:space-x-reverse px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/80 rounded-xl border border-slate-200 hover:border-indigo-200 transition-all shadow-2xs"
-          title={isSidebarCollapsed ? t.expandSidebar : t.collapseSidebar}
-        >
-          {isSidebarCollapsed ? (
-            <>
-              <PanelLeftOpen className="w-4 h-4 text-indigo-600" />
-              <span className="text-[11px]">{t.expandSidebar}</span>
-            </>
-          ) : (
-            <>
-              <PanelLeftClose className="w-4 h-4 text-slate-500" />
-              <span className="text-[11px]">{t.collapseSidebar}</span>
-            </>
-          )}
-        </button>
-
-        <div className="h-4 w-px bg-slate-200 hidden md:block" />
-
-        {/* Breadcrumb / Title */}
-        <div className="flex items-center space-x-2 rtl:space-x-reverse">
-          <span className="text-xs font-medium text-slate-400 hidden sm:inline">{settings.hotelName || t.warwickHotel}</span>
-          <span className="text-slate-300 text-xs hidden sm:inline">/</span>
-          <h1 className="text-sm font-bold text-slate-900 truncate">
-            {getPageTitle()}
-          </h1>
-        </div>
+        {/* Dynamic Breadcrumb Navigation tracking current page route */}
+        <BreadcrumbNavigation />
 
         {syncSuccessNotice && (
-          <span className="hidden lg:inline-flex items-center space-x-1.5 rtl:space-x-reverse ml-2 rtl:ml-0 rtl:mr-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 animate-fade-in">
+          <span className="hidden xl:inline-flex items-center space-x-1.5 rtl:space-x-reverse ml-2 rtl:ml-0 rtl:mr-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 animate-fade-in">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>{syncSuccessNotice}</span>
           </span>
@@ -373,9 +346,7 @@ export const Header: React.FC = () => {
               />
 
               <div
-                className={`fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-full sm:mt-2 sm:w-96 max-h-[calc(100vh-5.5rem)] sm:max-h-none bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col ${
-                  isRTL ? 'sm:left-0 sm:origin-top-left' : 'sm:right-0 sm:origin-top-right'
-                }`}
+                className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-full sm:mt-2 sm:w-96 max-h-[calc(100vh-5.5rem)] sm:max-h-none bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col sm:right-0 sm:origin-top-right"
               >
                 {/* Dropdown Header */}
                 <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">

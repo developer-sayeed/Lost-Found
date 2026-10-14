@@ -28,6 +28,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { PermissionKey, ActiveTab } from '../types';
 import { isMacOS } from '../hooks/useKeyboardShortcuts';
 import { UserAvatar } from '../lib/avatarHelper';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 export const Sidebar: React.FC = () => {
   const {
@@ -47,6 +48,7 @@ export const Sidebar: React.FC = () => {
   } = useApp();
   const { user, logout, hasPermission, isSuperAdmin, previewRole, effectiveRole } = useAuth();
   const { t, isRTL, translateRole } = useLanguage();
+  const location = useLocation();
   const isMac = isMacOS();
 
   const currentRole = effectiveRole || user?.role || '';
@@ -114,8 +116,8 @@ export const Sidebar: React.FC = () => {
         className={`bg-white text-slate-800 flex flex-col flex-shrink-0 min-h-screen border-r border-slate-200 select-none transition-all duration-300 ease-in-out z-50 ${
           // Mobile: fixed drawer
           isMobileSidebarOpen
-            ? `fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-72 shadow-2xl translate-x-0 md:static md:shadow-none`
-            : `fixed inset-y-0 ${isRTL ? 'right-0 translate-x-full' : 'left-0 -translate-x-full'} w-72 md:translate-x-0 md:static`
+            ? 'fixed inset-y-0 left-0 w-72 shadow-2xl translate-x-0 md:static md:shadow-none'
+            : 'fixed inset-y-0 left-0 -translate-x-full w-72 md:translate-x-0 md:static'
         } ${
           // Desktop collapsed vs expanded
           isSidebarCollapsed ? 'md:w-20' : 'md:w-64'
@@ -128,23 +130,10 @@ export const Sidebar: React.FC = () => {
           {/* Mobile Close Button */}
           <button
             onClick={() => setIsMobileSidebarOpen(false)}
-            className={`md:hidden absolute top-3.5 ${isRTL ? 'left-3.5' : 'right-3.5'} p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors`}
+            className="md:hidden absolute top-3.5 right-3.5 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
             title={t.close}
           >
             <X className="w-5 h-5" />
-          </button>
-
-          {/* Desktop Toggle Button in Header */}
-          <button
-            onClick={toggleSidebarCollapse}
-            title={isSidebarCollapsed ? t.expandSidebar : t.collapseSidebar}
-            className={`hidden md:flex absolute top-3.5 ${isRTL ? 'left-3.5' : 'right-3.5'} p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors z-10`}
-          >
-            {isSidebarCollapsed ? (
-              isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
-            ) : (
-              <PanelLeftClose className="w-4 h-4" />
-            )}
           </button>
 
           {/* Dynamic Hotel Brand Logo / Collapsed Sidebar Favicon */}
@@ -230,12 +219,17 @@ export const Sidebar: React.FC = () => {
         <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto">
           {navItems.map(item => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const targetPath = item.id === 'dashboard' ? '/dashboard' : `/${item.id === 'audit_logs' ? 'audit-logs' : item.id}`;
+            const isActive = location.pathname === targetPath || (item.id === 'dashboard' && location.pathname === '/');
             return (
-              <button
+              <NavLink
                 key={item.id}
                 id={`nav-${item.id}`}
-                onClick={() => handleNavClick(item.id)}
+                to={targetPath}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
+                }}
                 title={isSidebarCollapsed ? item.label : undefined}
                 className={`w-full flex items-center rounded-xl text-sm font-medium transition-all duration-150 ${
                   isSidebarCollapsed
@@ -262,39 +256,21 @@ export const Sidebar: React.FC = () => {
                     )}
                   </div>
                 )}
-              </button>
+              </NavLink>
             );
           })}
         </nav>
-
-        {/* Collapse / Expand Toggle Button Footer (Desktop) */}
-        <div className="hidden md:block px-3 py-2 border-t border-slate-100">
-          <button
-            onClick={toggleSidebarCollapse}
-            id="btn-sidebar-toggle-collapse"
-            className={`w-full flex items-center rounded-xl text-xs font-semibold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/70 p-2 transition-colors ${
-              isSidebarCollapsed ? 'justify-center' : 'space-x-2 rtl:space-x-reverse'
-            }`}
-            title={isSidebarCollapsed ? t.expandSidebar : t.collapseSidebar}
-          >
-            {isSidebarCollapsed ? (
-              <PanelLeftOpen className="w-4 h-4 text-indigo-600" />
-            ) : (
-              <>
-                <PanelLeftClose className="w-4 h-4 text-slate-400" />
-                <span>{t.collapseSidebar}</span>
-              </>
-            )}
-          </button>
-        </div>
 
         {/* User Footer Profile */}
         <div className="p-3.5 sm:p-4 border-t border-slate-100 bg-slate-50/60">
           {!isSidebarCollapsed ? (
             <>
-              <button
-                type="button"
-                onClick={() => handleNavClick('profile')}
+              <NavLink
+                to="/profile"
+                onClick={() => {
+                  setActiveTab('profile');
+                  if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
+                }}
                 className="w-full flex items-center space-x-3 rtl:space-x-reverse mb-2.5 text-left rtl:text-right group hover:opacity-90 transition-opacity"
                 title={t.myProfile}
               >
@@ -312,7 +288,7 @@ export const Sidebar: React.FC = () => {
                     {user?.email || (user?.staffId ? `ID: ${user.staffId}` : '')}
                   </p>
                 </div>
-              </button>
+              </NavLink>
 
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-md bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold">

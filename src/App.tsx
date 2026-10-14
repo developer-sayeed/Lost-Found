@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldAlert } from 'lucide-react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -121,61 +122,23 @@ const MainLayout: React.FC = () => {
     </div>
   );
 
-  const renderActiveView = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <DashboardView />;
-      case 'items':
-        if (!isMasterAdmin && !hasPermission('view')) {
-          return renderAccessRestricted('Lost & Found Items');
-        }
-        return <ItemsView />;
-      case 'dispatch':
-        if (!isMasterAdmin && !hasPermission('dispatch')) {
-          return renderAccessRestricted('Pending Dispatch');
-        }
-        return <PendingDispatchView />;
-      case 'staff':
-        if (!isMasterAdmin && !hasPermission('staff_management')) {
-          return renderAccessRestricted('Staff Management');
-        }
-        return <StaffManagementView />;
-      case 'performance':
-        if (!isMasterAdmin && !hasPermission('performance')) {
-          return renderAccessRestricted('Staff Performance Analytics');
-        }
-        return <StaffPerformanceView />;
-      case 'certificates':
-        if (!isMasterAdmin && !hasPermission('certificates_view') && !hasPermission('certificates')) {
-          return renderAccessRestricted('Certificates & Awards');
-        }
-        return <CertificatesView />;
-      case 'audit_logs':
-        if (!isMasterAdmin && !hasPermission('audit_logs')) {
-          return renderAccessRestricted('Audit & Activity Logs');
-        }
-        return <AuditLogsView />;
-      case 'databases':
-        if (!isMasterAdmin && !hasPermission('settings')) {
-          return renderAccessRestricted('Database Settings');
-        }
-        return <SettingsView initialTab="database" />;
-      case 'settings':
-        if (!isMasterAdmin && !hasPermission('settings') && !hasPermission('manage_staff_access')) {
-          return renderAccessRestricted('System Settings');
-        }
-        return <SettingsView />;
-      case 'profile':
-        return <UserProfileView />;
-      case 'removed':
-        if (!isMasterAdmin && !hasPermission('removed_items')) {
-          return renderAccessRestricted('Removed Items');
-        }
-        return <RemovedItemsView />;
-      default:
-        return <DashboardView />;
-    }
-  };
+  const location = useLocation();
+
+  // Keep activeTab in sync with current URL route
+  React.useEffect(() => {
+    const p = location.pathname.toLowerCase();
+    if (p === '/' || p === '/dashboard') setActiveTab('dashboard');
+    else if (p.startsWith('/items')) setActiveTab('items');
+    else if (p.startsWith('/dispatch')) setActiveTab('dispatch');
+    else if (p.startsWith('/staff')) setActiveTab('staff');
+    else if (p.startsWith('/performance')) setActiveTab('performance');
+    else if (p.startsWith('/certificates')) setActiveTab('certificates');
+    else if (p.startsWith('/audit-logs') || p.startsWith('/audit_logs')) setActiveTab('audit_logs');
+    else if (p.startsWith('/databases')) setActiveTab('databases');
+    else if (p.startsWith('/settings')) setActiveTab('settings');
+    else if (p.startsWith('/profile')) setActiveTab('profile');
+    else if (p.startsWith('/removed')) setActiveTab('removed');
+  }, [location.pathname, setActiveTab]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-900 pb-16 md:pb-0">
@@ -207,7 +170,89 @@ const MainLayout: React.FC = () => {
         )}
 
         <main className="flex-1 pb-16">
-          {renderActiveView()}
+          <Routes>
+            <Route path="/" element={<DashboardView />} />
+            <Route path="/dashboard" element={<DashboardView />} />
+            <Route
+              path="/items"
+              element={
+                !isMasterAdmin && !hasPermission('view')
+                  ? renderAccessRestricted('Lost & Found Items')
+                  : <ItemsView />
+              }
+            />
+            <Route
+              path="/dispatch"
+              element={
+                !isMasterAdmin && !hasPermission('dispatch')
+                  ? renderAccessRestricted('Pending Dispatch')
+                  : <PendingDispatchView />
+              }
+            />
+            <Route
+              path="/staff"
+              element={
+                !isMasterAdmin && !hasPermission('staff_management')
+                  ? renderAccessRestricted('Staff Management')
+                  : <StaffManagementView />
+              }
+            />
+            <Route
+              path="/performance"
+              element={
+                !isMasterAdmin && !hasPermission('performance')
+                  ? renderAccessRestricted('Staff Performance Analytics')
+                  : <StaffPerformanceView />
+              }
+            />
+            <Route
+              path="/certificates"
+              element={
+                !isMasterAdmin && !hasPermission('certificates_view') && !hasPermission('certificates')
+                  ? renderAccessRestricted('Certificates & Awards')
+                  : <CertificatesView />
+              }
+            />
+            <Route
+              path="/audit-logs"
+              element={
+                !isMasterAdmin && !hasPermission('audit_logs')
+                  ? renderAccessRestricted('Audit & Activity Logs')
+                  : <AuditLogsView />
+              }
+            />
+            <Route
+              path="/audit_logs"
+              element={<Navigate to="/audit-logs" replace />}
+            />
+            <Route
+              path="/databases"
+              element={
+                !isMasterAdmin && !hasPermission('settings')
+                  ? renderAccessRestricted('Database Settings')
+                  : <SettingsView initialTab="database" />
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                !isMasterAdmin && !hasPermission('settings') && !hasPermission('manage_staff_access')
+                  ? renderAccessRestricted('System Settings')
+                  : <SettingsView />
+              }
+            />
+            <Route path="/profile" element={<UserProfileView />} />
+            <Route
+              path="/removed"
+              element={
+                !isMasterAdmin && !hasPermission('removed_items')
+                  ? renderAccessRestricted('Removed Items')
+                  : <RemovedItemsView />
+              }
+            />
+            {/* Fallback to dashboard for unknown routes */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </main>
       </div>
 

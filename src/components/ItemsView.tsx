@@ -437,7 +437,7 @@ export const ItemsView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3">
           {/* Real-time Global Search */}
           <div className="flex-1 min-w-[220px] relative">
-            <Search className={`w-4 h-4 text-slate-400 absolute ${isRTL ? 'right-3.5' : 'left-3.5'} top-1/2 transform -translate-y-1/2`} />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 transform -translate-y-1/2" />
             <input
               id="input-items-search"
               type="text"
@@ -447,7 +447,7 @@ export const ItemsView: React.FC = () => {
                 setFilters(prev => ({ ...prev, searchQuery: e.target.value }));
                 setCurrentPage(1);
               }}
-              className={`w-full ${isRTL ? 'pr-10 pl-3.5' : 'pl-10 pr-3.5'} py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 placeholder:text-slate-400`}
+              className="w-full pl-10 pr-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 placeholder:text-slate-400"
             />
           </div>
 
@@ -897,7 +897,7 @@ export const ItemsView: React.FC = () => {
 
                       {/* Date Found */}
                       <td className="py-3.5 px-4 whitespace-nowrap text-slate-600">
-                        {new Date(item.dateFound).toLocaleDateString(isRTL ? 'ar-SA' : 'en-GB', {
+                        {new Date(item.dateFound).toLocaleDateString('en-GB', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric'

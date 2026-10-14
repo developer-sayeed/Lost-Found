@@ -1057,32 +1057,25 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return (saved === 'ar' || saved === 'en') ? saved : 'en';
   });
 
-  const applyLanguageAttributes = (lang: Language) => {
-    if (lang === 'ar') {
-      document.documentElement.setAttribute('dir', 'rtl');
-      document.documentElement.setAttribute('lang', 'ar');
-      document.body.classList.add('font-arabic');
-    } else {
-      document.documentElement.setAttribute('dir', 'ltr');
-      document.documentElement.setAttribute('lang', 'en');
-      document.body.classList.remove('font-arabic');
-    }
+  const applyLanguageAttributes = () => {
+    document.documentElement.setAttribute('dir', 'ltr');
+    document.documentElement.setAttribute('lang', 'en');
+    document.body.classList.remove('font-arabic');
   };
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem('warwick_app_language', lang);
-    applyLanguageAttributes(lang);
+  const setLanguage = (_lang: Language) => {
+    setLanguageState('en');
+    localStorage.setItem('warwick_app_language', 'en');
+    applyLanguageAttributes();
   };
 
   const toggleLanguage = () => {
-    const nextLang = language === 'en' ? 'ar' : 'en';
-    setLanguage(nextLang);
+    setLanguage('en');
   };
 
   useEffect(() => {
-    applyLanguageAttributes(language);
-  }, [language]);
+    applyLanguageAttributes();
+  }, []);
 
   const currentTranslations = translations[language] || translations.en;
 
@@ -1152,11 +1145,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   return (
     <LanguageContext.Provider
       value={{
-        language,
+        language: 'en',
         setLanguage,
         toggleLanguage,
-        t: currentTranslations,
-        isRTL: language === 'ar',
+        t: translations.en,
+        isRTL: false,
         translateCategory,
         translateStatus,
         translateRole

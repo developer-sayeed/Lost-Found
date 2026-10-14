@@ -85,13 +85,6 @@ font[style] {
   box-shadow: none !important;
 }
 
-/* Global Arabic Font & Direction */
-.font-arabic,
-[dir="rtl"],
-[dir="rtl"] body {
-  font-family: 'Cairo', system-ui, sans-serif !important;
-}
-
 /* High Contrast Dark Mode Global Class Mappings */
 .dark body {
   background-color: #090d16;

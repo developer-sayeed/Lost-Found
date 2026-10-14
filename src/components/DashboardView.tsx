@@ -651,14 +651,14 @@ export const DashboardView: React.FC = () => {
               className="flex-1 sm:flex-initial justify-center whitespace-nowrap px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 active:scale-95 rounded-xl transition-colors border border-slate-200 flex items-center space-x-1.5 rtl:space-x-reverse cursor-pointer"
             >
               <span className="whitespace-nowrap">{t.viewAll}</span>
-              {isRTL ? <ArrowLeft className="w-3.5 h-3.5 shrink-0" /> : <ArrowRight className="w-3.5 h-3.5 shrink-0" />}
+              <ArrowRight className="w-3.5 h-3.5 shrink-0" />
             </button>
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left rtl:text-right text-xs border-collapse">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 text-slate-600 uppercase tracking-wider font-semibold text-[11px] border-b border-slate-200">
                 <th className="py-3.5 px-5">{t.code}</th>
@@ -666,7 +666,7 @@ export const DashboardView: React.FC = () => {
                 <th className="py-3.5 px-5">{t.locationFound}</th>
                 <th className="py-3.5 px-5">{t.description}</th>
                 <th className="py-3.5 px-5">{t.status}</th>
-                <th className="py-3.5 px-5 text-right rtl:text-left">{t.actions}</th>
+                <th className="py-3.5 px-5 text-right">{t.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -681,7 +681,7 @@ export const DashboardView: React.FC = () => {
                       {item.code}
                     </td>
                     <td className="py-3.5 px-5 whitespace-nowrap text-slate-600">
-                      {new Date(item.dateFound).toLocaleDateString(isRTL ? 'ar-SA' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {new Date(item.dateFound).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="py-3.5 px-5 text-slate-700">
                       {item.locationFound}
