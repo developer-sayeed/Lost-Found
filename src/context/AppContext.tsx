@@ -35,6 +35,7 @@ import { offlineStorage, isNetworkError } from '../lib/offlineSync';
 import { capitalizeWords } from '../lib/stringUtils';
 import { updateDocumentFavicon } from '../utils/favicon';
 import { applyDynamicTheme } from '../lib/themeEngine';
+import { useNavigate } from 'react-router-dom';
 
 export type { ActiveTab };
 
@@ -278,6 +279,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
   const { user, updateUserPermissions, updateUserRole } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [selectedStaffProfile, setSelectedStaffProfile] = useState<StaffMember | null>(null);
@@ -2547,7 +2549,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const openStaffProfile = useCallback((staffMember?: StaffMember | null) => {
     setSelectedStaffProfile(staffMember || null);
     setActiveTab('profile');
-  }, []);
+    navigate('/profile');
+  }, [navigate]);
 
   return (
     <AppContext.Provider

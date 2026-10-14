@@ -35,6 +35,7 @@ export const Sidebar: React.FC = () => {
     activeTab,
     setActiveTab,
     openStaffProfile,
+    setSelectedStaffProfile,
     openQrScanner,
     isSidebarCollapsed,
     toggleSidebarCollapse,
@@ -268,6 +269,7 @@ export const Sidebar: React.FC = () => {
               <NavLink
                 to="/profile"
                 onClick={() => {
+                  setSelectedStaffProfile(null);
                   setActiveTab('profile');
                   if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
                 }}

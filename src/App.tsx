@@ -49,6 +49,24 @@ const MainLayout: React.FC = () => {
   // Initialize global desktop keyboard shortcut manager
   useKeyboardShortcuts();
 
+  const location = useLocation();
+
+  // Keep activeTab in sync with current URL route
+  React.useEffect(() => {
+    const p = location.pathname.toLowerCase();
+    if (p === '/' || p === '/dashboard') setActiveTab('dashboard');
+    else if (p.startsWith('/items')) setActiveTab('items');
+    else if (p.startsWith('/dispatch')) setActiveTab('dispatch');
+    else if (p.startsWith('/staff')) setActiveTab('staff');
+    else if (p.startsWith('/performance')) setActiveTab('performance');
+    else if (p.startsWith('/certificates')) setActiveTab('certificates');
+    else if (p.startsWith('/audit-logs') || p.startsWith('/audit_logs')) setActiveTab('audit_logs');
+    else if (p.startsWith('/databases')) setActiveTab('databases');
+    else if (p.startsWith('/settings')) setActiveTab('settings');
+    else if (p.startsWith('/profile')) setActiveTab('profile');
+    else if (p.startsWith('/removed')) setActiveTab('removed');
+  }, [location.pathname, setActiveTab]);
+
   // Dynamically apply custom font, button colors, presets, and theme variables in real-time
   React.useEffect(() => {
     if (settings) {
@@ -121,24 +139,6 @@ const MainLayout: React.FC = () => {
       </button>
     </div>
   );
-
-  const location = useLocation();
-
-  // Keep activeTab in sync with current URL route
-  React.useEffect(() => {
-    const p = location.pathname.toLowerCase();
-    if (p === '/' || p === '/dashboard') setActiveTab('dashboard');
-    else if (p.startsWith('/items')) setActiveTab('items');
-    else if (p.startsWith('/dispatch')) setActiveTab('dispatch');
-    else if (p.startsWith('/staff')) setActiveTab('staff');
-    else if (p.startsWith('/performance')) setActiveTab('performance');
-    else if (p.startsWith('/certificates')) setActiveTab('certificates');
-    else if (p.startsWith('/audit-logs') || p.startsWith('/audit_logs')) setActiveTab('audit_logs');
-    else if (p.startsWith('/databases')) setActiveTab('databases');
-    else if (p.startsWith('/settings')) setActiveTab('settings');
-    else if (p.startsWith('/profile')) setActiveTab('profile');
-    else if (p.startsWith('/removed')) setActiveTab('removed');
-  }, [location.pathname, setActiveTab]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-900 pb-16 md:pb-0">
