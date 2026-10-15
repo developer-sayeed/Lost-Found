@@ -2,6 +2,35 @@
 <html lang="en">
   <head>
     <script>
+      // Global patch to prevent third-party extensions / Google Translate / DOM injectors from crashing React
+      // Error: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.
+      if (typeof Node !== 'undefined' && Node.prototype) {
+        var originalRemoveChild = Node.prototype.removeChild;
+        Node.prototype.removeChild = function(child) {
+          if (child && child.parentNode !== this) {
+            if (console && console.warn) {
+              console.warn('[DOM Resilience] Suppressed invalid removeChild call on foreign node:', child);
+            }
+            if (child.parentNode) {
+              return child.parentNode.removeChild(child);
+            }
+            return child;
+          }
+          return originalRemoveChild.apply(this, arguments);
+        };
+
+        var originalInsertBefore = Node.prototype.insertBefore;
+        Node.prototype.insertBefore = function(newNode, referenceNode) {
+          if (referenceNode && referenceNode.parentNode !== this) {
+            if (console && console.warn) {
+              console.warn('[DOM Resilience] Suppressed invalid insertBefore call with foreign reference node:', referenceNode);
+            }
+            return this.appendChild(newNode);
+          }
+          return originalInsertBefore.apply(this, arguments);
+        };
+      }
+
       // Disable verbose Workbox dev logs
       try {
         window.__WB_DISABLE_DEV_LOGS = true;

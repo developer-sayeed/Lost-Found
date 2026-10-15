@@ -96,9 +96,18 @@ export const GoogleDriveBackupManager: React.FC = () => {
   // Local File Restore Input
   const localFileInputRef = useRef<HTMLInputElement>(null);
 
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Initialize Auth Listener on mount
   useEffect(() => {
     const cleanup = initGoogleDriveAuth(state => {
+      if (!isMountedRef.current) return;
       setAuthState(state);
       if (state.hasToken && state.isAuthenticated) {
         fetchDriveBackups();
@@ -121,6 +130,7 @@ export const GoogleDriveBackupManager: React.FC = () => {
     if (!autoEnabled || !authState.hasToken) return;
 
     const checkAndRunAutoBackup = async () => {
+      if (!isMountedRef.current) return;
       const token = getDriveAccessToken();
       if (!token) return;
 
@@ -152,19 +162,25 @@ export const GoogleDriveBackupManager: React.FC = () => {
     const token = getDriveAccessToken();
     if (!token) return;
 
-    setIsLoadingFiles(true);
+    if (isMountedRef.current) setIsLoadingFiles(true);
     try {
       const folderId = await ensureDriveBackupFolder(token);
       const files = await listGoogleDriveBackups(token, folderId);
-      setDriveFiles(files);
+      if (isMountedRef.current) {
+        setDriveFiles(files);
+      }
     } catch (err: any) {
       console.error('Failed to load Google Drive backups:', err);
-      setStatusMessage({
-        type: 'error',
-        text: `Could not retrieve backups from Google Drive: ${err.message}`
-      });
+      if (isMountedRef.current) {
+        setStatusMessage({
+          type: 'error',
+          text: `Could not retrieve backups from Google Drive: ${err.message}`
+        });
+      }
     } finally {
-      setIsLoadingFiles(false);
+      if (isMountedRef.current) {
+        setIsLoadingFiles(false);
+      }
     }
   };
 
