@@ -2549,7 +2549,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const openStaffProfile = useCallback((staffMember?: StaffMember | null) => {
     setSelectedStaffProfile(staffMember || null);
     setActiveTab('profile');
-    navigate('/profile');
+    if (staffMember) {
+      const identifier = staffMember.staffId || staffMember.userId || staffMember.id;
+      navigate(`/profile/${encodeURIComponent(identifier)}`);
+    } else {
+      navigate('/profile');
+    }
   }, [navigate]);
 
   return (

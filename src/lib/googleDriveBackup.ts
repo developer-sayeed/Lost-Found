@@ -30,11 +30,11 @@ let cachedFolderId: string | null = null;
 let cachedUserProfile: any = null;
 let isSigningIn = false;
 
-// Check sessionStorage on client-side startup to restore connection across local reloads
+// Check localStorage on client-side startup to restore connection permanently across tabs and reloads
 if (typeof window !== 'undefined') {
   try {
-    const savedToken = sessionStorage.getItem('gdrive_access_token');
-    const savedProfile = sessionStorage.getItem('gdrive_user_profile');
+    const savedToken = localStorage.getItem('gdrive_access_token') || sessionStorage.getItem('gdrive_access_token');
+    const savedProfile = localStorage.getItem('gdrive_user_profile') || sessionStorage.getItem('gdrive_user_profile');
     if (savedToken) {
       cachedAccessToken = savedToken;
       if (savedProfile) {
@@ -209,6 +209,8 @@ export const connectWithDirectToken = async (token: string): Promise<{ user: any
   cachedUserProfile = profile;
 
   try {
+    localStorage.setItem('gdrive_access_token', clean);
+    localStorage.setItem('gdrive_user_profile', JSON.stringify(profile));
     sessionStorage.setItem('gdrive_access_token', clean);
     sessionStorage.setItem('gdrive_user_profile', JSON.stringify(profile));
   } catch {}
@@ -286,6 +288,13 @@ export const signInWithGoogleDrive = async (): Promise<{
     cachedAccessToken = credential.accessToken;
     cachedUserProfile = result.user;
     try {
+      localStorage.setItem('gdrive_access_token', cachedAccessToken);
+      localStorage.setItem('gdrive_user_profile', JSON.stringify({
+        displayName: result.user.displayName,
+        email: result.user.email,
+        photoURL: result.user.photoURL,
+        uid: result.user.uid
+      }));
       sessionStorage.setItem('gdrive_access_token', cachedAccessToken);
       sessionStorage.setItem('gdrive_user_profile', JSON.stringify({
         displayName: result.user.displayName,
@@ -370,6 +379,8 @@ export const disconnectGoogleDrive = async (): Promise<void> => {
     cachedFolderId = null;
     cachedUserProfile = null;
     try {
+      localStorage.removeItem('gdrive_access_token');
+      localStorage.removeItem('gdrive_user_profile');
       sessionStorage.removeItem('gdrive_access_token');
       sessionStorage.removeItem('gdrive_user_profile');
     } catch {}

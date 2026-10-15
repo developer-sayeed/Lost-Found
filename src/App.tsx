@@ -241,7 +241,16 @@ const MainLayout: React.FC = () => {
                   : <SettingsView />
               }
             />
+            <Route
+              path="/settings/:subTab"
+              element={
+                !isMasterAdmin && !hasPermission('settings') && !hasPermission('manage_staff_access')
+                  ? renderAccessRestricted('System Settings')
+                  : <SettingsView />
+              }
+            />
             <Route path="/profile" element={<UserProfileView />} />
+            <Route path="/profile/:staffId" element={<UserProfileView />} />
             <Route
               path="/removed"
               element={

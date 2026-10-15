@@ -41,6 +41,30 @@ export const BreadcrumbNavigation: React.FC = () => {
     if (currentPath.startsWith('/audit-logs') || currentPath.startsWith('/audit_logs')) {
       return { title: t.auditLogs || 'Audit & Activity Logs', icon: History };
     }
+    if (currentPath.startsWith('/settings/')) {
+      const sub = currentPath.replace('/settings/', '').split('/')[0];
+      const subNames: Record<string, string> = {
+        'hotel': 'Hotel Information',
+        'hotel-information': 'Hotel Information',
+        'certificate': 'Certificate & Logo',
+        'logo': 'Certificate & Logo',
+        'categories': 'Item Categories',
+        'security': 'Password & Security',
+        'database': 'Database Integrations',
+        'google-drive': 'Google Drive Backup',
+        'sync': 'Connected Devices',
+        'import-data': 'Data Import & Export',
+        'alerts-validation': 'Alerts & Validation',
+        'login-page': 'Login Page Branding',
+        'shortcuts': 'Keyboard Shortcuts'
+      };
+      return {
+        title: subNames[sub] || 'Settings',
+        icon: Settings,
+        parentPath: '/settings',
+        parentTitle: t.settings || 'System Settings'
+      };
+    }
     if (currentPath.startsWith('/settings')) {
       return { title: t.settings || 'System Settings', icon: Settings };
     }
@@ -50,6 +74,15 @@ export const BreadcrumbNavigation: React.FC = () => {
         icon: Database,
         parentPath: '/settings',
         parentTitle: t.settings || 'Settings'
+      };
+    }
+    if (currentPath.startsWith('/profile/')) {
+      const staffParam = decodeURIComponent(currentPath.replace('/profile/', ''));
+      return {
+        title: selectedStaffProfile ? `${selectedStaffProfile.name}'s Profile` : `Staff Profile (${staffParam})`,
+        icon: User,
+        parentPath: '/profile',
+        parentTitle: t.myProfile || 'My Profile'
       };
     }
     if (currentPath.startsWith('/profile')) {

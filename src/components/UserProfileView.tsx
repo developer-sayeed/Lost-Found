@@ -50,38 +50,64 @@ import {
 import { LostItem, StaffMember, User } from '../types';
 import { toast } from 'react-toastify';
 import { UserAvatar } from '../lib/avatarHelper';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 
 export const UserProfileView: React.FC = () => {
   const { user, updateProfile, hasPermission } = useAuth();
   const { items, staff, updateStaff, selectedStaffProfile, setSelectedStaffProfile, openItemDetails, openPrint } = useApp();
+  const { staffId: urlStaffId } = useParams<{ staffId?: string }>();
+  const navigate = useNavigate();
 
-  // Selected staff state (default to selectedStaffProfile or current logged in user with exact email match)
-  const currentStaffMatch = useMemo(() => {
+  // Selected staff state (resolve from URL param :staffId, or selectedStaffProfile, or logged in user)
+  const resolvedTargetStaff = useMemo(() => {
+    if (urlStaffId) {
+      const decoded = decodeURIComponent(urlStaffId).toLowerCase().trim();
+      const match = staff.find(s => 
+        (s.id && s.id.toLowerCase() === decoded) ||
+        (s.staffId && s.staffId.toLowerCase() === decoded) ||
+        (s.userId && s.userId.toLowerCase() === decoded) ||
+        (s.name && s.name.toLowerCase().trim() === decoded) ||
+        (s.email && s.email.toLowerCase().trim() === decoded)
+      );
+      if (match) return match;
+    }
     if (selectedStaffProfile) {
       return staff.find(s => s.id === selectedStaffProfile.id || (s.email && selectedStaffProfile.email && s.email.toLowerCase() === selectedStaffProfile.email.toLowerCase())) || selectedStaffProfile;
     }
+    return null;
+  }, [urlStaffId, selectedStaffProfile, staff]);
+
+  const currentStaffMatch = useMemo(() => {
+    if (resolvedTargetStaff) return resolvedTargetStaff;
     if (user) {
       const uEmail = (user.email || '').toLowerCase().trim();
       return staff.find(s => s.email && uEmail && s.email.toLowerCase().trim() === uEmail) || null;
     }
     return null;
-  }, [selectedStaffProfile, user, staff]);
+  }, [resolvedTargetStaff, user, staff]);
 
   // If viewing someone else
-  const isViewingOtherStaff = Boolean(selectedStaffProfile && user && selectedStaffProfile.id !== user.id && selectedStaffProfile.email !== user.email);
+  const isViewingOtherStaff = Boolean(
+    resolvedTargetStaff && 
+    user && 
+    resolvedTargetStaff.id !== user.id && 
+    resolvedTargetStaff.email !== user.email &&
+    resolvedTargetStaff.staffId !== user.staffId
+  );
   const canEditCurrentProfile = !isViewingOtherStaff || user?.role === 'Super Admin' || hasPermission('edit_staff') || hasPermission('manage_staff_access');
 
-  const displayName = selectedStaffProfile?.name || user?.name || currentStaffMatch?.name || 'Staff Member';
-  const displayEmail = selectedStaffProfile?.email || user?.email || currentStaffMatch?.email || '';
-  const displayRole = selectedStaffProfile?.role || user?.role || currentStaffMatch?.role || 'Employee';
-  const displayDept = selectedStaffProfile?.department || user?.department || currentStaffMatch?.department || 'Housekeeping';
-  const displayPhone = selectedStaffProfile?.phone || user?.phone || currentStaffMatch?.phone || '';
-  const displayStaffId = selectedStaffProfile?.staffId || selectedStaffProfile?.userId || user?.staffId || currentStaffMatch?.staffId || currentStaffMatch?.userId || 'STF-2026-01';
-  const displayIqama = selectedStaffProfile?.iqamaNumber || user?.iqamaNumber || currentStaffMatch?.iqamaNumber || '';
-  const displayDOB = selectedStaffProfile?.dateOfBirth || user?.dateOfBirth || currentStaffMatch?.dateOfBirth || '';
-  const displayWorkplace = selectedStaffProfile?.workplace || user?.workplace || currentStaffMatch?.workplace || 'Warwick Hotels and Resorts';
-  const displayPosition = selectedStaffProfile?.position || user?.position || currentStaffMatch?.position || displayDept;
-  const displayEmergency = selectedStaffProfile?.emergencyContact || user?.emergencyContact || currentStaffMatch?.emergencyContact || '';
+  const activeStaff = resolvedTargetStaff || currentStaffMatch;
+  const displayName = activeStaff?.name || user?.name || 'Staff Member';
+  const displayEmail = activeStaff?.email || user?.email || '';
+  const displayRole = activeStaff?.role || user?.role || 'Employee';
+  const displayDept = activeStaff?.department || user?.department || 'Housekeeping';
+  const displayPhone = activeStaff?.phone || user?.phone || '';
+  const displayStaffId = activeStaff?.staffId || (activeStaff as any)?.userId || user?.staffId || 'STF-2026-01';
+  const displayIqama = activeStaff?.iqamaNumber || user?.iqamaNumber || '';
+  const displayDOB = activeStaff?.dateOfBirth || user?.dateOfBirth || '';
+  const displayWorkplace = activeStaff?.workplace || user?.workplace || 'Warwick Hotels and Resorts';
+  const displayPosition = activeStaff?.position || user?.position || displayDept;
+  const displayEmergency = activeStaff?.emergencyContact || user?.emergencyContact || '';
 
   // Edit Mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -491,7 +517,10 @@ export const UserProfileView: React.FC = () => {
       {isViewingOtherStaff && (
         <div className="flex items-center justify-between bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
           <button
-            onClick={() => setSelectedStaffProfile(null)}
+            onClick={() => {
+              setSelectedStaffProfile(null);
+              navigate('/profile');
+            }}
             className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors text-xs font-semibold cursor-pointer border border-slate-200"
           >
             <ArrowLeft className="w-4 h-4 text-slate-700" />

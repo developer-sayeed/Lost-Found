@@ -68,6 +68,7 @@ import { MongoDatabaseSettings } from './MongoDatabaseSettings';
 import { DataImportExportSettings } from './DataImportExportSettings';
 import { GoogleDriveBackupManager } from './GoogleDriveBackupManager';
 import { CategorySettings } from './CategorySettings';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { AlertsValidationSettings } from './AlertsValidationSettings';
 import { LoginPageCustomizer } from './LoginPageCustomizer';
 import { KeyboardShortcutsSettings } from './KeyboardShortcutsSettings';
@@ -139,12 +140,61 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   const isManager = ['Manager', 'Admin', 'Super Admin'].includes(currentRole);
   const canAccessHotel = isMasterAdmin || hasPermission('settings') || hasPermission('manage_staff_access');
 
-  const [activeTab, setActiveTab] = useState<
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { subTab: urlSubTab } = useParams<{ subTab?: string }>();
+
+  // Map URL slugs to internal tab IDs
+  const tabSlugMap: Record<string, 'hotel' | 'certificate' | 'categories' | 'security' | 'database' | 'google_drive' | 'sync' | 'import_data' | 'alerts_validation' | 'login_page' | 'shortcuts'> = {
+    'hotel': 'hotel',
+    'hotel-information': 'hotel',
+    'certificate': 'certificate',
+    'logo': 'certificate',
+    'categories': 'categories',
+    'security': 'security',
+    'password': 'security',
+    'database': 'database',
+    'databases': 'database',
+    'google-drive': 'google_drive',
+    'google_drive': 'google_drive',
+    'sync': 'sync',
+    'connected-devices': 'sync',
+    'import': 'import_data',
+    'import-data': 'import_data',
+    'alerts': 'alerts_validation',
+    'alerts-validation': 'alerts_validation',
+    'login': 'login_page',
+    'login-page': 'login_page',
+    'shortcuts': 'shortcuts'
+  };
+
+  const getTabFromUrl = (sub?: string) => {
+    if (!sub) return null;
+    return tabSlugMap[sub.toLowerCase()] || null;
+  };
+
+  const [activeTab, setActiveTabState] = useState<
     'hotel' | 'certificate' | 'categories' | 'security' | 'database' | 'google_drive' | 'sync' | 'import_data' | 'alerts_validation' | 'login_page' | 'shortcuts'
   >(() => {
+    const fromUrl = getTabFromUrl(urlSubTab);
+    if (fromUrl) return fromUrl;
     if (initialTab && initialTab !== ('theme' as any)) return initialTab;
     return canAccessHotel ? 'hotel' : 'security';
   });
+
+  const setActiveTab = (newTab: 'hotel' | 'certificate' | 'categories' | 'security' | 'database' | 'google_drive' | 'sync' | 'import_data' | 'alerts_validation' | 'login_page' | 'shortcuts') => {
+    setActiveTabState(newTab);
+    const slug = newTab.replace('_', '-');
+    navigate(`/settings/${slug}`, { replace: true });
+  };
+
+  // Sync state if URL changes externally (e.g. Back/Forward button or deep-link)
+  useEffect(() => {
+    const resolved = getTabFromUrl(urlSubTab);
+    if (resolved && resolved !== activeTab) {
+      setActiveTabState(resolved);
+    }
+  }, [urlSubTab]);
 
   const [databaseSubTab, setDatabaseSubTab] = useState<'mongodb' | 'gdrive'>('mongodb');
   const [connectedDevicesSubTab, setConnectedDevicesSubTab] = useState<'terminals' | 'blocked_devices' | 'security_activity'>('terminals');
@@ -167,10 +217,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   const [deviceNotice, setDeviceNotice] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
+    if (initialTab && !urlSubTab) {
+      setActiveTabState(initialTab);
     }
-  }, [initialTab]);
+  }, [initialTab, urlSubTab]);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [cacheNotice, setCacheNotice] = useState<string | null>(null);
   const [showClearCacheModal, setShowClearCacheModal] = useState(false);

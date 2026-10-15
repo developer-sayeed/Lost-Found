@@ -142,8 +142,7 @@ export const GoogleDriveBackupManager: React.FC = () => {
       }
     };
 
-    // Run check on mount/token acquire, and every 10 minutes
-    checkAndRunAutoBackup();
+    // Only run on periodic interval (10 minutes) when auto-backup is enabled, NEVER immediately on opening the page
     const interval = setInterval(checkAndRunAutoBackup, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, [autoEnabled, authState.hasToken, frequency, settings.googleDriveBackup?.lastBackupDate]);
