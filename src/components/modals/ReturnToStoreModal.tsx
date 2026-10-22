@@ -234,7 +234,7 @@ export const ReturnToStoreModal: React.FC = () => {
               type="submit"
               id="btn-confirm-return-to-store"
               disabled={isSubmitting || !is24hValid}
-              className="px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-xl shadow-xs hover:shadow transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 text-xs font-bold text-white btn-primary-gradient rounded-xl shadow-xs hover:shadow transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? (
                 <>

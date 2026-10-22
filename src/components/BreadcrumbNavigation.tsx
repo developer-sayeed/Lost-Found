@@ -109,42 +109,42 @@ export const BreadcrumbNavigation: React.FC = () => {
   return (
     <nav
       aria-label="Breadcrumb navigation"
-      className="flex items-center space-x-1.5 sm:space-x-2 text-xs font-medium text-slate-500 rtl:space-x-reverse select-none overflow-hidden"
+      className="hidden md:flex items-center space-x-1.5 sm:space-x-2 text-xs font-medium text-slate-500 dark:text-slate-400 select-none overflow-hidden"
     >
       {/* Root / Hotel Brand */}
       <Link
         to="/dashboard"
-        className="flex items-center space-x-1 text-slate-600 hover:text-indigo-600 transition-colors shrink-0 group"
+        className="flex items-center space-x-1 text-slate-600 dark:text-slate-300 hover:text-fuchsia-600 dark:hover:text-fuchsia-400 transition-colors shrink-0 group"
         title="Go to Dashboard"
       >
-        <Home className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-        <span className="hidden lg:inline font-semibold text-slate-700 group-hover:text-indigo-600">
+        <Home className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 group-hover:text-fuchsia-600 dark:group-hover:text-fuchsia-400 transition-colors" />
+        <span className="hidden lg:inline font-semibold text-slate-700 dark:text-slate-200 group-hover:text-fuchsia-600 dark:group-hover:text-fuchsia-400">
           {settings.hotelName || t.warwickHotel || 'Warwick Hotel'}
         </span>
       </Link>
 
       {/* Separator */}
-      <ChevronRight className="w-3 h-3 text-slate-300 shrink-0 rtl:rotate-180" />
+      <ChevronRight className="w-3 h-3 text-slate-300 dark:text-slate-600 shrink-0" />
 
       {/* Parent route link if available */}
       {routeInfo.parentPath && routeInfo.parentTitle && (
         <>
           <Link
             to={routeInfo.parentPath}
-            className="hover:text-indigo-600 text-slate-600 transition-colors hidden sm:inline"
+            className="hover:text-fuchsia-600 dark:hover:text-fuchsia-400 text-slate-600 dark:text-slate-300 transition-colors hidden sm:inline"
           >
             {routeInfo.parentTitle}
           </Link>
-          <ChevronRight className="w-3 h-3 text-slate-300 shrink-0 rtl:rotate-180 hidden sm:inline" />
+          <ChevronRight className="w-3 h-3 text-slate-300 dark:text-slate-600 shrink-0 hidden sm:inline" />
         </>
       )}
 
-      {/* Current Active Page with Icon */}
-      <div className="flex items-center space-x-1.5 rtl:space-x-reverse font-bold text-slate-900 bg-slate-100/80 px-2 sm:px-2.5 py-1 rounded-lg border border-slate-200/60 shadow-2xs truncate">
+      {/* Current Active Page with Icon (Matching Primary Button Gradient Style) */}
+      <div className="flex items-center space-x-1.5 font-bold text-white btn-primary-gradient px-2.5 py-1 rounded-lg shadow-xs border border-white/20 truncate">
         {IconComponent && (
-          <IconComponent className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+          <IconComponent className="w-3.5 h-3.5 text-white shrink-0" />
         )}
-        <span className="truncate text-xs text-slate-900" id="current-breadcrumb-title">
+        <span className="truncate text-xs text-white" id="current-breadcrumb-title">
           {routeInfo.title}
         </span>
       </div>

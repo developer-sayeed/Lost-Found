@@ -520,35 +520,35 @@ Rolex Oyster Watch,Jewelry,2026-08-24,18:20,Executive Lounge,,Dr. Tariq,Samir,HK
                 : '[\n  {\n    "itemName": "Gold Watch",\n    "category": "Jewelry",\n    "dateFound": "2026-08-20",\n    "roomNumber": "304"\n  }\n]'
             }
             rows={4}
-            className="w-full p-3 font-mono text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50"
+            className="w-full p-3 font-mono text-xs border border-slate-200 dark:border-fuchsia-900/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-fuchsia-500 bg-slate-50/50 dark:bg-[#120815] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
           />
         </div>
       </div>
 
       {/* Step 2: Live Data Preview & Summary */}
       {parsedItems.length > 0 && (
-        <div className="space-y-4 pt-4 border-t border-slate-100 animate-in fade-in">
+        <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-fuchsia-900/20 animate-in fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
-              <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-extrabold">2</span>
+            <label className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+              <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-fuchsia-950/60 text-indigo-700 dark:text-fuchsia-300 flex items-center justify-center text-[10px] font-extrabold border border-transparent dark:border-fuchsia-800/30">2</span>
               <span>Data Preview ({parsedItems.length} Valid Records Found)</span>
             </label>
 
             {/* Mode selection */}
             <div className="flex items-center space-x-4">
-              <span className="text-xs text-slate-500 font-medium">Import Strategy:</span>
-              <label className="inline-flex items-center space-x-1.5 text-xs text-slate-700 cursor-pointer">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Import Strategy:</span>
+              <label className="inline-flex items-center space-x-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
                 <input
                   type="radio"
                   name="importMode"
                   value="append"
                   checked={importMode === 'append'}
                   onChange={() => setImportMode('append')}
-                  className="text-indigo-600 focus:ring-indigo-500"
+                  className="text-fuchsia-600 focus:ring-fuchsia-500"
                 />
                 <span className="font-semibold">Append (Add to list)</span>
               </label>
-              <label className="inline-flex items-center space-x-1.5 text-xs text-slate-700 cursor-pointer">
+              <label className="inline-flex items-center space-x-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
                 <input
                   type="radio"
                   name="importMode"
@@ -557,16 +557,16 @@ Rolex Oyster Watch,Jewelry,2026-08-24,18:20,Executive Lounge,,Dr. Tariq,Samir,HK
                   onChange={() => setImportMode('replace')}
                   className="text-rose-600 focus:ring-rose-500"
                 />
-                <span className="font-semibold text-rose-600">Replace All Items</span>
+                <span className="font-semibold text-rose-600 dark:text-rose-400">Replace All Items</span>
               </label>
             </div>
           </div>
 
           {/* Preview Table */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+          <div className="border border-slate-200 dark:border-fuchsia-900/30 rounded-xl overflow-hidden shadow-2xs">
             <div className="max-h-60 overflow-y-auto">
-              <table className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-[11px] sticky top-0">
+              <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-[#200f24] text-slate-500 dark:text-fuchsia-200 font-semibold border-b border-slate-200 dark:border-fuchsia-900/30 text-[11px] sticky top-0">
                   <tr>
                     <th className="py-2.5 px-3">#</th>
                     <th className="py-2.5 px-3">Item Name</th>
@@ -578,24 +578,24 @@ Rolex Oyster Watch,Jewelry,2026-08-24,18:20,Executive Lounge,,Dr. Tariq,Samir,HK
                     <th className="py-2.5 px-3">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
+                <tbody className="divide-y divide-slate-100 dark:divide-fuchsia-900/20 bg-white dark:bg-[#180F1A] font-medium">
                   {parsedItems.slice(0, 10).map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50">
-                      <td className="py-2 px-3 font-mono text-slate-400 text-[11px]">{idx + 1}</td>
-                      <td className="py-2 px-3 font-bold text-slate-900">{item.itemName}</td>
+                    <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-[#221028]">
+                      <td className="py-2 px-3 font-mono text-slate-400 dark:text-slate-500 text-[11px]">{idx + 1}</td>
+                      <td className="py-2 px-3 font-bold text-slate-900 dark:text-white">{item.itemName}</td>
                       <td className="py-2 px-3">
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-semibold">
+                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-[#251329] text-slate-700 dark:text-fuchsia-300 rounded text-[10px] font-semibold border border-transparent dark:border-fuchsia-900/30">
                           {item.category}
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-slate-500">{item.dateFound}</td>
+                      <td className="py-2 px-3 text-slate-500 dark:text-slate-400">{item.dateFound}</td>
                       <td className="py-2 px-3">
                         {item.roomNumber ? `Room ${item.roomNumber}` : item.locationFound}
                       </td>
-                      <td className="py-2 px-3 text-slate-600">{item.employeeName}</td>
-                      <td className="py-2 px-3 text-indigo-600 font-medium">{item.storeLocation}</td>
+                      <td className="py-2 px-3 text-slate-600 dark:text-slate-300">{item.employeeName}</td>
+                      <td className="py-2 px-3 text-indigo-600 dark:text-fuchsia-400 font-medium">{item.storeLocation}</td>
                       <td className="py-2 px-3">
-                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-semibold">
+                        <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 rounded text-[10px] font-semibold">
                           {item.status}
                         </span>
                       </td>
@@ -605,7 +605,7 @@ Rolex Oyster Watch,Jewelry,2026-08-24,18:20,Executive Lounge,,Dr. Tariq,Samir,HK
               </table>
             </div>
             {parsedItems.length > 10 && (
-              <div className="bg-slate-50 px-3 py-2 text-[11px] text-slate-500 border-t border-slate-200 text-center font-medium">
+              <div className="bg-slate-50 dark:bg-[#200f24] px-3 py-2 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-fuchsia-900/30 text-center font-medium">
                 Showing first 10 rows of {parsedItems.length} records to be imported.
               </div>
             )}
@@ -648,52 +648,52 @@ Rolex Oyster Watch,Jewelry,2026-08-24,18:20,Executive Lounge,,Dr. Tariq,Samir,HK
       )}
 
       {/* Step 3: Export & Backup Hub */}
-      <div className="space-y-4 pt-6 border-t border-slate-100">
+      <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
         <div>
-          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-2">
-            <Download className="w-4 h-4 text-indigo-600" />
-            <span>Export & Backup Registry</span>
+          <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+            <Download className="w-4 h-4 text-indigo-600 dark:text-fuchsia-400" />
+            <span>Export &amp; Backup Registry</span>
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Download your current live Lost & Found inventory records ({items.length} items) for offline archiving or reporting.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Download your current live Lost &amp; Found inventory records ({items.length} items) for offline archiving or reporting.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-slate-50/75 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div className="bg-slate-50/75 dark:bg-[#180F1A] p-4 rounded-xl border border-slate-200 dark:border-fuchsia-900/30 flex items-center justify-between shadow-2xs">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
                 <FileSpreadsheet className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-900">Export as CSV / Excel</p>
-                <p className="text-[11px] text-slate-500">Formatted spreadsheet compatible with Microsoft Excel & Sheets</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">Export as CSV / Excel</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Formatted spreadsheet compatible with Microsoft Excel &amp; Sheets</p>
               </div>
             </div>
             <button
               type="button"
               onClick={handleExportItemsCSV}
-              className="inline-flex items-center space-x-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer flex-shrink-0"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer flex-shrink-0"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export CSV</span>
             </button>
           </div>
 
-          <div className="bg-slate-50/75 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div className="bg-slate-50/75 dark:bg-[#180F1A] p-4 rounded-xl border border-slate-200 dark:border-fuchsia-900/30 flex items-center justify-between shadow-2xs">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-fuchsia-950/40 border border-indigo-100 dark:border-fuchsia-800/40 text-indigo-600 dark:text-fuchsia-400 flex items-center justify-center flex-shrink-0">
                 <Database className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-900">Export Full JSON Backup</p>
-                <p className="text-[11px] text-slate-500">Raw JSON dataset containing complete timelines and metadata</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">Export Full JSON Backup</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Raw JSON dataset containing complete timelines and metadata</p>
               </div>
             </div>
             <button
               type="button"
               onClick={handleExportItemsJSON}
-              className="inline-flex items-center space-x-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer flex-shrink-0"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 btn-primary-gradient text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer flex-shrink-0"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export JSON</span>
@@ -702,20 +702,20 @@ Rolex Oyster Watch,Jewelry,2026-08-24,18:20,Executive Lounge,,Dr. Tariq,Samir,HK
         </div>
 
         {/* Google Drive Auto Backup Highlight */}
-        <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/50 p-4 rounded-xl border border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+        <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/50 dark:from-[#180F1A] dark:to-[#221028] p-4 rounded-xl border border-blue-200/80 dark:border-fuchsia-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 shadow-2xs">
           <div className="flex items-start sm:items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 dark:bg-fuchsia-600 text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
               <Cloud className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <p className="text-xs font-bold text-slate-900">Google Drive Automated Cloud Backups</p>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                <p className="text-xs font-bold text-slate-900 dark:text-white">Google Drive Automated Cloud Backups</p>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-fuchsia-950/50 text-blue-800 dark:text-fuchsia-300 border border-transparent dark:border-fuchsia-800/40">
                   Cloud Live
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 mt-0.5">
-                Automatically snapshot full database, staff accounts, certificates, audit logs & settings directly into your Google Drive on an hourly, daily, or weekly schedule.
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                Automatically snapshot full database, staff accounts, certificates, audit logs &amp; settings directly into your Google Drive on an hourly, daily, or weekly schedule.
               </p>
             </div>
           </div>
@@ -723,7 +723,7 @@ Rolex Oyster Watch,Jewelry,2026-08-24,18:20,Executive Lounge,,Dr. Tariq,Samir,HK
             type="button"
             id="btn-goto-gdrive-backup"
             onClick={() => setActiveTab('settings')}
-            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer flex-shrink-0"
+            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 btn-primary-gradient text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer flex-shrink-0"
           >
             <span>Manage Cloud Backups</span>
             <ArrowRight className="w-3.5 h-3.5" />

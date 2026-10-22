@@ -137,7 +137,7 @@ export const DispatchModal: React.FC = () => {
               type="submit"
               id="btn-dispatch-confirm"
               disabled={isSubmitting}
-              className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center space-x-1.5"
+              className="px-5 py-2.5 btn-primary-gradient text-white text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center space-x-1.5 cursor-pointer"
             >
               <Truck className="w-4 h-4" />
               <span>{isSubmitting ? 'Dispatching...' : `Confirm Dispatch to ${finderName.split(' ')[0]}`}</span>

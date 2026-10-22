@@ -129,10 +129,10 @@ export const ELEMENT_CATALOG: ElementCatalogItem[] = [
   },
   {
     type: 'arabic_bismillah',
-    name: 'Bismillah Calligraphy',
+    name: 'Executive Calligraphic Header',
     category: 'Titles & Awards',
     categoryKey: 'title',
-    description: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ sacred calligraphic header',
+    description: 'Calligraphic excellence header banner',
     icon: Sparkle
   },
   {
@@ -560,9 +560,9 @@ export function createNewElement(
       return {
         ...base,
         y: 8,
-        content: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-        fontSize: 18,
-        fontFamily: "'Amiri', 'Traditional Arabic', serif",
+        content: 'IN PURSUIT OF HOSPITALITY EXCELLENCE',
+        fontSize: 16,
+        fontFamily: "'Playfair Display', serif",
         textColor: settings.accentColor
       };
 
@@ -583,9 +583,9 @@ export function createNewElement(
       return {
         ...base,
         y: 49,
-        content: 'محمد أبو سعيد رضاي',
-        fontSize: 28,
-        fontFamily: "'Amiri', 'Traditional Arabic', serif",
+        content: 'Honored Recipient',
+        fontSize: 26,
+        fontFamily: "'Playfair Display', serif",
         textColor: settings.primaryColor
       };
 

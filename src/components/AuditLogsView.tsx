@@ -800,10 +800,10 @@ export const AuditLogsView: React.FC = () => {
               id="btn-export-audit-csv"
               onClick={exportToCsv}
               disabled={filteredLogs.length === 0}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-colors disabled:opacity-60 min-h-[36px]"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center space-x-1.5 px-3.5 py-1.5 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-60 min-h-[36px]"
               title="Export CSV"
             >
-              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <Download className="w-3.5 h-3.5 text-white" />
               <span className="whitespace-nowrap">CSV</span>
             </button>
 
@@ -811,10 +811,10 @@ export const AuditLogsView: React.FC = () => {
             <button
               id="btn-print-audit-report"
               onClick={handlePrint}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-colors min-h-[36px]"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center space-x-1.5 px-3.5 py-1.5 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all min-h-[36px]"
               title="Print report"
             >
-              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <Printer className="w-3.5 h-3.5 text-white" />
               <span className="whitespace-nowrap">Print</span>
             </button>
 

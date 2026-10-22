@@ -104,7 +104,7 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center space-x-1.5 rtl:space-x-reverse font-semibold uppercase tracking-wider rounded-lg border whitespace-nowrap transition-colors ${sizeClasses} ${styleClasses} ${className}`}
+      className={`inline-flex items-center space-x-1.5 font-semibold uppercase tracking-wider rounded-lg border whitespace-nowrap transition-colors ${sizeClasses} ${styleClasses} ${className}`}
     >
       {dot && (
         <span className="relative flex items-center justify-center">

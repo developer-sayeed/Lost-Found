@@ -69,7 +69,7 @@ export const HotelLogoDisplay: React.FC<HotelLogoDisplayProps> = ({
   const resolvedLogoUrl =
     (hotelLogoUrl && hotelLogoUrl.trim())
       ? hotelLogoUrl
-      : (appSettings?.certificateLogoUrl || appSettings?.logoUrl || '');
+      : (appSettings?.certificateLogoUrl || appSettings?.logoLightUrl || appSettings?.logoUrl || '');
 
   const sizePx = Math.max(20, Math.min(hotelLogoSize, 160));
 

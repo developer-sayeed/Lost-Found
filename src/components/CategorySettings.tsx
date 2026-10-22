@@ -559,7 +559,7 @@ export const CategorySettings: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl transition-colors shadow-xs flex items-center space-x-1.5"
+                  className="px-4 py-2 text-xs font-bold text-white btn-primary-gradient disabled:opacity-50 rounded-xl transition-all shadow-xs flex items-center space-x-1.5 cursor-pointer"
                 >
                   {isSaving ? (
                     <span>Saving...</span>

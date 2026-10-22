@@ -72,30 +72,44 @@ const MainLayout: React.FC = () => {
     if (settings) {
       applyDynamicTheme(settings);
 
-      // Dark Mode handling: System dark mode is removed per user request.
-      // By default the application runs strictly in Light / White Mode.
-      // Dark Mode is only activated when explicitly chosen by the user (isDarkMode === true or themeMode === 'dark').
-      const isDark = Boolean(settings.isDarkMode === true || settings.themeMode === 'dark');
+      // Determine theme mode: Respect user setting, fallback to system preference if unspecified
+      let isDark = false;
+      if (settings.themeMode === 'dark' || settings.isDarkMode === true) {
+        isDark = true;
+      } else if (settings.themeMode === 'light' || settings.isDarkMode === false) {
+        isDark = false;
+      } else if (typeof window !== 'undefined' && window.matchMedia) {
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
 
       if (isDark) {
         document.documentElement.classList.add('dark');
-        document.documentElement.style.setProperty('--theme-bg-canvas', '#090d16');
-        document.documentElement.style.setProperty('--theme-bg-surface', '#111827');
-        document.documentElement.style.setProperty('--theme-text-primary', '#f8fafc');
-        document.documentElement.style.setProperty('--theme-border', '#2d3748');
+        document.documentElement.style.setProperty('--theme-bg-canvas', '#0F0911');
+        document.documentElement.style.setProperty('--theme-bg-surface', '#180F1A');
+        document.documentElement.style.setProperty('--theme-text-primary', '#F7F3F7');
+        document.documentElement.style.setProperty('--theme-border', '#2E2032');
       } else {
         document.documentElement.classList.remove('dark');
-        document.documentElement.style.setProperty('--theme-bg-canvas', '#f8fafc');
-        document.documentElement.style.setProperty('--theme-bg-surface', '#ffffff');
-        document.documentElement.style.setProperty('--theme-text-primary', '#0f172a');
-        document.documentElement.style.setProperty('--theme-border', '#e2e8f0');
+        document.documentElement.style.setProperty('--theme-bg-canvas', '#FDFCFD');
+        document.documentElement.style.setProperty('--theme-bg-surface', '#FFFFFF');
+        document.documentElement.style.setProperty('--theme-text-primary', '#1A0C1D');
+        document.documentElement.style.setProperty('--theme-border', '#E7DDE9');
       }
     } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.style.setProperty('--theme-bg-canvas', '#f8fafc');
-      document.documentElement.style.setProperty('--theme-bg-surface', '#ffffff');
-      document.documentElement.style.setProperty('--theme-text-primary', '#0f172a');
-      document.documentElement.style.setProperty('--theme-border', '#e2e8f0');
+      const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (prefersDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.style.setProperty('--theme-bg-canvas', '#0F0911');
+        document.documentElement.style.setProperty('--theme-bg-surface', '#180F1A');
+        document.documentElement.style.setProperty('--theme-text-primary', '#F7F3F7');
+        document.documentElement.style.setProperty('--theme-border', '#2E2032');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.style.setProperty('--theme-bg-canvas', '#FDFCFD');
+        document.documentElement.style.setProperty('--theme-bg-surface', '#FFFFFF');
+        document.documentElement.style.setProperty('--theme-text-primary', '#1A0C1D');
+        document.documentElement.style.setProperty('--theme-border', '#E7DDE9');
+      }
     }
   }, [
     settings?.fontFamily,

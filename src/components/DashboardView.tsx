@@ -43,6 +43,7 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { LostItem } from '../types';
+import { useNavigate } from 'react-router-dom';
 import { isWithinHandover24Hours } from '../lib/handoverUtils';
 import { Badge } from './Badge';
 import { NotificationEfficiencyWidget } from './NotificationEfficiencyWidget';
@@ -124,6 +125,7 @@ export const DashboardView: React.FC = () => {
   const { user, isAdmin, hasPermission, isSuperAdmin, previewRole } = useAuth();
   const isMasterAdmin = isSuperAdmin && !previewRole;
   const { t, isRTL, translateCategory, translateStatus } = useLanguage();
+  const navigate = useNavigate();
 
   // Dynamic time-based greeting calculation (Morning / Afternoon / Evening / Night)
   const greeting = useMemo(() => {
@@ -135,7 +137,7 @@ export const DashboardView: React.FC = () => {
         period: 'morning',
         shift: 'Morning Shift',
         accentBg: 'from-amber-500/10 via-amber-500/5 to-transparent',
-        iconBg: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200/80 dark:border-amber-800/60'
+        iconBg: 'bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30 border border-amber-300/40'
       };
     }
     if (hour >= 12 && hour < 17) {
@@ -145,7 +147,7 @@ export const DashboardView: React.FC = () => {
         period: 'afternoon',
         shift: 'Afternoon Shift',
         accentBg: 'from-blue-500/10 via-indigo-500/5 to-transparent',
-        iconBg: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200/80 dark:border-blue-800/60'
+        iconBg: 'bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 border border-blue-300/40'
       };
     }
     if (hour >= 17 && hour < 21) {
@@ -155,7 +157,7 @@ export const DashboardView: React.FC = () => {
         period: 'evening',
         shift: 'Evening Shift',
         accentBg: 'from-purple-500/10 via-rose-500/5 to-transparent',
-        iconBg: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200/80 dark:border-purple-800/60'
+        iconBg: 'bg-gradient-to-br from-purple-500 via-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30 border border-rose-300/40'
       };
     }
     return {
@@ -164,7 +166,7 @@ export const DashboardView: React.FC = () => {
       period: 'night',
       shift: 'Night Shift',
       accentBg: 'from-indigo-900/15 via-slate-900/5 to-transparent',
-      iconBg: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-200/80 dark:border-indigo-800/60'
+      iconBg: 'bg-gradient-to-br from-indigo-600 via-purple-700 to-slate-900 text-white shadow-lg shadow-purple-600/30 border border-indigo-400/40'
     };
   }, []);
 
@@ -224,35 +226,38 @@ export const DashboardView: React.FC = () => {
       {/* ========================================================================= */}
       <div 
         id="dashboard-welcome-banner"
-        className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-4 sm:p-6 md:p-7 transition-all"
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 shadow-lg border border-fuchsia-500/25 transition-all text-white"
+        style={{
+          background: 'linear-gradient(135deg, #3d1246 0%, #260a2d 55%, #18071c 100%)'
+        }}
       >
-        {/* Subtle Ambient Time Gradient Backdrop */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-r ${greeting.accentBg} pointer-events-none opacity-90`}
-          aria-hidden="true"
+        {/* Ambient Glow Backdrop */}
+        <div 
+          aria-hidden="true" 
+          className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-fuchsia-500/15 blur-3xl pointer-events-none" 
         />
 
         <div className="relative z-10 flex items-center justify-between gap-4">
           {/* Greeting Icon, Title, and Dynamic Hotel Name */}
-          <div className="flex items-center space-x-3.5 sm:space-x-5 rtl:space-x-reverse min-w-0">
+          <div className="flex items-center space-x-3.5 sm:space-x-5 min-w-0">
             <div
-              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 border shadow-2xs ${greeting.iconBg}`}
+              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 border border-fuchsia-400/30 shadow-md ${greeting.iconBg}`}
               title={greeting.text}
             >
-              <GreetingIcon className="w-6 h-6 sm:w-7 sm:h-7" />
+              <GreetingIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
 
             <div className="min-w-0 flex-1">
-              {/* Main Greeting Heading (e.g. Good Morning / Good Afternoon / Good Evening / Good Night) */}
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug">
+              {/* Main Greeting Heading */}
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-snug">
                 {greeting.text}
               </h1>
 
               {/* Dynamic Hotel Name Message */}
-              <p className="mt-1 text-xs sm:text-sm md:text-base font-medium text-slate-600 dark:text-slate-300 flex items-center flex-wrap gap-1.5 leading-relaxed">
+              <p className="mt-1 text-xs sm:text-sm md:text-base font-medium text-fuchsia-200/90 flex items-center flex-wrap gap-1.5 leading-relaxed">
                 <span>Welcome to</span>
-                <span className="font-bold text-indigo-600 dark:text-indigo-400 inline-flex items-center gap-1.5">
-                  <Building2 className="w-4 h-4 inline-block flex-shrink-0" />
+                <span className="font-bold text-fuchsia-300 inline-flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4 inline-block flex-shrink-0 text-fuchsia-400" />
                   {hotelName}
                 </span>
                 <span>Lost and Found Portal</span>
@@ -260,18 +265,19 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Clean Date Indicator (Responsive) */}
-          <div className="hidden sm:flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold text-slate-600 dark:text-slate-300 flex-shrink-0">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+          {/* Clean Date Indicator */}
+          <div className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-fuchsia-400/20 text-xs font-semibold text-fuchsia-100 flex-shrink-0 backdrop-blur-md">
+            <Calendar className="w-3.5 h-3.5 text-fuchsia-300" />
             <span>{todayFormatted}</span>
           </div>
         </div>
       </div>
 
       {/* 5 Summary Metric Top Cards: Total Item, Store, Handover, Total Dispatch, Found Today */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-5">
         {/* 1. Total Item */}
         <div 
+          id="dashboard-stat-card-total"
           onClick={() => {
             setFilters(prev => ({
               ...prev,
@@ -283,23 +289,24 @@ export const DashboardView: React.FC = () => {
               datePreset: 'All'
             }));
             setActiveTab('items');
+            navigate('/items');
           }}
-          className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group"
+          className="dashboard-summary-card select-none p-4 sm:p-5 flex flex-col justify-between cursor-pointer group rounded-2xl sm:rounded-3xl border border-fuchsia-200/70 dark:border-fuchsia-500/20 shadow-xs transition-colors bg-gradient-to-br from-fuchsia-50/50 via-white/80 to-purple-50/40 dark:from-[#241328]/70 dark:via-[#1a0c1d]/70 dark:to-[#120815]/70 hover:border-fuchsia-400/60 dark:hover:border-fuchsia-400/50 active:scale-100 active:outline-none"
           title="Click to view all items in inventory"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {t.totalItems}
             </span>
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform backdrop-blur-md shadow-2xs">
               <Package className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3">
-            <p className="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+          <div className="mt-3.5">
+            <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white group-hover:text-fuchsia-600 dark:group-hover:text-fuchsia-400 transition-colors">
               {stats.totalItems}
             </p>
-            <div className="mt-1 flex items-center text-[11px] text-indigo-600 font-medium">
+            <div className="mt-1 flex items-center text-[11px] text-fuchsia-600 dark:text-fuchsia-400 font-semibold">
               <span>{t.allRecords}</span>
             </div>
           </div>
@@ -307,6 +314,7 @@ export const DashboardView: React.FC = () => {
 
         {/* 2. Store (Stored Items) */}
         <div 
+          id="dashboard-stat-card-store"
           onClick={() => {
             setFilters(prev => ({
               ...prev,
@@ -318,23 +326,24 @@ export const DashboardView: React.FC = () => {
               datePreset: 'All'
             }));
             setActiveTab('items');
+            navigate('/items');
           }}
-          className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group"
+          className="dashboard-summary-card select-none p-4 sm:p-5 flex flex-col justify-between cursor-pointer group rounded-2xl sm:rounded-3xl border border-fuchsia-200/70 dark:border-fuchsia-500/20 shadow-xs transition-colors bg-gradient-to-br from-fuchsia-50/50 via-white/80 to-purple-50/40 dark:from-[#241328]/70 dark:via-[#1a0c1d]/70 dark:to-[#120815]/70 hover:border-fuchsia-400/60 dark:hover:border-fuchsia-400/50 active:scale-100 active:outline-none"
           title="Click to filter by currently stored items"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {t.store}
             </span>
-            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform backdrop-blur-md shadow-2xs">
               <Layers className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3">
-            <p className="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+          <div className="mt-3.5">
+            <p className="text-2xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400 group-hover:text-blue-500 transition-colors">
               {stats.stored}
             </p>
-            <div className="mt-1 flex items-center text-[11px] text-blue-600 font-medium">
+            <div className="mt-1 flex items-center text-[11px] text-blue-600 dark:text-blue-400 font-semibold">
               <span>{t.inStorage}</span>
             </div>
           </div>
@@ -342,6 +351,7 @@ export const DashboardView: React.FC = () => {
 
         {/* 3. Handover */}
         <div 
+          id="dashboard-stat-card-handover"
           onClick={() => {
             setFilters(prev => ({
               ...prev,
@@ -353,23 +363,24 @@ export const DashboardView: React.FC = () => {
               datePreset: 'All'
             }));
             setActiveTab('items');
+            navigate('/items');
           }}
-          className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group"
+          className="dashboard-summary-card select-none p-4 sm:p-5 flex flex-col justify-between cursor-pointer group rounded-2xl sm:rounded-3xl border border-fuchsia-200/70 dark:border-fuchsia-500/20 shadow-xs transition-colors bg-gradient-to-br from-fuchsia-50/50 via-white/80 to-purple-50/40 dark:from-[#241328]/70 dark:via-[#1a0c1d]/70 dark:to-[#120815]/70 hover:border-fuchsia-400/60 dark:hover:border-fuchsia-400/50 active:scale-100 active:outline-none"
           title="Click to filter by handed over items"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {t.handover}
             </span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform backdrop-blur-md shadow-2xs">
               <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3">
-            <p className="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+          <div className="mt-3.5">
+            <p className="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors">
               {stats.handedOver}
             </p>
-            <div className="mt-1 flex items-center text-[11px] text-emerald-600 font-medium">
+            <div className="mt-1 flex items-center text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
               <span>{t.returnedToGuests}</span>
             </div>
           </div>
@@ -377,6 +388,7 @@ export const DashboardView: React.FC = () => {
 
         {/* 4. Total Dispatch */}
         <div 
+          id="dashboard-stat-card-dispatch"
           onClick={() => {
             setFilters(prev => ({
               ...prev,
@@ -388,23 +400,24 @@ export const DashboardView: React.FC = () => {
               datePreset: 'All'
             }));
             setActiveTab('items');
+            navigate('/items');
           }}
-          className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-rose-300 hover:shadow-md transition-all cursor-pointer group"
+          className="dashboard-summary-card select-none p-4 sm:p-5 flex flex-col justify-between cursor-pointer group rounded-2xl sm:rounded-3xl border border-fuchsia-200/70 dark:border-fuchsia-500/20 shadow-xs transition-colors bg-gradient-to-br from-fuchsia-50/50 via-white/80 to-purple-50/40 dark:from-[#241328]/70 dark:via-[#1a0c1d]/70 dark:to-[#120815]/70 hover:border-fuchsia-400/60 dark:hover:border-fuchsia-400/50 active:scale-100 active:outline-none"
           title="Click to filter by dispatched items"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {t.totalDispatch}
             </span>
-            <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform backdrop-blur-md shadow-2xs">
               <Truck className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3">
-            <p className="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-rose-600 transition-colors">
+          <div className="mt-3.5">
+            <p className="text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400 group-hover:text-rose-500 transition-colors">
               {stats.dispatched}
             </p>
-            <div className="mt-1 flex items-center text-[11px] text-rose-600 font-medium">
+            <div className="mt-1 flex items-center text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
               <span>{t.dispatchedItems}</span>
             </div>
           </div>
@@ -412,6 +425,7 @@ export const DashboardView: React.FC = () => {
 
         {/* 5. Found Today */}
         <div 
+          id="dashboard-stat-card-today"
           onClick={() => {
             const todayStr = new Date().toISOString().split('T')[0];
             setFilters(prev => ({
@@ -424,28 +438,29 @@ export const DashboardView: React.FC = () => {
               datePreset: 'All'
             }));
             setActiveTab('items');
+            navigate('/items');
           }}
-          className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-amber-300 hover:shadow-md transition-all cursor-pointer group col-span-2 sm:col-span-1"
+          className="dashboard-summary-card select-none p-4 sm:p-5 flex flex-col justify-between cursor-pointer group col-span-2 sm:col-span-1 rounded-2xl sm:rounded-3xl border border-fuchsia-200/70 dark:border-fuchsia-500/20 shadow-xs transition-colors bg-gradient-to-br from-fuchsia-50/50 via-white/80 to-purple-50/40 dark:from-[#241328]/70 dark:via-[#1a0c1d]/70 dark:to-[#120815]/70 hover:border-fuchsia-400/60 dark:hover:border-fuchsia-400/50 active:scale-100 active:outline-none"
           title="Click to filter items found today"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {t.foundToday}
             </span>
-            <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform backdrop-blur-md shadow-2xs">
               <CalendarCheck className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3">
-            <div className="flex items-baseline space-x-2 rtl:space-x-reverse">
-              <p className="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
+          <div className="mt-3.5">
+            <div className="flex items-baseline space-x-2">
+              <p className="text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400 group-hover:text-amber-500 transition-colors">
                 {stats.foundToday}
               </p>
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25">
                 {t.today}
               </span>
             </div>
-            <div className="mt-1 flex items-center text-[11px] text-amber-600 font-medium">
+            <div className="mt-1 flex items-center text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
               <span>{t.loggedToday}</span>
             </div>
           </div>
@@ -453,14 +468,14 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* 2 Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
         {/* Donut Chart: Items by Status */}
-        <section className="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <section className="lg:col-span-5 hotel-card-glass p-5 sm:p-7 rounded-2xl sm:rounded-3xl flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-base text-slate-900">
+            <h2 className="font-bold text-base text-slate-900 dark:text-white">
               {t.itemsByStatus}
             </h2>
-            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg uppercase tracking-wide border border-emerald-100">
+            <span className="px-3 py-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-full uppercase tracking-wider border border-emerald-500/20 backdrop-blur-xs">
               {t.liveBreakdown}
             </span>
           </div>
@@ -540,15 +555,15 @@ export const DashboardView: React.FC = () => {
 
           {/* Dynamic Status Labels */}
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-slate-100 text-xs font-semibold text-slate-600">
-            <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+            <div className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
               <span>{t.store} {storedPct}% ({stats.stored})</span>
             </div>
-            <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+            <div className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               <span>{t.handover} {handedOverPct}% ({stats.handedOver})</span>
             </div>
-            <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+            <div className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
               <span>{t.dispatched} {dispatchedPct}% ({stats.dispatched})</span>
             </div>
@@ -556,17 +571,17 @@ export const DashboardView: React.FC = () => {
         </section>
 
         {/* Bar Chart: Items by Category */}
-        <section className="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <section className="lg:col-span-7 hotel-card-glass p-5 sm:p-7 rounded-2xl sm:rounded-3xl flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-8 h-8 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center">
                 <BarChart3 className="w-4 h-4" />
               </div>
-              <h2 className="font-bold text-base text-slate-900">
+              <h2 className="font-bold text-base text-slate-900 dark:text-white">
                 {t.itemsByCategory}
               </h2>
             </div>
-            <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2.5 py-1 rounded-lg">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100/80 dark:bg-slate-800/80 px-3 py-1 rounded-full border border-slate-200/60 dark:border-slate-700/60">
               {categoryData.length} {categoryData.length === 1 ? t.category : t.categories}
             </span>
           </div>
@@ -619,19 +634,19 @@ export const DashboardView: React.FC = () => {
       <NotificationEfficiencyWidget />
 
       {/* Recent Items Section */}
-      <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <section className="hotel-card-glass rounded-2xl sm:rounded-3xl overflow-hidden">
         {/* Section Header */}
-        <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100">
+        <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h2 className="font-bold text-base text-slate-900">
+            <h2 className="font-bold text-base text-slate-900 dark:text-white">
               {t.recentActivity}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {t.latestItemsLogged}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 sm:space-x-3 rtl:space-x-reverse w-full sm:w-auto shrink-0">
+          <div className="flex items-center gap-2 sm:space-x-3 w-full sm:w-auto shrink-0">
             {hasPermission('create') && (
               <button
                 id="btn-dashboard-add-item"
@@ -639,7 +654,7 @@ export const DashboardView: React.FC = () => {
                   setEditingItem(null);
                   setIsAddModalOpen(true);
                 }}
-                className="flex-1 sm:flex-initial justify-center whitespace-nowrap flex items-center space-x-1.5 rtl:space-x-reverse px-3.5 sm:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
+                className="flex-1 sm:flex-initial justify-center whitespace-nowrap flex items-center space-x-1.5 px-3.5 sm:px-4 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4 shrink-0" />
                 <span className="whitespace-nowrap">{t.addItem}</span>
@@ -647,8 +662,11 @@ export const DashboardView: React.FC = () => {
             )}
             <button
               id="btn-dashboard-view-all"
-              onClick={() => setActiveTab('items')}
-              className="flex-1 sm:flex-initial justify-center whitespace-nowrap px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 active:scale-95 rounded-xl transition-colors border border-slate-200 flex items-center space-x-1.5 rtl:space-x-reverse cursor-pointer"
+              onClick={() => {
+                setActiveTab('items');
+                navigate('/items');
+              }}
+              className="flex-1 sm:flex-initial justify-center whitespace-nowrap px-3.5 py-2 text-xs font-semibold rounded-xl transition-all border border-fuchsia-300 dark:border-fuchsia-700/80 text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-50/70 dark:bg-fuchsia-950/40 hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/60 flex items-center space-x-1.5 cursor-pointer shadow-2xs"
             >
               <span className="whitespace-nowrap">{t.viewAll}</span>
               <ArrowRight className="w-3.5 h-3.5 shrink-0" />
@@ -695,8 +713,8 @@ export const DashboardView: React.FC = () => {
                     <td className="py-3.5 px-5">
                       <Badge status={item.status} />
                     </td>
-                    <td className="py-3.5 px-5 text-right rtl:text-left">
-                      <div className="flex items-center justify-end rtl:justify-start space-x-1 rtl:space-x-reverse">
+                    <td className="py-3.5 px-5 text-right">
+                      <div className="flex items-center justify-end space-x-1">
                         <button
                           id={`btn-qr-${item.id}`}
                           onClick={() => openItemQrModal(item)}

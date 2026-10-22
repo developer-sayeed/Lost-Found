@@ -1,42 +1,120 @@
 @import "tailwindcss";
 
-:root {
-  /* Theme Accent Colors */
-  --color-primary: #0f172a;
-  --color-secondary: #4f46e5;
-  --color-btn: #4f46e5;
-  --theme-font: 'Plus Jakarta Sans', system-ui, sans-serif;
+@custom-variant dark (&:where(.dark, .dark *));
 
-  /* Theme Layout & Contrast Variables - Light Mode */
-  --theme-bg-canvas: #f8fafc;
-  --theme-bg-surface: #ffffff;
-  --theme-bg-surface-elevated: #ffffff;
-  --theme-bg-subtle: #f1f5f9;
-  --theme-bg-hover: #f8fafc;
-  --theme-text-primary: #0f172a;
-  --theme-text-secondary: #475569;
-  --theme-text-muted: #94a3b8;
-  --theme-border: #e2e8f0;
-  --theme-border-subtle: #f1f5f9;
-  --theme-border-focus: #4f46e5;
-  --theme-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+:root {
+  /* EcomDrive Official Theme Tokens (HSL & Hex) */
+  --background: 300 33% 99%;
+  --foreground: 289 40% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 289 40% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 289 40% 8%;
+  --primary: 289 57% 27%; /* #5E1E6C */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 291 26% 95%; /* #F5EFF6 */
+  --secondary-foreground: 289 40% 14%;
+  --muted: 291 26% 95%;
+  --muted-foreground: 290 12% 45%; /* #7C6581 */
+  --accent: 291 60% 45%; /* #A32EB8 */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 291 22% 89%; /* #E7DDE9 */
+  --input: 291 22% 89%;
+  --ring: 291 60% 45%;
+  --radius: 0.75rem;
+  --plum: 289 57% 21%; /* #491754 */
+  --fuchsia-glow: #a855f724;
+  --violet-glow: #7c3aed1f;
+
+  /* Theme Accent Colors & Fonts */
+  --color-primary: #5E1E6C;
+  --color-secondary: #F5EFF6;
+  --color-btn: #5E1E6C;
+  --color-accent: #A32EB8;
+  --theme-font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  /* LIGHT THEME (EcomDrive Plum, Fuchsia, Violet system) */
+  --theme-bg-canvas: #FDFCFD;
+  --theme-bg-surface: #FFFFFF;
+  --theme-bg-surface-elevated: #FFFFFF;
+  --theme-bg-subtle: #F5EFF6;
+  --theme-bg-hover: #F8F3F9;
+  --theme-text-primary: #1A0C1D;
+  --theme-text-secondary: #7C6581;
+  --theme-text-muted: #7C6581;
+  --theme-border: #E7DDE9;
+  --theme-border-subtle: #F5EFF6;
+  --theme-border-focus: #A32EB8;
+  --theme-ring: #A32EB8;
+  --theme-destructive: #DC2828;
+  --theme-destructive-foreground: #FAFAFA;
+  --theme-plum: #491754;
+  --theme-shadow: 0 1px 3px 0 rgb(94 30 108 / 0.05), 0 1px 2px -1px rgb(94 30 108 / 0.05);
+
+  /* EcomDrive Gradients & Atmospheric Glow */
+  --gradient-primary-cta: linear-gradient(135deg, #4A1755 0%, #A21CAF 55%, #C026D3 100%);
+  --gradient-nav-top: linear-gradient(90deg, #4a1755 0%, #c026d3 50%, #e879f9 100%);
+  --gradient-heading: linear-gradient(135deg, #4A1755 0%, #A21CAF 45%, #C026D3 100%);
+  --glow-accent-1: #A855F724;
+  --glow-accent-2: #7C3AED1F;
 }
 
-/* High-Contrast Dark Theme CSS Variables */
+/* DARK THEME (EcomDrive Official .dark system) */
 .dark, html.dark {
   color-scheme: dark;
-  --theme-bg-canvas: #090d16;
-  --theme-bg-surface: #111827;
-  --theme-bg-surface-elevated: #1e293b;
-  --theme-bg-subtle: #172033;
-  --theme-bg-hover: #1f2a40;
-  --theme-text-primary: #f8fafc;
-  --theme-text-secondary: #cbd5e1;
-  --theme-text-muted: #94a3b8;
-  --theme-border: #2d3748;
-  --theme-border-subtle: #1f293d;
-  --theme-border-focus: #818cf8;
-  --theme-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  --background: 288 32% 5%; /* #0F0911 */
+  --foreground: 300 20% 96%; /* #F7F3F7 */
+  --card: 288 28% 8%; /* #180F1A */
+  --card-foreground: 300 20% 96%;
+  --popover: 288 28% 8%;
+  --popover-foreground: 300 20% 96%;
+  --primary: 291 91% 73%; /* #E67BF9 */
+  --primary-foreground: 289 57% 12%; /* #2A0D30 */
+  --secondary: 288 24% 13%; /* #261929 */
+  --secondary-foreground: 300 20% 92%; /* #EFE7EF */
+  --muted: 288 24% 13%;
+  --muted-foreground: 291 13% 62%; /* #A792AB */
+  --accent: 291 91% 73%; /* #E67BF9 */
+  --accent-foreground: 289 57% 12%;
+  --destructive: 0 62.8% 40%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 288 22% 16%; /* #2E2032 */
+  --input: 288 22% 16%;
+  --ring: 291 91% 65%; /* #DF55F7 */
+  --plum: 291 91% 73%;
+  --fuchsia-glow: #e879f91f;
+  --violet-glow: #a78bfa1a;
+
+  --color-primary: #E67BF9;
+  --color-secondary: #261929;
+  --color-btn: #E67BF9;
+  --color-accent: #E67BF9;
+
+  --theme-bg-canvas: #0F0911;
+  --theme-bg-surface: #180F1A;
+  --theme-bg-surface-elevated: #221425;
+  --theme-bg-subtle: #261929;
+  --theme-bg-hover: #2E1D31;
+  --theme-text-primary: #F7F3F7;
+  --theme-text-secondary: #EFE7EF;
+  --theme-text-muted: #A792AB;
+  --theme-border: #2E2032;
+  --theme-border-subtle: #261929;
+  --theme-border-focus: #DF55F7;
+  --theme-ring: #DF55F7;
+  --theme-destructive: #A62626;
+  --theme-destructive-foreground: #FAFAFA;
+  --theme-plum: #E67BF9;
+  --theme-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.6);
+
+  /* Gradients */
+  --gradient-primary-cta: linear-gradient(135deg, #4A1755 0%, #A21CAF 55%, #C026D3 100%);
+  --gradient-nav-top: linear-gradient(90deg, #4a1755 0%, #c026d3 50%, #e879f9 100%);
+  --gradient-heading: linear-gradient(135deg, #E879F9 0%, #D946EF 45%, #A78BFA 100%);
+  --glow-accent-1: #E879F91F;
+  --glow-accent-2: #A78BFA1A;
 }
 
 body {
@@ -44,6 +122,254 @@ body {
   background-color: var(--theme-bg-canvas);
   color: var(--theme-text-primary);
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* EcomDrive Button CTA styling - Unified Primary Theme Color & Gradient */
+.btn-primary-gradient,
+.btn-ecomdrive-cta,
+.btn-primary,
+button.btn-primary,
+button[type="submit"]:not(.btn-secondary):not(.btn-cancel):not(.btn-ghost):not(.btn-danger):not([class*="bg-transparent"]):not([class*="bg-slate-"]):not([class*="bg-gray-"]),
+button.bg-indigo-600,
+a.bg-indigo-600,
+button.bg-fuchsia-600,
+a.bg-fuchsia-600 {
+  background: var(--gradient-primary-cta) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 4px 18px -2px rgba(162, 28, 175, 0.45) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border-radius: var(--radius);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary-gradient:hover,
+.btn-ecomdrive-cta:hover,
+.btn-primary:hover,
+button.btn-primary:hover,
+button[type="submit"]:not(.btn-secondary):not(.btn-cancel):not(.btn-ghost):not(.btn-danger):not([class*="bg-transparent"]):not([class*="bg-slate-"]):not([class*="bg-gray-"]):hover,
+button.bg-indigo-600:hover,
+a.bg-indigo-600:hover,
+button.bg-fuchsia-600:hover,
+a.bg-fuchsia-600:hover {
+  filter: brightness(1.12) !important;
+  box-shadow: 0 8px 28px -4px rgba(192, 38, 211, 0.75) !important;
+  transform: translateY(-1.5px) scale(1.01) !important;
+}
+
+.btn-primary-gradient:active,
+.btn-ecomdrive-cta:active,
+.btn-primary:active,
+button.btn-primary:active,
+button[type="submit"]:not(.btn-secondary):not(.btn-cancel):not(.btn-ghost):not(.btn-danger):not([class*="bg-transparent"]):not([class*="bg-slate-"]):not([class*="bg-gray-"]):active,
+button.bg-indigo-600:active,
+a.bg-indigo-600:active,
+button.bg-fuchsia-600:active,
+a.bg-fuchsia-600:active {
+  transform: translateY(0) scale(0.98) !important;
+  box-shadow: 0 2px 10px -2px rgba(162, 28, 175, 0.5) !important;
+}
+
+/* EcomDrive Brand Secondary & Outline Button */
+.btn-brand-secondary,
+.btn-ecomdrive-secondary {
+  background: rgba(232, 121, 249, 0.08) !important;
+  color: #5E1E6C !important;
+  border: 1px solid rgba(162, 28, 175, 0.25) !important;
+  border-radius: var(--radius);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.dark .btn-brand-secondary,
+.dark .btn-ecomdrive-secondary {
+  background: rgba(232, 121, 249, 0.12) !important;
+  color: #E879F9 !important;
+  border-color: rgba(232, 121, 249, 0.3) !important;
+}
+
+.btn-brand-secondary:hover,
+.btn-ecomdrive-secondary:hover {
+  background: var(--gradient-primary-cta) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 6px 20px -2px rgba(162, 28, 175, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* EcomDrive Pill Badge Style */
+.badge-ecomdrive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid rgba(217, 70, 239, 0.25);
+  background: rgba(217, 70, 239, 0.07);
+  color: #5E1E6C;
+  backdrop-filter: blur(8px);
+}
+
+.dark .badge-ecomdrive {
+  color: #E879F9;
+  border-color: rgba(232, 121, 249, 0.25);
+  background: rgba(232, 121, 249, 0.1);
+}
+
+/* Modern Hotel-Grade Glassmorphism & Static Stable Border Utilities */
+.hotel-card-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(254, 250, 255, 0.82) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(231, 221, 233, 0.85);
+  border-radius: 1.5rem; /* modern 24px hotel-grade radius */
+  box-shadow: 0 10px 30px -5px rgba(94, 30, 108, 0.05), 0 2px 8px -2px rgba(94, 30, 108, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  position: relative;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+}
+
+.dark .hotel-card-glass {
+  background: linear-gradient(135deg, rgba(24, 15, 28, 0.88) 0%, rgba(18, 10, 21, 0.82) 100%);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(232, 121, 249, 0.16);
+  box-shadow: 0 14px 40px -8px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.02), inset 0 1px 0 rgba(232, 121, 249, 0.1);
+}
+
+.hotel-card-glass:hover {
+  border-color: rgba(162, 28, 175, 0.35);
+  box-shadow: 0 14px 34px -6px rgba(94, 30, 108, 0.12), 0 0 16px -2px rgba(192, 38, 211, 0.1);
+}
+
+.dark .hotel-card-glass:hover {
+  border-color: rgba(232, 121, 249, 0.4);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.75), 0 0 20px -3px rgba(192, 38, 211, 0.2);
+}
+
+.hotel-card-glass:active,
+.dashboard-summary-card:active,
+[id*="stat-card"]:active,
+[id*="summary-card"]:active {
+  /* Prevent any padding or layout jump on click/active */
+  transform: none !important;
+  outline: none !important;
+  border-width: 1px !important;
+}
+
+/* ========================================================================= */
+/* UNIVERSAL TABLE HEADER BRAND GRADIENT & SEAMLESS EDGE ALIGNMENT           */
+/* ========================================================================= */
+table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.overflow-x-auto {
+  scrollbar-width: thin;
+}
+
+.overflow-x-auto > table {
+  margin: 0 !important;
+  border: 0 !important;
+}
+
+table thead,
+table thead tr {
+  background: linear-gradient(135deg, rgba(74, 23, 85, 0.08) 0%, rgba(162, 28, 175, 0.06) 50%, rgba(192, 38, 211, 0.09) 100%) !important;
+  border-bottom: 1px solid rgba(231, 221, 233, 0.95) !important;
+}
+
+table thead th {
+  color: #4A1755 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  font-size: 0.72rem !important;
+  border-top: none !important;
+}
+
+/* Eliminate 1px padding shifts and borders on first/last cells */
+table thead th:first-child,
+table tbody td:first-child {
+  border-left: none !important;
+}
+
+table thead th:last-child,
+table tbody td:last-child {
+  border-right: none !important;
+}
+
+.dark table thead,
+.dark table thead tr {
+  background: linear-gradient(135deg, rgba(50, 15, 58, 0.95) 0%, rgba(28, 9, 33, 0.98) 100%) !important;
+  border-bottom: 1px solid rgba(232, 121, 249, 0.22) !important;
+}
+
+.dark table thead th {
+  color: #F0ABFC !important;
+}
+
+/* Ensure sticky table cells seamlessly match dark surface background instead of showing flat white */
+.dark table td.sticky,
+.dark table th.sticky,
+.dark table td[class*="sticky"],
+.dark table th[class*="sticky"] {
+  background-color: #180F1A !important;
+  color: #F7F3F7 !important;
+}
+
+.dark table thead th.sticky,
+.dark table thead th[class*="sticky"] {
+  background: linear-gradient(135deg, rgba(50, 15, 58, 0.95) 0%, rgba(28, 9, 33, 0.98) 100%) !important;
+  color: #F0ABFC !important;
+}
+
+.dark table tbody tr {
+  border-color: rgba(232, 121, 249, 0.1) !important;
+  color: #F7F3F7 !important;
+}
+
+.dark table tbody {
+  background-color: #180F1A !important;
+}
+
+.dark table tbody tr:hover {
+  background: rgba(232, 121, 249, 0.06) !important;
+}
+
+/* EcomDrive Card Glow & Border */
+.card-ecomdrive {
+  background-color: var(--theme-bg-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 16px 40px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dark .card-ecomdrive {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.card-ecomdrive:hover {
+  border-color: rgba(217, 70, 239, 0.4);
+  transform: translateY(-2px);
+}
+
+.heading-gradient-accent {
+  background: var(--gradient-heading);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Google Website Translator Styling & Cleanup */
@@ -86,141 +412,290 @@ font[style] {
 }
 
 /* High Contrast Dark Mode Global Class Mappings */
+/* High Contrast Dark Mode Global Class Mappings - Plum, Fuchsia & Violet System */
 .dark body {
-  background-color: #090d16;
-  color: #f8fafc;
+  background-color: var(--theme-bg-canvas);
+  color: var(--theme-text-primary);
 }
 
 .dark main {
-  background-color: #090d16;
+  background-color: var(--theme-bg-canvas);
 }
 
-.dark .bg-white {
-  background-color: #111827 !important;
-  color: #f8fafc;
+/* EcomDrive Dark Mode Pure Card & Surface Mappings */
+.dark .bg-white,
+.dark .dark\:bg-slate-900,
+.dark .dark\:bg-slate-950,
+.dark .dark\:bg-slate-900\/95,
+.dark .dark\:bg-slate-900\/60,
+.dark [class*="dark:bg-slate-900"] {
+  background-color: var(--theme-bg-surface) !important; /* #180F1A */
+  color: var(--theme-text-primary);
 }
 
-.dark aside.bg-white {
-  background-color: #0d131f !important;
-  border-color: #242f42 !important;
+.dark aside.bg-white,
+.dark aside {
+  background-color: #140C16 !important;
+  border-color: var(--theme-border) !important;
 }
 
-.dark header.bg-white {
-  background-color: #0d131f !important;
-  border-color: #242f42 !important;
+.dark header.bg-white,
+.dark header {
+  background-color: #140C16 !important;
+  border-color: var(--theme-border) !important;
 }
 
+/* Sub-containers, elevated panels, table stripes and pills */
 .dark .bg-slate-50,
 .dark .bg-slate-50\/50,
 .dark .bg-slate-50\/60,
 .dark .bg-slate-50\/70,
-.dark .bg-slate-50\/80 {
-  background-color: #172033 !important;
+.dark .bg-slate-50\/80,
+.dark .dark\:bg-slate-800,
+.dark .dark\:bg-slate-800\/80,
+.dark [class*="dark:bg-slate-800"] {
+  background-color: var(--theme-bg-subtle) !important; /* #261929 */
 }
 
 .dark .bg-slate-100 {
-  background-color: #1e293b !important;
+  background-color: #221425 !important;
 }
 
 .dark .text-slate-900,
-.dark .text-slate-800 {
-  color: #f8fafc !important;
+.dark .text-slate-800,
+.dark .dark\:text-white,
+.dark .dark\:text-slate-100,
+.dark .dark\:text-slate-200 {
+  color: var(--theme-text-primary) !important; /* #F7F3F7 */
 }
 
 .dark .text-slate-700,
-.dark .text-slate-600 {
-  color: #cbd5e1 !important;
+.dark .text-slate-600,
+.dark .dark\:text-slate-300 {
+  color: var(--theme-text-secondary) !important; /* #EFE7EF */
 }
 
 .dark .text-slate-500,
-.dark .text-slate-400 {
-  color: #94a3b8 !important;
+.dark .text-slate-400,
+.dark .dark\:text-slate-400,
+.dark .dark\:text-slate-500 {
+  color: var(--theme-text-muted) !important; /* #A792AB */
 }
 
 .dark .border-slate-200,
-.dark .border-slate-100 {
-  border-color: #2d3748 !important;
+.dark .border-slate-100,
+.dark .border-slate-300,
+.dark .dark\:border-slate-800,
+.dark .dark\:border-slate-700,
+.dark [class*="dark:border-slate-"] {
+  border-color: var(--theme-border) !important; /* #2E2032 */
 }
 
 .dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 .dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
-  border-color: #2d3748 !important;
+  border-color: var(--theme-border) !important;
 }
 
 .dark input:not([type="color"]):not([type="checkbox"]):not([type="radio"]),
 .dark select,
 .dark textarea {
-  background-color: #1a2333 !important;
-  color: #f8fafc !important;
-  border-color: #334155 !important;
+  background-color: #1F1322 !important;
+  color: var(--theme-text-primary) !important;
+  border-color: var(--theme-border) !important;
+}
+
+.dark input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: var(--theme-border-focus) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(223, 85, 247, 0.25) !important;
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder {
-  color: #64748b !important;
+  color: #7A667E !important;
 }
 
 .dark .hover\:bg-slate-50:hover,
-.dark .hover\:bg-slate-100:hover {
-  background-color: #1e293b !important;
+.dark .hover\:bg-slate-100:hover,
+.dark .dark\:hover\:bg-slate-800:hover,
+.dark .dark\:hover\:bg-slate-700:hover {
+  background-color: var(--theme-bg-hover) !important; /* #2E1D31 */
 }
 
+/* EcomDrive Interactive Overrides for Indigo & Primary Utilities */
 .dark .bg-indigo-50,
+.dark .bg-indigo-50\/30,
 .dark .bg-indigo-50\/60,
 .dark .bg-indigo-50\/70,
 .dark .bg-indigo-50\/80 {
-  background-color: #1e1b4b !important;
-  color: #a5b4fc !important;
+  background-color: rgba(232, 121, 249, 0.12) !important;
+  color: #E879F9 !important;
 }
 
 .dark .border-indigo-100,
 .dark .border-indigo-200 {
-  border-color: #3730a3 !important;
+  border-color: rgba(232, 121, 249, 0.25) !important;
 }
 
 .dark .text-indigo-700,
 .dark .text-indigo-600 {
-  color: #818cf8 !important;
+  color: #E879F9 !important;
+}
+
+.dark .bg-indigo-600,
+.dark .bg-indigo-700,
+.dark .bg-blue-600,
+.dark .bg-purple-600,
+.dark .bg-primary,
+.dark button[type="submit"]:not(.btn-unstyled):not(.btn-danger):not(.btn-ghost),
+.dark .btn-primary-gradient,
+.dark .btn-primary {
+  background: var(--gradient-primary-cta) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 22px -4px rgba(192, 38, 211, 0.7) !important;
+  border: 1px solid rgba(232, 121, 249, 0.25) !important;
+}
+
+.dark .bg-indigo-600:hover,
+.dark .bg-indigo-700:hover,
+.dark .bg-blue-600:hover,
+.dark .bg-purple-600:hover,
+.dark button[type="submit"]:not(.btn-unstyled):not(.btn-danger):not(.btn-ghost):hover,
+.dark .btn-primary-gradient:hover,
+.dark .btn-primary:hover {
+  filter: brightness(1.1) !important;
+  box-shadow: 0 8px 30px -6px rgba(192, 38, 211, 0.85) !important;
+  transform: translateY(-1px) scale(1.01) !important;
+}
+
+/* Light Mode EcomDrive Purple & Fuchsia Accents */
+.bg-indigo-50,
+.bg-indigo-50\/60,
+.bg-indigo-50\/70,
+.bg-indigo-50\/80 {
+  background-color: #F5EFF6;
+  color: #5E1E6C;
+}
+
+.text-indigo-600,
+.text-indigo-700 {
+  color: #5E1E6C;
+}
+
+/* Unified Primary Button in Light Mode */
+.bg-indigo-600,
+.bg-indigo-700,
+.bg-blue-600,
+.bg-purple-600,
+.bg-primary,
+button[type="submit"]:not(.btn-unstyled):not(.btn-danger):not(.btn-ghost),
+.btn-primary-gradient,
+.btn-primary {
+  background: var(--gradient-primary-cta) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px -2px rgba(162, 28, 175, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.bg-indigo-600:hover,
+.bg-indigo-700:hover,
+.bg-blue-600:hover,
+.bg-purple-600:hover,
+button[type="submit"]:not(.btn-unstyled):not(.btn-danger):not(.btn-ghost):hover,
+.btn-primary-gradient:hover,
+.btn-primary:hover {
+  filter: brightness(1.1) !important;
+  box-shadow: 0 8px 28px -4px rgba(192, 38, 211, 0.7) !important;
+  transform: translateY(-1px) scale(1.01) !important;
+}
+
+.border-indigo-100,
+.border-indigo-200 {
+  border-color: #E7DDE9;
 }
 
 .dark .bg-emerald-50,
 .dark .bg-emerald-50\/80 {
-  background-color: #064e3b !important;
+  background-color: rgba(16, 185, 129, 0.12) !important;
   color: #a7f3d0 !important;
 }
 
-.dark .border-emerald-200 {
-  border-color: #047857 !important;
+.dark .border-emerald-200,
+.dark .border-emerald-100 {
+  border-color: rgba(16, 185, 129, 0.25) !important;
 }
 
 .dark .text-emerald-700,
+.dark .text-emerald-600,
 .dark .text-emerald-800 {
   color: #6ee7b7 !important;
 }
 
+.dark .bg-blue-50,
+.dark .bg-blue-50\/80 {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  color: #93c5fd !important;
+}
+
+.dark .border-blue-200,
+.dark .border-blue-100 {
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+.dark .text-blue-700,
+.dark .text-blue-600 {
+  color: #93c5fd !important;
+}
+
 .dark .bg-amber-50,
 .dark .bg-amber-50\/80 {
-  background-color: #451a03 !important;
+  background-color: rgba(245, 158, 11, 0.12) !important;
   color: #fde68a !important;
 }
 
-.dark .border-amber-200 {
-  border-color: #92400e !important;
+.dark .border-amber-200,
+.dark .border-amber-100 {
+  border-color: rgba(245, 158, 11, 0.25) !important;
 }
 
 .dark .text-amber-800,
-.dark .text-amber-700 {
+.dark .text-amber-700,
+.dark .text-amber-600 {
   color: #fcd34d !important;
 }
 
 .dark .bg-rose-50,
 .dark .bg-rose-50\/80 {
-  background-color: #4c0519 !important;
+  background-color: rgba(239, 68, 68, 0.12) !important;
   color: #fecdd3 !important;
 }
 
-.dark .border-rose-200 {
-  border-color: #9f1239 !important;
+.dark .border-rose-200,
+.dark .border-rose-100 {
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+.dark .text-rose-700,
+.dark .text-rose-600 {
+  color: #fda4af !important;
+}
+
+.dark .bg-purple-50,
+.dark .bg-purple-50\/80 {
+  background-color: rgba(168, 85, 247, 0.12) !important;
+  color: #e9d5ff !important;
+}
+
+.dark .border-purple-200,
+.dark .border-purple-100 {
+  border-color: rgba(168, 85, 247, 0.25) !important;
+}
+
+.dark .text-purple-700,
+.dark .text-purple-600 {
+  color: #d8b4fe !important;
 }
 
 .dark .text-rose-700,

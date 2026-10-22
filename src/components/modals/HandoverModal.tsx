@@ -206,7 +206,7 @@ export const HandoverModal: React.FC = () => {
               type="submit"
               id="btn-handover-confirm"
               disabled={isSubmitting}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+              className="px-5 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? 'Confirming...' : 'Confirm Handover'}
             </button>

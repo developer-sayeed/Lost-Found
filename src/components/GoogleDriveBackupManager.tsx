@@ -41,7 +41,9 @@ import {
   pruneOldDriveBackups,
   DEFAULT_BACKUP_FOLDER_NAME,
   GoogleDriveAuthState,
-  connectWithDirectToken
+  connectWithDirectToken,
+  isDriveAuthError,
+  GoogleDriveAuthExpiredError
 } from '../lib/googleDriveBackup';
 import { GoogleDriveBackupFile, FullSystemBackupPackage, GoogleDriveBackupSettings } from '../types';
 
@@ -160,22 +162,45 @@ export const GoogleDriveBackupManager: React.FC = () => {
   // Fetch list of backups from Drive
   const fetchDriveBackups = async () => {
     const token = getDriveAccessToken();
-    if (!token) return;
+    if (!token) {
+      if (isMountedRef.current) {
+        setAuthState({ isAuthenticated: false, user: null, hasToken: false });
+        setDriveFiles([]);
+      }
+      return;
+    }
 
     if (isMountedRef.current) setIsLoadingFiles(true);
     try {
       const folderId = await ensureDriveBackupFolder(token);
       const files = await listGoogleDriveBackups(token, folderId);
       if (isMountedRef.current) {
-        setDriveFiles(files);
+        setDriveFiles(files || []);
+        if (!getDriveAccessToken()) {
+          setAuthState({ isAuthenticated: false, user: null, hasToken: false });
+        }
       }
     } catch (err: any) {
-      console.error('Failed to load Google Drive backups:', err);
-      if (isMountedRef.current) {
-        setStatusMessage({
-          type: 'error',
-          text: `Could not retrieve backups from Google Drive: ${err.message}`
-        });
+      if (
+        err instanceof GoogleDriveAuthExpiredError ||
+        err?.isAuthExpired ||
+        isDriveAuthError(err?.status, err?.message) ||
+        err?.message?.includes('invalid authentication credentials') ||
+        err?.message?.includes('OAuth 2 access token')
+      ) {
+        console.warn('[Google Drive] Access token expired or invalid:', err?.message || err);
+        if (isMountedRef.current) {
+          setAuthState({ isAuthenticated: false, user: null, hasToken: false });
+          setDriveFiles([]);
+        }
+      } else {
+        console.warn('Could not retrieve backups from Google Drive:', err?.message || err);
+        if (isMountedRef.current) {
+          setStatusMessage({
+            type: 'error',
+            text: `Could not retrieve backups from Google Drive: ${err.message}`
+          });
+        }
       }
     } finally {
       if (isMountedRef.current) {
@@ -636,10 +661,10 @@ export const GoogleDriveBackupManager: React.FC = () => {
       )}
 
       {/* Section 1: Google Drive Account Authentication */}
-      <div className="bg-slate-50/80 rounded-2xl border border-slate-200/80 p-5 sm:p-6 space-y-4">
+      <div className="bg-slate-50/80 dark:bg-[#180F1A] rounded-2xl border border-slate-200/80 dark:border-fuchsia-900/30 p-5 sm:p-6 space-y-4 transition-colors">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start space-x-3.5">
-            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-2xs shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/40 flex items-center justify-center shadow-2xs shrink-0">
               <svg className="w-6 h-6" viewBox="0 0 48 48">
                 <path fill="#FFC107" d="M17 6L4 29l8 13 13-23z" />
                 <path fill="#FF3D00" d="M31 6H17l13 23h14z" />
@@ -648,25 +673,25 @@ export const GoogleDriveBackupManager: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="text-sm font-bold text-slate-900">Google Drive Connection</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Google Drive Connection</h3>
                 {authState.isAuthenticated && authState.hasToken ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />
                     Connected
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-fuchsia-950/70 text-slate-700 dark:text-fuchsia-300 border border-slate-300/80 dark:border-fuchsia-800/50 shadow-2xs">
                     Not Connected
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {authState.isAuthenticated && authState.user
                   ? `Signed in as ${authState.user.displayName || 'Google Account'} (${authState.user.email || 'No email'})`
                   : 'Connect your Google Drive account with permission to store and manage encrypted hotel backup snapshots.'}
               </p>
               {authState.isAuthenticated && (
-                <div className="flex items-center space-x-2 mt-2 text-[11px] text-slate-600">
+                <div className="flex items-center space-x-2 mt-2 text-[11px] text-slate-600 dark:text-slate-300">
                   <Folder className="w-3.5 h-3.5 text-amber-500" />
                   <span>Target Folder: <strong>{DEFAULT_BACKUP_FOLDER_NAME}</strong></span>
                 </div>
@@ -711,10 +736,10 @@ export const GoogleDriveBackupManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowTokenInput(prev => !prev)}
-                  className="px-3.5 py-2.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+                  className="px-3.5 py-2.5 bg-white dark:bg-[#180F1A] hover:bg-slate-100 dark:hover:bg-[#251329] border border-slate-300 dark:border-fuchsia-900/40 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
                   title="Connect directly using a Google OAuth Access Token without domain restrictions"
                 >
-                  <Key className="w-3.5 h-3.5 text-indigo-600" />
+                  <Key className="w-3.5 h-3.5 text-indigo-600 dark:text-fuchsia-400" />
                   <span>{showTokenInput ? 'Hide Token Input' : 'Connect via Token'}</span>
                 </button>
               </div>
@@ -724,12 +749,12 @@ export const GoogleDriveBackupManager: React.FC = () => {
 
         {/* Direct Token Input Panel (Localhost & Local File Friendly) */}
         {showTokenInput && !authState.isAuthenticated && (
-          <div className="p-4 bg-indigo-50/80 border border-indigo-200 rounded-xl space-y-3 animate-in fade-in">
+          <div className="p-4 bg-indigo-50/80 dark:bg-[#1c0f20] border border-indigo-200 dark:border-fuchsia-900/40 rounded-xl space-y-3 animate-in fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center space-x-2">
-                <Key className="w-4 h-4 text-indigo-600" />
-                <h4 className="text-xs font-bold text-slate-900">Direct Google Access Token Connection</h4>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
+                <Key className="w-4 h-4 text-indigo-600 dark:text-fuchsia-400" />
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white">Direct Google Access Token Connection</h4>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-fuchsia-950/60 text-indigo-700 dark:text-fuchsia-300 border border-transparent dark:border-fuchsia-800/30">
                   Localhost Friendly
                 </span>
               </div>
@@ -737,14 +762,14 @@ export const GoogleDriveBackupManager: React.FC = () => {
                 href="https://developers.google.com/oauthplayground"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center space-x-1"
+                className="text-[11px] font-semibold text-indigo-600 dark:text-fuchsia-400 hover:text-indigo-800 dark:hover:text-fuchsia-300 hover:underline flex items-center space-x-1"
               >
                 <span>OAuth 2.0 Playground</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
 
-            <p className="text-[11px] text-slate-600 leading-relaxed">
+            <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
               When testing locally (or if your domain is not authorized in Firebase Console), you can paste any Google OAuth access token with Drive File scope (<code>https://www.googleapis.com/auth/drive.file</code>) to connect immediately without domain restrictions.
             </p>
 
@@ -754,13 +779,13 @@ export const GoogleDriveBackupManager: React.FC = () => {
                 value={manualToken}
                 onChange={e => setManualToken(e.target.value)}
                 placeholder="Paste Google Access Token (ya29.a0...)"
-                className="flex-1 px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="flex-1 px-3 py-2 bg-white dark:bg-[#140816] border border-indigo-200 dark:border-fuchsia-900/40 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-fuchsia-500 focus:outline-none"
               />
               <button
                 type="button"
                 onClick={handleConnectWithToken}
                 disabled={isConnectingToken || !manualToken.trim()}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0 flex items-center justify-center space-x-1.5"
+                className="px-4 py-2 btn-primary-gradient disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center justify-center space-x-1.5"
               >
                 {isConnectingToken ? (
                   <>
@@ -781,50 +806,50 @@ export const GoogleDriveBackupManager: React.FC = () => {
         {/* Detailed Auth Error & Unauthorized Domain Resolution Guide */}
         {authError && (
           <div className="space-y-3 animate-in fade-in">
-            <div className="p-4 bg-rose-50 border border-rose-200 text-rose-900 rounded-xl text-xs space-y-3">
+            <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-900 dark:text-rose-200 rounded-xl text-xs space-y-3">
               <div className="flex items-start space-x-2.5">
-                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">
-                  <p className="font-bold text-rose-900">
+                  <p className="font-bold text-rose-900 dark:text-rose-200">
                     {authError.includes('unauthorized-domain')
                       ? 'Firebase Domain Authorization Required (auth/unauthorized-domain)'
                       : 'Google Drive Authentication Notice'}
                   </p>
-                  <p className="text-slate-700 text-xs leading-relaxed">
+                  <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
                     {authError}
                   </p>
                 </div>
               </div>
 
               {authError.includes('unauthorized-domain') && (
-                <div className="p-3.5 bg-white rounded-xl border border-rose-200/90 space-y-3 text-xs text-slate-700 shadow-2xs">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
-                    <span className="font-bold text-slate-900">Option 1: Add domain to Firebase Console</span>
+                <div className="p-3.5 bg-white dark:bg-[#180F1A] rounded-xl border border-rose-200/90 dark:border-rose-900/40 space-y-3 text-xs text-slate-700 dark:text-slate-300 shadow-2xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-fuchsia-900/20">
+                    <span className="font-bold text-slate-900 dark:text-white">Option 1: Add domain to Firebase Console</span>
                     <button
                       type="button"
                       onClick={handleCopyHost}
-                      className="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-rose-100 hover:bg-rose-200 text-rose-900 rounded-lg text-[11px] font-bold transition-colors cursor-pointer w-fit"
+                      className="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-rose-100 dark:bg-rose-950/60 hover:bg-rose-200 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-200 rounded-lg text-[11px] font-bold transition-colors cursor-pointer w-fit"
                     >
-                      {copiedHost ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-rose-700" />}
+                      {copiedHost ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3 text-rose-700 dark:text-rose-400" />}
                       <span>{copiedHost ? 'Copied to Clipboard!' : `Copy Host "${window.location.hostname || 'localhost'}"`}</span>
                     </button>
                   </div>
 
-                  <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-600 leading-relaxed">
-                    <li>Go to <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-semibold underline">Firebase Console</a> and select your project.</li>
+                  <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    <li>Go to <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-fuchsia-400 font-semibold underline">Firebase Console</a> and select your project.</li>
                     <li>Navigate to <strong>Authentication &gt; Settings &gt; Authorized domains</strong>.</li>
-                    <li>Click <strong>Add domain</strong> and enter: <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-rose-700 font-bold">{window.location.hostname || 'localhost'}</code></li>
+                    <li>Click <strong>Add domain</strong> and enter: <code className="bg-slate-100 dark:bg-[#251329] px-1.5 py-0.5 rounded font-mono text-rose-700 dark:text-rose-400 font-bold">{window.location.hostname || 'localhost'}</code></li>
                     <li>Wait ~30 seconds for Firebase rules to apply, then click <strong>Sign in with Google Drive</strong>.</li>
                   </ol>
 
-                  <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="text-[11px] text-slate-600">
+                  <div className="pt-2 border-t border-slate-100 dark:border-fuchsia-900/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300">
                       <strong>Option 2: Instant Connection without Firebase Console changes</strong>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowTokenInput(true)}
-                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer w-fit"
+                      className="px-3 py-1 btn-primary-gradient text-white rounded-lg text-xs font-bold transition-all cursor-pointer w-fit"
                     >
                       Paste Access Token Below
                     </button>
@@ -839,26 +864,26 @@ export const GoogleDriveBackupManager: React.FC = () => {
       {/* Section 2: Automated Backup Schedule & Configuration */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-            <Clock className="w-4 h-4 text-indigo-600" />
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-indigo-600 dark:text-fuchsia-400" />
             <span>Automated Backup Schedule</span>
           </h3>
-          <span className="text-xs text-slate-500">Continuous cloud sync</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Continuous cloud sync</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Toggle Auto Backup Card */}
-          <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-3">
+          <div className="p-4 bg-white dark:bg-[#180F1A] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-slate-900">Auto-Backup Status</p>
-                <p className="text-[11px] text-slate-500">Enable automatic scheduled backups</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">Auto-Backup Status</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Enable automatic scheduled backups</p>
               </div>
               <button
                 type="button"
                 onClick={() => setAutoEnabled(!autoEnabled)}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  autoEnabled ? 'bg-indigo-600' : 'bg-slate-200'
+                  autoEnabled ? 'bg-fuchsia-600' : 'bg-slate-200 dark:bg-slate-700'
                 }`}
               >
                 <span
@@ -868,9 +893,9 @@ export const GoogleDriveBackupManager: React.FC = () => {
                 />
               </button>
             </div>
-            <div className="text-[11px] text-slate-600 pt-1">
+            <div className="text-[11px] text-slate-600 dark:text-slate-300 pt-1">
               {autoEnabled ? (
-                <span className="text-emerald-600 font-semibold flex items-center space-x-1">
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center space-x-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Auto-backup is ACTIVE</span>
                 </span>
@@ -881,51 +906,51 @@ export const GoogleDriveBackupManager: React.FC = () => {
           </div>
 
           {/* Backup Frequency */}
-          <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-2">
-            <label className="text-xs font-bold text-slate-900 block">Backup Frequency</label>
+          <div className="p-4 bg-white dark:bg-[#180F1A] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 shadow-2xs space-y-2">
+            <label className="text-xs font-bold text-slate-900 dark:text-white block">Backup Frequency</label>
             <select
               value={frequency}
               onChange={e => setFrequency(e.target.value as any)}
-              className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-fuchsia-500 focus:outline-none"
             >
               <option value="6h">Every 6 Hours</option>
               <option value="12h">Every 12 Hours</option>
               <option value="daily">Daily (Every 24 Hours) [Recommended]</option>
               <option value="weekly">Weekly</option>
             </select>
-            <p className="text-[11px] text-slate-500">Interval for automated background snapshots</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Interval for automated background snapshots</p>
           </div>
 
           {/* Max Files to Retain */}
-          <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-2">
-            <label className="text-xs font-bold text-slate-900 block">Cloud Retention (Max Files)</label>
+          <div className="p-4 bg-white dark:bg-[#180F1A] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 shadow-2xs space-y-2">
+            <label className="text-xs font-bold text-slate-900 dark:text-white block">Cloud Retention (Max Files)</label>
             <select
               value={maxFiles}
               onChange={e => setMaxFiles(Number(e.target.value))}
-              className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-fuchsia-500 focus:outline-none"
             >
               <option value={5}>Keep latest 5 backups</option>
               <option value={10}>Keep latest 10 backups</option>
               <option value={15}>Keep latest 15 backups (Recommended)</option>
               <option value={30}>Keep latest 30 backups</option>
             </select>
-            <p className="text-[11px] text-slate-500">Automatically prunes older backups to save Drive space</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Automatically prunes older backups to save Drive space</p>
           </div>
         </div>
 
         {/* Schedule Controls & Last Backup Info */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-          <div className="flex items-center space-x-3 text-slate-700">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-[#180F1A] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 text-xs">
+          <div className="flex items-center space-x-3 text-slate-700 dark:text-slate-200">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <div>
               <span>Last Google Drive Backup: </span>
-              <strong>
+              <strong className="text-slate-900 dark:text-white">
                 {settings.googleDriveBackup?.lastBackupDate
                   ? new Date(settings.googleDriveBackup.lastBackupDate).toLocaleString()
                   : 'No cloud backups completed yet'}
               </strong>
               {settings.googleDriveBackup?.lastBackupFileName && (
-                <span className="text-slate-500 ml-1">
+                <span className="text-slate-500 dark:text-slate-400 ml-1">
                   ({settings.googleDriveBackup.lastBackupFileName})
                 </span>
               )}
@@ -937,7 +962,7 @@ export const GoogleDriveBackupManager: React.FC = () => {
               type="button"
               onClick={handleSaveConfig}
               disabled={isSavingConfig}
-              className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs shadow-xs transition-colors cursor-pointer"
+              className="px-4 py-1.5 btn-primary-gradient text-white font-semibold rounded-xl text-xs shadow-xs transition-all cursor-pointer"
             >
               {isSavingConfig ? 'Saving...' : 'Save Schedule Settings'}
             </button>
@@ -946,13 +971,13 @@ export const GoogleDriveBackupManager: React.FC = () => {
       </div>
 
       {/* Section 3: Instant Backup Execution */}
-      <div className="p-5 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-slate-50 rounded-2xl border border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-5 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-slate-50 dark:from-[#180F1A] dark:via-[#200f24] dark:to-[#180F1A] rounded-2xl border border-blue-100 dark:border-fuchsia-900/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <h3 className="text-sm font-bold text-slate-900">Manual Instant Backup</h3>
+            <Sparkles className="w-4 h-4 text-blue-600 dark:text-fuchsia-400" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Manual Instant Backup</h3>
           </div>
-          <p className="text-xs text-slate-600 max-w-2xl">
+          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-2xl">
             Immediately capture all registered hotel lost items, staff accounts, certificates, custom themes, and system settings, creating a verified snapshot in your Google Drive folder.
           </p>
         </div>
@@ -963,8 +988,8 @@ export const GoogleDriveBackupManager: React.FC = () => {
           disabled={isBackingUp || !authState.hasToken}
           className={`inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all shrink-0 cursor-pointer ${
             !authState.hasToken
-              ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+              ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+              : 'btn-primary-gradient text-white shadow-fuchsia-500/20'
           }`}
         >
           <RefreshCw className={`w-4 h-4 ${isBackingUp ? 'animate-spin' : ''}`} />
@@ -976,9 +1001,9 @@ export const GoogleDriveBackupManager: React.FC = () => {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
-            <HardDrive className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-sm font-bold text-slate-900">Backups Stored in Google Drive</h3>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+            <HardDrive className="w-4 h-4 text-indigo-600 dark:text-fuchsia-400" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Backups Stored in Google Drive</h3>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-[#251329] text-slate-700 dark:text-fuchsia-300 border border-transparent dark:border-fuchsia-900/30">
               {driveFiles.length} file{driveFiles.length !== 1 ? 's' : ''}
             </span>
           </div>
@@ -988,7 +1013,7 @@ export const GoogleDriveBackupManager: React.FC = () => {
               type="button"
               onClick={fetchDriveBackups}
               disabled={isLoadingFiles || !authState.hasToken}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white dark:bg-[#180F1A] hover:bg-slate-50 dark:hover:bg-[#221028] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoadingFiles ? 'animate-spin' : ''}`} />
               <span>Refresh List</span>
@@ -997,11 +1022,11 @@ export const GoogleDriveBackupManager: React.FC = () => {
         </div>
 
         {!authState.hasToken ? (
-          <div className="text-center py-12 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-3">
-            <Cloud className="w-10 h-10 text-slate-400 mx-auto" />
+          <div className="text-center py-12 px-4 bg-slate-50 dark:bg-[#180F1A] rounded-2xl border border-dashed border-slate-200 dark:border-fuchsia-900/40 space-y-3">
+            <Cloud className="w-10 h-10 text-slate-400 dark:text-fuchsia-400/60 mx-auto" />
             <div className="space-y-1">
-              <h4 className="text-sm font-bold text-slate-800">Google Drive Not Connected</h4>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">
+              <h4 className="text-sm font-bold text-slate-800 dark:text-white">Google Drive Not Connected</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
                 Sign in with Google Drive above to view, restore, and manage automated website and database backups directly from cloud storage.
               </p>
             </div>
@@ -1014,22 +1039,22 @@ export const GoogleDriveBackupManager: React.FC = () => {
             </button>
           </div>
         ) : isLoadingFiles ? (
-          <div className="py-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center space-y-2">
-            <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
+          <div className="py-12 text-center text-slate-400 dark:text-slate-300 text-xs flex flex-col items-center justify-center space-y-2">
+            <RefreshCw className="w-6 h-6 animate-spin text-indigo-600 dark:text-fuchsia-400" />
             <span>Scanning Google Drive folder for backups...</span>
           </div>
         ) : driveFiles.length === 0 ? (
-          <div className="text-center py-12 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
-            <Folder className="w-10 h-10 text-slate-400 mx-auto" />
-            <h4 className="text-sm font-bold text-slate-800">No Backups Found in Google Drive</h4>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          <div className="text-center py-12 px-4 bg-slate-50 dark:bg-[#180F1A] rounded-2xl border border-dashed border-slate-200 dark:border-fuchsia-900/40 space-y-2">
+            <Folder className="w-10 h-10 text-slate-400 dark:text-fuchsia-400/60 mx-auto" />
+            <h4 className="text-sm font-bold text-slate-800 dark:text-white">No Backups Found in Google Drive</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               Click &quot;Run Instant Backup to Drive&quot; above to create your first full website and database snapshot.
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-fuchsia-900/30">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+              <thead className="bg-slate-50 dark:bg-[#200f24] text-slate-700 dark:text-fuchsia-200 font-bold border-b border-slate-200 dark:border-fuchsia-900/30">
                 <tr>
                   <th className="py-3 px-4">Backup File Name</th>
                   <th className="py-3 px-4">Date Created</th>
@@ -1038,42 +1063,42 @@ export const GoogleDriveBackupManager: React.FC = () => {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-fuchsia-900/20 bg-white dark:bg-[#180F1A]">
                 {driveFiles.map(file => (
-                  <tr key={file.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-medium text-slate-900">
+                  <tr key={file.id} className="hover:bg-slate-50/70 dark:hover:bg-[#221028] transition-colors">
+                    <td className="py-3.5 px-4 font-mono font-medium text-slate-900 dark:text-white">
                       <div className="flex items-center space-x-2">
-                        <FileCode className="w-4 h-4 text-indigo-500 shrink-0" />
+                        <FileCode className="w-4 h-4 text-indigo-500 dark:text-fuchsia-400 shrink-0" />
                         <span className="truncate max-w-xs">{file.name}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                       {new Date(file.createdTime).toLocaleString()}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600 font-mono whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">
                       {formatFileSize(file.size)}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600">
+                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
                       {file.recordsCount ? (
                         <div className="flex items-center space-x-2 text-[11px]">
                           {file.recordsCount.items !== undefined && (
-                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 font-semibold">
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/40 font-semibold">
                               {file.recordsCount.items} Items
                             </span>
                           )}
                           {file.recordsCount.staff !== undefined && (
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 font-semibold">
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800/40 font-semibold">
                               {file.recordsCount.staff} Staff
                             </span>
                           )}
                           {file.recordsCount.certificates !== undefined && (
-                            <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-100 font-semibold">
+                            <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800/40 font-semibold">
                               {file.recordsCount.certificates} Certs
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-[11px] truncate max-w-xs block">
+                        <span className="text-slate-400 dark:text-slate-500 text-[11px] truncate max-w-xs block">
                           {file.description || 'Full System Snapshot'}
                         </span>
                       )}
@@ -1084,7 +1109,7 @@ export const GoogleDriveBackupManager: React.FC = () => {
                           href={file.webViewLink}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#251329] border border-slate-200 dark:border-fuchsia-900/40 rounded-lg transition-colors cursor-pointer"
                           title="Open file in Google Drive"
                         >
                           <ExternalLink className="w-3 h-3" />
@@ -1095,17 +1120,17 @@ export const GoogleDriveBackupManager: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleInitiateDriveRestore(file)}
-                        className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-colors cursor-pointer"
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 dark:text-fuchsia-300 hover:bg-indigo-50 dark:hover:bg-fuchsia-950/40 border border-indigo-200 dark:border-fuchsia-800/40 rounded-lg transition-colors cursor-pointer"
                         title="Restore website database using this backup"
                       >
-                        <RefreshCw className="w-3 h-3 text-indigo-600" />
+                        <RefreshCw className="w-3 h-3 text-indigo-600 dark:text-fuchsia-400" />
                         <span>Restore</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(file)}
-                        className="inline-flex items-center space-x-1 px-2 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition-colors cursor-pointer"
+                        className="inline-flex items-center space-x-1 px-2 py-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 rounded-lg transition-colors cursor-pointer"
                         title="Delete this backup from Google Drive"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -1121,19 +1146,19 @@ export const GoogleDriveBackupManager: React.FC = () => {
 
       {/* CONFIRMATION MODAL: RESTORE SYSTEM FROM BACKUP */}
       {restoreTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 space-y-5 animate-scale-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/40 shadow-2xl max-w-lg w-full p-6 space-y-5 animate-scale-in">
             <div className="flex items-start space-x-3.5">
-              <div className="p-3 bg-amber-50 text-amber-600 rounded-xl border border-amber-200 shrink-0">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-200 dark:border-amber-800/40 shrink-0">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
-                  Confirm System & Database Restoration
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Confirm System &amp; Database Restoration
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   You are about to restore the full website database from{' '}
-                  <strong className="text-slate-700">
+                  <strong className="text-slate-700 dark:text-fuchsia-200">
                     {restoreTarget.source === 'drive'
                       ? `Google Drive backup "${restoreTarget.file?.name}"`
                       : 'local JSON backup package'}
@@ -1145,44 +1170,44 @@ export const GoogleDriveBackupManager: React.FC = () => {
 
             {/* Summary of records in package */}
             {restoreTarget.package && (
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-xs">
-                <p className="font-bold text-slate-800">Snapshot Contents to be Restored:</p>
-                <div className="grid grid-cols-2 gap-2 text-slate-600">
-                  <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-100">
-                    <span>Lost & Found Items:</span>
-                    <strong className="text-slate-900">
+              <div className="p-4 bg-slate-50 dark:bg-[#200f24] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 space-y-2 text-xs">
+                <p className="font-bold text-slate-800 dark:text-white">Snapshot Contents to be Restored:</p>
+                <div className="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center justify-between p-2 bg-white dark:bg-[#180F1A] rounded-lg border border-slate-100 dark:border-fuchsia-900/30">
+                    <span>Lost &amp; Found Items:</span>
+                    <strong className="text-slate-900 dark:text-white">
                       {restoreTarget.package.database.items?.length || 0}
                     </strong>
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-100">
+                  <div className="flex items-center justify-between p-2 bg-white dark:bg-[#180F1A] rounded-lg border border-slate-100 dark:border-fuchsia-900/30">
                     <span>Staff Accounts:</span>
-                    <strong className="text-slate-900">
+                    <strong className="text-slate-900 dark:text-white">
                       {restoreTarget.package.database.staff?.length || 0}
                     </strong>
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-100">
+                  <div className="flex items-center justify-between p-2 bg-white dark:bg-[#180F1A] rounded-lg border border-slate-100 dark:border-fuchsia-900/30">
                     <span>Certificates:</span>
-                    <strong className="text-slate-900">
+                    <strong className="text-slate-900 dark:text-white">
                       {restoreTarget.package.database.certificates?.length || 0}
                     </strong>
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-100">
+                  <div className="flex items-center justify-between p-2 bg-white dark:bg-[#180F1A] rounded-lg border border-slate-100 dark:border-fuchsia-900/30">
                     <span>Hotel Settings:</span>
-                    <strong className="text-emerald-700">Included</strong>
+                    <strong className="text-emerald-700 dark:text-emerald-400">Included</strong>
                   </div>
                 </div>
-                <p className="text-[11px] text-amber-700 font-medium pt-1">
+                <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium pt-1">
                   ⚠️ Current database state will be updated with this snapshot.
                 </p>
               </div>
             )}
 
-            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100 dark:border-fuchsia-900/30">
               <button
                 type="button"
                 onClick={() => setRestoreTarget(null)}
                 disabled={isRestoring}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1202,30 +1227,30 @@ export const GoogleDriveBackupManager: React.FC = () => {
 
       {/* CONFIRMATION MODAL: DELETE FROM DRIVE (MANDATORY PER WORKSPACE SKILL) */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5 animate-scale-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/40 shadow-2xl max-w-md w-full p-6 space-y-5 animate-scale-in">
             <div className="flex items-start space-x-3.5">
-              <div className="p-3 bg-rose-50 text-rose-600 rounded-xl border border-rose-200 shrink-0">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl border border-rose-200 dark:border-rose-900/40 shrink-0">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">Delete Google Drive Backup?</h3>
-                <p className="text-xs text-slate-500">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Delete Google Drive Backup?</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Are you sure you want to delete this backup file from your Google Drive?
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-700 break-all">
+            <div className="p-3.5 bg-slate-50 dark:bg-[#200f24] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 text-xs font-mono text-slate-700 dark:text-fuchsia-200 break-all">
               {deleteTarget.name}
             </div>
 
-            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100 dark:border-fuchsia-900/30">
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
                 disabled={isDeleting}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>

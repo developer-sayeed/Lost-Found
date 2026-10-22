@@ -22,6 +22,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import { DEFAULT_TOAST_CONFIG } from '../../types';
 import { triggerConfetti } from '../../utils/confetti';
+import { resolveLoginLogo } from '../../utils/logoHelper';
 
 export const AuthModal: React.FC = () => {
   const { loginWithEmail, isLoading, inactivityNotice } = useAuth();
@@ -72,8 +73,14 @@ export const AuthModal: React.FC = () => {
     }
   }, [inactivityNotice]);
 
-  // Database-driven logo resolution
-  const dynamicLogoUrl = settings?.loginLogoUrl || settings?.logoUrl;
+  // Dynamic Background and Atmosphere
+  const bgStyle = settings?.loginBackgroundStyle || 'luxury-dark';
+  const isDarkAtmosphere = bgStyle !== 'minimal-clean';
+  const cardBlurEnabled = settings?.loginCardBlur !== false;
+
+  // Dynamic Theme-driven logo resolution (Light vs Dark atmosphere)
+  const resolvedLogoData = resolveLoginLogo(settings, isDarkAtmosphere);
+  const dynamicLogoUrl = resolvedLogoData.url;
   const logoWidth = settings?.loginLogoWidth || settings?.logoWidth || 140;
   const logoHeight = settings?.loginLogoHeight || settings?.logoHeight || 48;
   const logoFit = settings?.loginLogoFit || settings?.logoFit || 'contain';
@@ -83,10 +90,6 @@ export const AuthModal: React.FC = () => {
   const brandSubtitle = settings?.loginPageSubtitle?.trim() || '';
   const brandTagline = settings?.loginPageTagline?.trim() || '';
   const footerText = settings?.loginFooterText?.trim() || '';
-
-  // Dynamic Background and Atmosphere
-  const bgStyle = settings?.loginBackgroundStyle || 'luxury-dark';
-  const cardBlurEnabled = settings?.loginCardBlur !== false;
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,7 +201,9 @@ export const AuthModal: React.FC = () => {
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in ${
         cardBlurEnabled ? 'backdrop-blur-md' : ''
       } ${
-        bgStyle === 'luxury-dark'
+        bgStyle === 'plum-violet'
+          ? 'bg-gradient-to-br from-[#180F1A] via-[#491754] to-[#0F0911]'
+          : bgStyle === 'luxury-dark'
           ? 'bg-slate-950/85'
           : bgStyle === 'royal-indigo'
           ? 'bg-gradient-to-br from-slate-950/95 via-indigo-950/90 to-slate-900/95'
@@ -206,19 +211,44 @@ export const AuthModal: React.FC = () => {
           ? 'bg-gradient-to-br from-slate-950/95 via-emerald-950/90 to-slate-900/95'
           : bgStyle === 'minimal-clean'
           ? 'bg-slate-200/90'
+          : bgStyle === 'custom-video'
+          ? 'bg-slate-950'
+          : bgStyle === 'custom-gradient'
+          ? 'bg-slate-950'
           : 'bg-slate-950/85'
       }`}
       style={{
         backgroundColor: bgStyle === 'custom-color' ? settings?.loginBgColor || '#020617' : undefined,
         backgroundImage:
-          bgStyle === 'custom-image' && settings?.loginBgImageUrl ? `url("${settings.loginBgImageUrl}")` : undefined,
+          bgStyle === 'custom-gradient'
+            ? (settings?.loginGradientDirection === 'radial'
+                ? `radial-gradient(circle, ${settings?.loginGradientStart || '#180F1A'}, ${settings?.loginGradientEnd || '#491754'})`
+                : `linear-gradient(${settings?.loginGradientDirection || 'to bottom right'}, ${settings?.loginGradientStart || '#180F1A'}, ${settings?.loginGradientEnd || '#491754'})`)
+            : bgStyle === 'custom-image' && settings?.loginBgImageUrl
+            ? `url("${settings.loginBgImageUrl}")`
+            : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}
     >
-      {/* Dimming overlay if custom image is used */}
-      {bgStyle === 'custom-image' && (
-        <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-xs pointer-events-none" />
+      {/* Background Video Layer for custom-video atmosphere */}
+      {bgStyle === 'custom-video' && settings?.loginBgVideoUrl && (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0 transition-all duration-300"
+          style={{
+            filter: settings?.loginVideoBlurEnabled ? `blur(${(settings?.loginVideoBlurAmount ?? 40) * 0.2}px)` : 'none'
+          }}
+          src={settings.loginBgVideoUrl}
+        />
+      )}
+
+      {/* Dimming overlay if custom image or video is used (no forced blur for video unless enabled) */}
+      {(bgStyle === 'custom-image' || bgStyle === 'custom-video') && (
+        <div className={`absolute inset-0 bg-slate-950/60 pointer-events-none z-0 ${bgStyle === 'custom-image' ? 'backdrop-blur-xs' : ''}`} />
       )}
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative z-10">
@@ -455,7 +485,7 @@ export const AuthModal: React.FC = () => {
                   type="submit"
                   id="btn-login-submit"
                   disabled={isLoading || (lockoutRemainingSeconds !== null && lockoutRemainingSeconds > 0)}
-                  className="w-full flex items-center justify-center space-x-2 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-semibold rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-2"
+                  className="w-full flex items-center justify-center space-x-2 py-2.5 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-2"
                 >
                   {isLoading ? (
                     <>

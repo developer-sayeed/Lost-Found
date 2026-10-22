@@ -20,7 +20,9 @@ import {
   X,
   Eye,
   EyeOff,
-  WifiOff
+  WifiOff,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { AppNotification } from '../types';
 import { PWAInstallButton } from './pwa/PWAInstallButton';
@@ -52,7 +54,8 @@ export const Header: React.FC = () => {
     isNotificationRead,
     isNotificationDeleted,
     items,
-    openItemDetails
+    openItemDetails,
+    updateSettings
   } = useApp();
   const { user, isAdmin } = useAuth();
   const { language, setLanguage, t, isRTL, translateRole } = useLanguage();
@@ -273,10 +276,55 @@ export const Header: React.FC = () => {
     }
   };
 
+  const [isCurrentlyDark, setIsCurrentlyDark] = useState<boolean>(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    return settings?.themeMode === 'dark' || settings?.isDarkMode === true;
+  });
+
+  useEffect(() => {
+    const checkDark = () => {
+      const active = (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')) ||
+        settings?.themeMode === 'dark' ||
+        settings?.isDarkMode === true;
+      setIsCurrentlyDark(active);
+    };
+    checkDark();
+
+    const observer = new MutationObserver(() => checkDark());
+    if (typeof document !== 'undefined') {
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    }
+    return () => observer.disconnect();
+  }, [settings?.themeMode, settings?.isDarkMode]);
+
+  const toggleThemeMode = () => {
+    const nextDark = !isCurrentlyDark;
+    setIsCurrentlyDark(nextDark);
+    if (nextDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    if (updateSettings) {
+      updateSettings({
+        themeMode: nextDark ? 'dark' : 'light',
+        isDarkMode: nextDark
+      });
+    }
+  };
+
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-8 flex items-center justify-between shadow-xs sticky top-0 z-30">
+    <header className="relative h-16 bg-white dark:bg-[#180F1A] border-b border-slate-200 dark:border-slate-800/80 px-4 sm:px-8 flex items-center justify-between shadow-xs sticky top-0 z-30 transition-colors">
+      {/* EcomDrive Signature Gradient Top Accent Line */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-[2px]" 
+        style={{ background: 'linear-gradient(90deg, #4a1755 0%, #c026d3 50%, #e879f9 100%)' }} 
+      />
+
       {/* Left side: Mobile Hamburger, Desktop Toggle, Breadcrumb & Title */}
-      <div className="flex items-center space-x-2 sm:space-x-3 rtl:space-x-reverse">
+      <div className="flex items-center space-x-2 sm:space-x-3">
         {/* Mobile Hamburger Menu Button */}
         <button
           type="button"
@@ -292,7 +340,7 @@ export const Header: React.FC = () => {
         <BreadcrumbNavigation />
 
         {syncSuccessNotice && (
-          <span className="hidden xl:inline-flex items-center space-x-1.5 rtl:space-x-reverse ml-2 rtl:ml-0 rtl:mr-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 animate-fade-in">
+          <span className="hidden xl:inline-flex items-center space-x-1.5 ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 animate-fade-in">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>{syncSuccessNotice}</span>
           </span>
@@ -300,24 +348,28 @@ export const Header: React.FC = () => {
       </div>
 
       {/* Center/Right Controls & Profile */}
-      <div className="flex items-center space-x-2 sm:space-x-3 rtl:space-x-reverse">
+      <div className="flex items-center space-x-2 sm:space-x-3">
         {/* Free Google Website Translator Engine */}
         <GoogleTranslateBar variant="header" />
 
-        {/* Quick QR Scanner Button */}
-        <button
-          type="button"
-          id="btn-header-qr-scanner"
-          onClick={openQrScanner}
-          className="flex items-center space-x-1.5 rtl:space-x-reverse px-2.5 sm:px-3 py-1.5 rounded-xl border border-indigo-200/80 bg-indigo-50/80 hover:bg-indigo-100/80 text-indigo-700 text-xs font-semibold transition-all shadow-2xs group"
-          title={t.scanQr}
-        >
-          <QrCode className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform" />
-          <span className="hidden sm:inline">{t.quickScan}</span>
-        </button>
-
         {/* PWA App Install Button (for mobile hotel staff) */}
         <PWAInstallButton />
+
+        {/* EcomDrive Dark / Light Mode Toggle Button */}
+        <button
+          type="button"
+          id="btn-header-theme-toggle"
+          onClick={toggleThemeMode}
+          className="p-2 text-slate-600 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-fuchsia-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+          title={isCurrentlyDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          aria-label="Toggle theme mode"
+        >
+          {isCurrentlyDark ? (
+            <Sun className="w-4 h-4 text-amber-400 hover:rotate-45 transition-transform" />
+          ) : (
+            <Moon className="w-4 h-4 text-slate-600 hover:-rotate-12 transition-transform" />
+          )}
+        </button>
 
         {/* Real-time Notifications Bell & Dropdown */}
         <div className="relative" ref={notifDropdownRef}>
@@ -350,7 +402,7 @@ export const Header: React.FC = () => {
               >
                 {/* Dropdown Header */}
                 <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <div className="flex items-center space-x-2">
                     <span className="text-xs font-bold text-slate-900">{t.notifications || 'Notifications'}</span>
                     {unreadNotificationsCount > 0 && (
                       <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
@@ -358,7 +410,7 @@ export const Header: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+                  <div className="flex items-center space-x-1.5">
                     {/* Broadcast notice button for admin / supervisor */}
                     {['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(user?.role || '') && (
                       <button
@@ -367,7 +419,7 @@ export const Header: React.FC = () => {
                           setIsNotifOpen(false);
                           setIsBroadcastModalOpen(true);
                         }}
-                        className="flex items-center space-x-1 rtl:space-x-reverse text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg transition-colors"
+                        className="flex items-center space-x-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg transition-colors"
                         title="Broadcast Notice to Staff"
                       >
                         <Send className="w-3 h-3" />
@@ -415,14 +467,14 @@ export const Header: React.FC = () => {
                       <div
                         key={notif.id}
                         onClick={() => handleNotificationClick(notif)}
-                        className={`p-3 hover:bg-slate-50 transition-colors cursor-pointer flex items-start space-x-3 rtl:space-x-reverse relative group/item ${
+                        className={`p-3 hover:bg-slate-50 transition-colors cursor-pointer flex items-start space-x-3 relative group/item ${
                           isUnread ? 'bg-indigo-50/30' : ''
                         }`}
                       >
                         {renderNotifIcon(notif.type)}
-                        <div className="flex-1 min-w-0 pr-14 rtl:pr-0 rtl:pl-14">
+                        <div className="flex-1 min-w-0 pr-14">
                           <div className="flex items-center justify-between gap-1 mb-0.5">
-                            <div className="flex items-center space-x-1.5 rtl:space-x-reverse truncate">
+                            <div className="flex items-center space-x-1.5 truncate">
                               <h4 className={`text-xs truncate ${isUnread ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
                                 {notif.title}
                               </h4>
@@ -445,7 +497,7 @@ export const Header: React.FC = () => {
                             {notif.message}
                           </p>
                           {notif.itemCode && (
-                            <div className="mt-1.5 flex items-center space-x-1.5 rtl:space-x-reverse">
+                            <div className="mt-1.5 flex items-center space-x-1.5">
                               <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[10px] font-bold">
                                 {notif.itemCode}
                               </span>
@@ -457,7 +509,7 @@ export const Header: React.FC = () => {
                         </div>
 
                         {/* Quick action buttons on hover: Toggle Read/Unread & Dismiss for me */}
-                        <div className="absolute top-2 right-2 rtl:right-auto rtl:left-2 flex items-center space-x-1 rtl:space-x-reverse opacity-0 group-hover/item:opacity-100 transition-opacity">
+                        <div className="absolute top-2 right-2 flex items-center space-x-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -503,7 +555,7 @@ export const Header: React.FC = () => {
         {isSyncPaused && (
           <div
             id="badge-header-offline"
-            className="flex items-center space-x-1.5 rtl:space-x-reverse px-2.5 py-1 text-xs font-semibold rounded-xl bg-amber-100/90 text-amber-900 border border-amber-200/90 shadow-2xs"
+            className="flex items-center space-x-1.5 px-2.5 py-1 text-xs font-semibold rounded-xl bg-amber-100/90 text-amber-900 border border-amber-200/90 shadow-2xs"
             title={t.offlineNoticeDescription}
           >
             <WifiOff className="w-3.5 h-3.5 text-amber-600" />
@@ -512,14 +564,14 @@ export const Header: React.FC = () => {
           </div>
         )}
 
-        {/* User Profile Info */}
+        {/* User Profile Info (Hidden on mobile per user specification, available via bottom nav) */}
         <button
           type="button"
           onClick={() => openStaffProfile(null)}
-          className="flex items-center space-x-2.5 rtl:space-x-reverse pl-2 sm:pl-3 rtl:pl-0 rtl:pr-2 sm:rtl:pr-3 border-l rtl:border-l-0 rtl:border-r border-slate-200 hover:opacity-80 transition-opacity text-left rtl:text-right group"
+          className="hidden sm:flex items-center space-x-2.5 pl-2 sm:pl-3 border-l border-slate-200 dark:border-slate-800 hover:opacity-80 transition-opacity text-left group"
           title={t.myProfile}
         >
-          <div className="text-right rtl:text-left hidden sm:block">
+          <div className="text-right hidden sm:block">
             <p className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
               {user?.name || 'MD ABU SAYEED RIDAY'}
             </p>

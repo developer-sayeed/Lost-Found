@@ -66,7 +66,6 @@ export const StaffPerformancePrintModal: React.FC<StaffPerformancePrintModalProp
 
   // Dynamic Hotel Branding from Settings
   const hotelName = settings?.hotelName || 'Warwick Hotels & Resorts';
-  const hotelArabic = settings?.hotelArabicName || 'فندق ورويك';
   const hotelSub = settings?.hotelSubTitle || 'Luxury Hotels & Resorts';
   const logoUrl = settings?.logoUrl || '';
   const hotelPhone = settings?.phoneNumber || '';
@@ -289,7 +288,7 @@ export const StaffPerformancePrintModal: React.FC<StaffPerformancePrintModalProp
               type="button"
               id="btn-trigger-perf-print"
               onClick={handlePrint}
-              className="flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+              className="flex items-center space-x-1.5 px-4 py-2 btn-primary-gradient text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Print Official Audit PDF</span>
@@ -444,7 +443,7 @@ export const StaffPerformancePrintModal: React.FC<StaffPerformancePrintModalProp
                     {hotelName}
                   </div>
                   <div className="text-[11px] text-slate-600 font-medium">
-                    {hotelArabic} &bull; {hotelSub}
+                    {hotelSub}
                   </div>
                 </div>
 
@@ -798,7 +797,7 @@ export const StaffPerformancePrintModal: React.FC<StaffPerformancePrintModalProp
             <button
               type="button"
               onClick={handlePrint}
-              className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+              className="px-4 py-1.5 btn-primary-gradient text-white font-bold rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print Official Audit PDF</span>

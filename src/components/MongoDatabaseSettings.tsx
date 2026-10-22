@@ -290,8 +290,8 @@ export const MongoDatabaseSettings: React.FC = () => {
       {/* Top Banner Status */}
       <div className={`p-6 rounded-2xl border transition-all ${
         isLive
-          ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-          : 'bg-slate-50 border-slate-200 text-slate-900'
+          ? 'bg-emerald-50/70 dark:bg-[#180F1A] border-emerald-200 dark:border-emerald-500/20 text-emerald-950 dark:text-white'
+          : 'bg-slate-50 dark:bg-[#180F1A] border-slate-200 dark:border-fuchsia-900/30 text-slate-900 dark:text-white'
       }`}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start space-x-3.5">
@@ -300,16 +300,18 @@ export const MongoDatabaseSettings: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-base font-bold">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   {isLive ? 'Connected to Real MongoDB Database' : 'Database Storage Mode: Local Storage'}
                 </h2>
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                  isLive ? 'bg-emerald-200/80 text-emerald-900' : 'bg-amber-100 text-amber-900'
+                  isLive
+                    ? 'bg-emerald-200/80 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40'
+                    : 'bg-amber-100 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300'
                 }`}>
                   {isLive ? 'Live MongoDB' : 'Local JSON Fallback'}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
                 {isLive
                   ? `Your hotel inventory, categories, staff, and system records are stored directly inside MongoDB cluster (${mongoStatus?.host || 'MongoDB Atlas Server'}).`
                   : 'Connect your MongoDB Atlas or self-hosted MongoDB instance below to store and query live real-time hotel data.'}
@@ -321,7 +323,7 @@ export const MongoDatabaseSettings: React.FC = () => {
             <button
               type="button"
               onClick={refreshMongoStatus}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl shadow-2xs transition-all cursor-pointer"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-white dark:bg-[#251329] hover:bg-slate-50 dark:hover:bg-[#2f1934] border border-slate-200 dark:border-fuchsia-900/30 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl shadow-2xs transition-all cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh Status</span>
@@ -331,7 +333,7 @@ export const MongoDatabaseSettings: React.FC = () => {
                 type="button"
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
-                className="flex items-center space-x-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                className="flex items-center space-x-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-400 text-xs font-semibold rounded-xl transition-all cursor-pointer"
               >
                 <Unplug className="w-3.5 h-3.5" />
                 <span>{isDisconnecting ? 'Disconnecting...' : 'Disconnect'}</span>
@@ -342,61 +344,61 @@ export const MongoDatabaseSettings: React.FC = () => {
 
         {/* Live Metrics Grid: Active Connections, Data Count, Status, Storage MB/GB, Memory MB */}
         {isLive && mongoStatus && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-5 pt-5 border-t border-emerald-200/60">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-5 pt-5 border-t border-emerald-200/60 dark:border-fuchsia-900/30">
             {/* 1. Status */}
-            <div className="bg-white/90 p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</div>
-              <div className="text-xs font-bold text-emerald-700 mt-0.5 flex items-center space-x-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <div className="bg-white/90 dark:bg-[#1c0f20] p-3.5 rounded-xl border border-emerald-200/80 dark:border-fuchsia-900/30 shadow-2xs">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-fuchsia-300/70 uppercase tracking-wider">Status</div>
+              <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mt-0.5 flex items-center space-x-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>Live Connected</span>
               </div>
-              <div className="text-[10px] text-slate-500 mt-0.5 truncate">{mongoStatus.databaseName}</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{mongoStatus.databaseName}</div>
             </div>
 
             {/* 2. Active Connections */}
-            <div className="bg-white/90 p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Connections</div>
-              <div className="text-sm font-bold text-slate-900 mt-0.5">1 Active</div>
-              <div className="text-[10px] text-emerald-600 font-medium mt-0.5">Pool: 10 sockets</div>
+            <div className="bg-white/90 dark:bg-[#1c0f20] p-3.5 rounded-xl border border-emerald-200/80 dark:border-fuchsia-900/30 shadow-2xs">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-fuchsia-300/70 uppercase tracking-wider">Active Connections</div>
+              <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">1 Active</div>
+              <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">Pool: 10 sockets</div>
             </div>
 
             {/* 3. Total Data Count */}
-            <div className="bg-white/90 p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Records</div>
-              <div className="text-sm font-bold text-slate-900 mt-0.5">{totalLiveRecords} Records</div>
-              <div className="text-[10px] text-slate-500 mt-0.5">{items.length} items • {staff.length} staff</div>
+            <div className="bg-white/90 dark:bg-[#1c0f20] p-3.5 rounded-xl border border-emerald-200/80 dark:border-fuchsia-900/30 shadow-2xs">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-fuchsia-300/70 uppercase tracking-wider">Total Records</div>
+              <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{totalLiveRecords} Records</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{items.length} items • {staff.length} staff</div>
             </div>
 
             {/* 4. Storage Used */}
-            <div className="bg-white/90 p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1">
-                <HardDrive className="w-3 h-3 text-slate-400" />
+            <div className="bg-white/90 dark:bg-[#1c0f20] p-3.5 rounded-xl border border-emerald-200/80 dark:border-fuchsia-900/30 shadow-2xs">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-fuchsia-300/70 uppercase tracking-wider flex items-center space-x-1">
+                <HardDrive className="w-3 h-3 text-slate-400 dark:text-fuchsia-400" />
                 <span>Storage Used</span>
               </div>
-              <div className="text-sm font-bold text-slate-900 mt-0.5">1.84 MB</div>
-              <div className="text-[10px] text-slate-500 mt-0.5">of 512 MB Free Tier</div>
+              <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">1.84 MB</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">of 512 MB Free Tier</div>
             </div>
 
             {/* 5. Memory Used */}
-            <div className="bg-white/90 p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1">
-                <Cpu className="w-3 h-3 text-slate-400" />
+            <div className="bg-white/90 dark:bg-[#1c0f20] p-3.5 rounded-xl border border-emerald-200/80 dark:border-fuchsia-900/30 shadow-2xs">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-fuchsia-300/70 uppercase tracking-wider flex items-center space-x-1">
+                <Cpu className="w-3 h-3 text-slate-400 dark:text-fuchsia-400" />
                 <span>Memory Used</span>
               </div>
-              <div className="text-sm font-bold text-slate-900 mt-0.5">38.4 MB</div>
-              <div className="text-[10px] text-slate-500 mt-0.5">Buffer & Cache</div>
+              <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">38.4 MB</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Buffer &amp; Cache</div>
             </div>
 
             {/* 6. Latency / Ping */}
-            <div className="bg-white/90 p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1">
-                <Activity className="w-3 h-3 text-emerald-600" />
+            <div className="bg-white/90 dark:bg-[#1c0f20] p-3.5 rounded-xl border border-emerald-200/80 dark:border-fuchsia-900/30 shadow-2xs">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-fuchsia-300/70 uppercase tracking-wider flex items-center space-x-1">
+                <Activity className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                 <span>Cluster Ping</span>
               </div>
-              <div className="text-sm font-bold text-emerald-700 mt-0.5">
+              <div className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
                 {mongoStatus.pingMs ? `${mongoStatus.pingMs}ms` : '<8ms'}
               </div>
-              <div className="text-[10px] text-slate-500 mt-0.5">High Performance</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">High Performance</div>
             </div>
           </div>
         )}
@@ -406,13 +408,13 @@ export const MongoDatabaseSettings: React.FC = () => {
       {actionNotice && (
         <div className={`p-4 rounded-xl border flex items-center space-x-2.5 text-xs font-semibold ${
           actionNotice.type === 'success'
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-            : 'bg-rose-50 border-rose-200 text-rose-800'
+            ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300'
+            : 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/40 text-rose-800 dark:text-rose-300'
         }`}>
           {actionNotice.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           ) : (
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
           )}
           <span>{actionNotice.message}</span>
         </div>
@@ -421,22 +423,22 @@ export const MongoDatabaseSettings: React.FC = () => {
       {/* ========================================================================= */}
       {/* 🚀 MONGODB COLLECTIONS & LIVE RECORD COUNTS COMPONENT */}
       {/* ========================================================================= */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+      <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-sm p-6 space-y-6">
         {/* Header with Search & Quick Sync Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
           <div>
             <div className="flex items-center space-x-2.5">
-              <div className="p-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+              <div className="p-2 rounded-xl bg-indigo-50 dark:bg-fuchsia-950/40 border border-indigo-100 dark:border-fuchsia-800/30 text-indigo-600 dark:text-fuchsia-400">
                 <Table className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
-                  <span>MongoDB Collections & Live Record Counts</span>
-                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded-md border border-indigo-100">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <span>MongoDB Collections &amp; Live Record Counts</span>
+                  <span className="px-2 py-0.5 bg-indigo-50 dark:bg-fuchsia-950/40 text-indigo-700 dark:text-fuchsia-300 text-[10px] font-bold rounded-md border border-indigo-100 dark:border-fuchsia-800/30">
                     {collectionsList.length} Collections
                   </span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Real-time document counts, indexed fields, and synchronization metrics across all MongoDB database collections.
                 </p>
               </div>
@@ -451,17 +453,17 @@ export const MongoDatabaseSettings: React.FC = () => {
                 value={collectionSearch}
                 onChange={e => setCollectionSearch(e.target.value)}
                 placeholder="Search collection..."
-                className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 text-slate-800 w-44"
+                className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-[#180F1A] focus:ring-2 focus:ring-fuchsia-500/20 text-slate-800 dark:text-white w-44"
               />
             </div>
 
             <button
               type="button"
               onClick={refreshMongoStatus}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#251329] hover:bg-slate-200 dark:hover:bg-[#2f1934] text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-transparent dark:border-fuchsia-900/20 transition-all cursor-pointer shadow-2xs"
               title="Refresh Live Record Counts"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+              <RefreshCw className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
               <span>Refresh</span>
             </button>
 
@@ -481,28 +483,28 @@ export const MongoDatabaseSettings: React.FC = () => {
 
         {/* Quick Stats Summary Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-100">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Total Live Records</span>
-            <div className="text-xl font-extrabold text-indigo-950 mt-0.5">{totalLiveRecords}</div>
-            <span className="text-[10px] text-indigo-700 font-medium">Across {collectionsList.length} collections</span>
+          <div className="p-3.5 bg-indigo-50/60 dark:bg-[#200f24] rounded-xl border border-indigo-100 dark:border-fuchsia-500/30 shadow-xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-fuchsia-400">Total Live Records</span>
+            <div className="text-xl font-extrabold text-indigo-950 dark:text-white mt-0.5">{totalLiveRecords}</div>
+            <span className="text-[10px] text-indigo-700 dark:text-fuchsia-300/80 font-medium">Across {collectionsList.length} collections</span>
           </div>
 
-          <div className="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-100">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Lost Items Inventory</span>
-            <div className="text-xl font-extrabold text-emerald-950 mt-0.5">{items.length}</div>
-            <span className="text-[10px] text-emerald-700 font-medium">{storedItemsCount} currently stored in HK</span>
+          <div className="p-3.5 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-xl border border-emerald-100 dark:border-emerald-500/30 shadow-xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Lost Items Inventory</span>
+            <div className="text-xl font-extrabold text-emerald-950 dark:text-emerald-300 mt-0.5">{items.length}</div>
+            <span className="text-[10px] text-emerald-700 dark:text-emerald-400/80 font-medium">{storedItemsCount} currently stored in HK</span>
           </div>
 
-          <div className="p-3.5 bg-amber-50/60 rounded-xl border border-amber-100">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Staff & Users</span>
-            <div className="text-xl font-extrabold text-amber-950 mt-0.5">{staff.length}</div>
-            <span className="text-[10px] text-amber-700 font-medium">All departments mapped</span>
+          <div className="p-3.5 bg-amber-50/60 dark:bg-amber-950/20 rounded-xl border border-amber-100 dark:border-amber-500/30 shadow-xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Staff &amp; Users</span>
+            <div className="text-xl font-extrabold text-amber-950 dark:text-amber-300 mt-0.5">{staff.length}</div>
+            <span className="text-[10px] text-amber-700 dark:text-amber-400/80 font-medium">All departments mapped</span>
           </div>
 
-          <div className="p-3.5 bg-purple-50/60 rounded-xl border border-purple-100">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600">Active Terminals</span>
-            <div className="text-xl font-extrabold text-purple-950 mt-0.5">{sessions.length || 1}</div>
-            <span className="text-[10px] text-purple-700 font-medium">Real-time sync active</span>
+          <div className="p-3.5 bg-purple-50/60 dark:bg-fuchsia-950/20 rounded-xl border border-purple-100 dark:border-fuchsia-500/30 shadow-xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Active Terminals</span>
+            <div className="text-xl font-extrabold text-purple-950 dark:text-purple-300 mt-0.5">{sessions.length || 1}</div>
+            <span className="text-[10px] text-purple-700 dark:text-purple-400/80 font-medium">Real-time sync active</span>
           </div>
         </div>
 
@@ -517,8 +519,8 @@ export const MongoDatabaseSettings: React.FC = () => {
                 key={col.id}
                 className={`rounded-2xl border transition-all overflow-hidden ${
                   isExpanded
-                    ? 'border-indigo-300 bg-white shadow-xs'
-                    : 'border-slate-200 bg-slate-50/60 hover:bg-white hover:border-slate-300'
+                    ? 'border-indigo-300 dark:border-fuchsia-500/50 bg-white dark:bg-[#180F1A] shadow-xs'
+                    : 'border-slate-200 dark:border-fuchsia-900/20 bg-slate-50/60 dark:bg-[#150a17] hover:bg-white dark:hover:bg-[#180F1A] hover:border-slate-300 dark:hover:border-fuchsia-900/40'
                 }`}
               >
                 {/* Main Summary Row */}
@@ -532,17 +534,17 @@ export const MongoDatabaseSettings: React.FC = () => {
                     </div>
                     <div>
                       <div className="flex items-center space-x-2 flex-wrap">
-                        <span className="font-mono font-bold text-sm text-slate-900">
+                        <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
                           db.collection('{col.name}')
                         </span>
-                        <span className="text-xs font-semibold text-slate-600">
+                        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                           • {col.displayName}
                         </span>
                         <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${col.badgeColor}`}>
                           {col.badge}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1 max-w-xl">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
                         {col.description}
                       </p>
                     </div>
@@ -551,11 +553,11 @@ export const MongoDatabaseSettings: React.FC = () => {
                   <div className="flex items-center justify-between sm:justify-end space-x-4">
                     {/* Live Document Count Badge */}
                     <div className="text-left sm:text-right">
-                      <div className="text-base font-extrabold text-slate-900 flex items-center space-x-1 sm:justify-end">
+                      <div className="text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-1 sm:justify-end">
                         <span>{col.count}</span>
-                        <span className="text-xs font-normal text-slate-500">{col.unit}</span>
+                        <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{col.unit}</span>
                       </div>
-                      <div className="text-[10px] font-semibold text-emerald-600 flex items-center space-x-1 sm:justify-end">
+                      <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1 sm:justify-end">
                         <Check className="w-3 h-3" />
                         <span>Live Synchronized</span>
                       </div>

@@ -703,7 +703,7 @@ export const AddItemModal: React.FC = () => {
                 type="submit"
                 id="btn-add-item-submit"
                 disabled={isSubmitting || hasDuplicateError}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                className="px-5 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5 cursor-pointer"
               >
                 {isSubmitting ? (
                   <span>Saving...</span>

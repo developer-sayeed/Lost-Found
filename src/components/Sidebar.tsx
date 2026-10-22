@@ -29,6 +29,7 @@ import { PermissionKey, ActiveTab } from '../types';
 import { isMacOS } from '../hooks/useKeyboardShortcuts';
 import { UserAvatar } from '../lib/avatarHelper';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { resolveHotelLogo } from '../utils/logoHelper';
 
 export const Sidebar: React.FC = () => {
   const {
@@ -51,6 +52,40 @@ export const Sidebar: React.FC = () => {
   const { t, isRTL, translateRole } = useLanguage();
   const location = useLocation();
   const isMac = isMacOS();
+
+  // Dynamic Theme state tracker for instant logo adaptation
+  const [isDark, setIsDark] = React.useState<boolean>(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    return settings?.themeMode === 'dark' || settings?.isDarkMode === true;
+  });
+
+  React.useEffect(() => {
+    const checkDark = () => {
+      const active = (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')) ||
+        settings?.themeMode === 'dark' ||
+        settings?.isDarkMode === true;
+      setIsDark(active);
+    };
+    checkDark();
+
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === 'attributes' && m.attributeName === 'class') {
+          checkDark();
+        }
+      }
+    });
+
+    if (typeof document !== 'undefined') {
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    }
+    return () => observer.disconnect();
+  }, [settings?.themeMode, settings?.isDarkMode]);
+
+  // Dynamically resolve logo for current theme (Light Mode vs Dark Mode)
+  const activeLogo = resolveHotelLogo(settings, isDark ? 'dark' : 'light');
 
   const currentRole = effectiveRole || user?.role || '';
   const isAdminTier = ['Super Admin', 'Admin', 'Manager', 'Supervisor'].includes(currentRole);
@@ -114,7 +149,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Sidebar Element */}
       <aside
-        className={`bg-white text-slate-800 flex flex-col flex-shrink-0 min-h-screen border-r border-slate-200 select-none transition-all duration-300 ease-in-out z-50 ${
+        className={`bg-white dark:bg-[#0f0911] text-slate-800 dark:text-slate-100 flex flex-col flex-shrink-0 min-h-screen border-r border-slate-200 dark:border-fuchsia-950/40 select-none transition-all duration-300 ease-in-out z-50 ${
           // Mobile: fixed drawer
           isMobileSidebarOpen
             ? 'fixed inset-y-0 left-0 w-72 shadow-2xl translate-x-0 md:static md:shadow-none'
@@ -125,7 +160,7 @@ export const Sidebar: React.FC = () => {
         }`}
       >
         {/* Hotel Brand Logo Header (Logo Only - No Text) */}
-        <div className={`p-4 sm:p-5 border-b border-slate-100 relative flex items-center justify-center min-h-[76px] transition-all ${
+        <div className={`p-4 sm:p-5 border-b border-slate-100 dark:border-fuchsia-950/40 relative flex items-center justify-center min-h-[76px] transition-all ${
           isSidebarCollapsed ? 'px-2 py-4' : 'px-4 py-4'
         }`}>
           {/* Mobile Close Button */}
@@ -140,13 +175,13 @@ export const Sidebar: React.FC = () => {
           {/* Dynamic Hotel Brand Logo / Collapsed Sidebar Favicon */}
           <div className="flex items-center justify-center w-full px-1">
             {isSidebarCollapsed ? (
-              /* Collapsed Sidebar (w-20): Render the configured Favicon */
+              /* Collapsed Sidebar (w-20): Render the configured Favicon or Theme Icon */
               <div
-                className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200/80 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden hover:border-indigo-300 hover:shadow-xs transition-all group"
-                title={`${settings?.hotelName || 'Warwick'} - Favicon`}
+                className="w-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden hover:border-fuchsia-500 hover:shadow-xs transition-all group"
+                title={`${settings?.hotelName || 'Warwick'} - (${isDark ? 'Dark Theme' : 'Light Theme'})`}
               >
                 <img
-                  src={settings?.faviconUrl || settings?.logoUrl || '/icon.svg'}
+                  src={settings?.faviconUrl || activeLogo.url || '/icon.svg'}
                   alt="Favicon"
                   className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-105"
                   onError={(e) => {
@@ -158,24 +193,25 @@ export const Sidebar: React.FC = () => {
                   referrerPolicy="no-referrer"
                 />
               </div>
-            ) : settings?.logoUrl ? (
-              /* Expanded Sidebar: Render Full Hotel Brand Logo */
+            ) : activeLogo.url ? (
+              /* Expanded Sidebar: Render Dynamic Hotel Brand Logo (Dark / Light Responsive) */
               <div
-                className="flex items-center justify-center overflow-hidden transition-all rounded-xl bg-transparent"
+                className="flex items-center justify-center overflow-hidden transition-all duration-300 rounded-xl bg-transparent"
                 style={{
-                  width: `${settings.logoWidth || 140}px`,
-                  height: `${settings.logoHeight || 48}px`,
+                  width: `${settings?.logoWidth || 140}px`,
+                  height: `${settings?.logoHeight || 48}px`,
                   maxWidth: '100%'
                 }}
               >
                 <img
-                  src={settings.logoUrl}
-                  alt={settings.hotelName || 'Hotel Logo'}
-                  className="w-full h-full transition-all duration-150"
+                  key={activeLogo.url}
+                  src={activeLogo.url}
+                  alt={`${settings?.hotelName || 'Hotel Logo'} (${activeLogo.mode} mode)`}
+                  className="w-full h-full transition-all duration-300 animate-fade-in"
                   style={{
-                    objectFit: settings.logoFit || 'contain',
-                    maxWidth: `${settings.logoWidth || 140}px`,
-                    maxHeight: `${settings.logoHeight || 48}px`
+                    objectFit: settings?.logoFit || 'contain',
+                    maxWidth: `${settings?.logoWidth || 140}px`,
+                    maxHeight: `${settings?.logoHeight || 48}px`
                   }}
                   onError={(e) => {
                     if (settings?.faviconUrl) {
@@ -221,7 +257,16 @@ export const Sidebar: React.FC = () => {
           {navItems.map(item => {
             const Icon = item.icon;
             const targetPath = item.id === 'dashboard' ? '/dashboard' : `/${item.id === 'audit_logs' ? 'audit-logs' : item.id}`;
-            const isActive = location.pathname === targetPath || (item.id === 'dashboard' && location.pathname === '/');
+            const isActive =
+              location.pathname === targetPath ||
+              (item.id === 'dashboard' && (location.pathname === '/' || location.pathname === '/dashboard')) ||
+              (targetPath !== '/' && targetPath !== '/dashboard' && (location.pathname === targetPath || location.pathname.startsWith(`${targetPath}/`))) ||
+              (item.id === 'settings' && (
+                location.pathname.startsWith('/settings') ||
+                location.pathname.startsWith('/databases') ||
+                activeTab === 'settings'
+              )) ||
+              (activeTab === item.id);
             return (
               <NavLink
                 key={item.id}
@@ -232,19 +277,19 @@ export const Sidebar: React.FC = () => {
                   if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
                 }}
                 title={isSidebarCollapsed ? item.label : undefined}
-                className={`w-full flex items-center rounded-xl text-sm font-medium transition-all duration-150 ${
+                className={`w-full flex items-center rounded-xl text-sm font-semibold transition-all duration-150 ${
                   isSidebarCollapsed
                     ? 'justify-center px-2 py-3'
-                    : 'space-x-3 rtl:space-x-reverse px-3.5 py-2.5 text-left rtl:text-right'
+                    : 'space-x-3 px-3.5 py-2.5 text-left'
                 } ${
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'btn-primary-gradient !text-white shadow-md shadow-fuchsia-950/25 border border-white/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1f0e24] hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 <Icon
-                  className={`w-5 h-5 flex-shrink-0 ${
-                    isActive ? 'text-indigo-600' : 'text-slate-400'
+                  className={`w-5 h-5 flex-shrink-0 transition-colors ${
+                    isActive ? '!text-white' : 'text-slate-400 dark:text-slate-500'
                   }`}
                 />
                 {!isSidebarCollapsed && (
@@ -273,7 +318,7 @@ export const Sidebar: React.FC = () => {
                   setActiveTab('profile');
                   if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
                 }}
-                className="w-full flex items-center space-x-3 rtl:space-x-reverse mb-2.5 text-left rtl:text-right group hover:opacity-90 transition-opacity"
+                className="w-full flex items-center space-x-3 mb-2.5 text-left group hover:opacity-90 transition-opacity"
                 title={t.myProfile}
               >
                 <UserAvatar
@@ -294,14 +339,14 @@ export const Sidebar: React.FC = () => {
 
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-md bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold">
-                  {user?.role === 'Super Admin' && <ShieldCheck className="w-3 h-3 mr-1 rtl:mr-0 rtl:ml-1 text-indigo-600" />}
+                  {user?.role === 'Super Admin' && <ShieldCheck className="w-3 h-3 mr-1 text-indigo-600" />}
                   {translateRole(user?.role)}
                 </span>
 
                 <button
                   id="btn-sidebar-signout"
                   onClick={() => logout()}
-                  className="flex items-center space-x-1 rtl:space-x-reverse text-[11px] text-slate-500 hover:text-rose-600 hover:bg-rose-50 px-2 py-0.5 rounded-lg transition-colors"
+                  className="flex items-center space-x-1 text-[11px] text-slate-500 hover:text-rose-600 hover:bg-rose-50 px-2 py-0.5 rounded-lg transition-colors"
                 >
                   <LogOut className="w-3 h-3" />
                   <span>{t.logout}</span>

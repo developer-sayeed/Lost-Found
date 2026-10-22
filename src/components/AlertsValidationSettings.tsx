@@ -382,20 +382,20 @@ export const AlertsValidationSettings: React.FC = () => {
           </div>
 
           {/* Dedicated Login Success Alert & Confetti Card */}
-          <div className="bg-gradient-to-r from-indigo-50/70 via-white to-amber-50/50 rounded-2xl border border-indigo-200 shadow-xs p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-indigo-100">
+          <div className="bg-gradient-to-r from-indigo-50/70 via-white to-amber-50/50 dark:from-[#200f24] dark:via-[#180F1A] dark:to-[#1c0d1e] rounded-2xl border border-indigo-200 dark:border-fuchsia-900/40 shadow-xs p-6 space-y-4 transition-colors">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-indigo-100 dark:border-fuchsia-900/30">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
                   <PartyPopper className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <span>Login Success Alert &amp; Celebration Controls</span>
-                    <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] bg-indigo-100 dark:bg-fuchsia-950/60 text-indigo-800 dark:text-fuchsia-300 font-bold px-2 py-0.5 rounded-full border border-indigo-200/50 dark:border-fuchsia-800/40">
                       Staff Portal
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Control what message appears when staff logs in, with optional confetti particles and dynamic token substitution.
                   </p>
                 </div>
@@ -416,39 +416,39 @@ export const AlertsValidationSettings: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2 space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     Login Success Message Format
                   </label>
-                  <div className="flex items-center space-x-1 text-[10px] text-slate-500">
+                  <div className="flex items-center space-x-1 text-[10px] text-slate-500 dark:text-slate-400">
                     <span>Tokens:</span>
-                    <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono">{'{name}'}</code>
-                    <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono">{'{role}'}</code>
-                    <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono">{'{hotel}'}</code>
+                    <code className="bg-slate-100 dark:bg-[#120815] px-1 py-0.5 rounded text-indigo-600 dark:text-fuchsia-400 font-mono border border-transparent dark:border-fuchsia-900/40">{'{name}'}</code>
+                    <code className="bg-slate-100 dark:bg-[#120815] px-1 py-0.5 rounded text-indigo-600 dark:text-fuchsia-400 font-mono border border-transparent dark:border-fuchsia-900/40">{'{role}'}</code>
+                    <code className="bg-slate-100 dark:bg-[#120815] px-1 py-0.5 rounded text-indigo-600 dark:text-fuchsia-400 font-mono border border-transparent dark:border-fuchsia-900/40">{'{hotel}'}</code>
                   </div>
                 </div>
                 <input
                   type="text"
                   value={(toastConfig.loginSuccess as string) || DEFAULT_TOAST_CONFIG.loginSuccess || ''}
                   onChange={(e) => handleToastChange('loginSuccess', e.target.value)}
-                  className="w-full text-xs bg-white border border-slate-300 rounded-xl p-3 font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full text-xs bg-white dark:bg-[#120815] border border-slate-300 dark:border-fuchsia-900/40 rounded-xl p-3 font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   placeholder="🔐 Authentication validated. Welcome {name} to {hotel}!"
                 />
               </div>
 
-              <div className="p-3 rounded-xl border border-indigo-100 bg-white space-y-2">
-                <span className="text-xs font-bold text-slate-800 block">Celebration Confetti</span>
+              <div className="p-3 rounded-xl border border-indigo-100 dark:border-fuchsia-900/40 bg-white dark:bg-[#120815] space-y-2 transition-colors">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Celebration Confetti</span>
                 <label className="flex items-center space-x-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={toastConfig.loginSuccessConfetti !== false}
                     onChange={(e) => handleToastChange('loginSuccessConfetti', e.target.checked)}
-                    className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                    className="w-4 h-4 text-indigo-600 rounded border-slate-300 dark:border-slate-700 focus:ring-indigo-500"
                   />
-                  <span className="text-xs font-semibold text-slate-800">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                     {toastConfig.loginSuccessConfetti !== false ? '🎉 Confetti Active' : '🚫 No Confetti'}
                   </span>
                 </label>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
                   Fires colorful particles across screen upon successful authentication.
                 </p>
               </div>
@@ -456,12 +456,12 @@ export const AlertsValidationSettings: React.FC = () => {
           </div>
 
           {/* Individual Toast Action Messages List */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-xs p-6 space-y-4 transition-colors">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-fuchsia-900/20">
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Toast Action & Event Messages</h3>
-                <p className="text-xs text-slate-500">
-                  Customize the exact wording displayed for each system event. Supported placeholders: <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono text-[11px]">{'{code}'}</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono text-[11px]">{'{name}'}</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono text-[11px]">{'{receiver}'}</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono text-[11px]">{'{count}'}</code>.
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Toast Action & Event Messages</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Customize the exact wording displayed for each system event. Supported placeholders: <code className="bg-slate-100 dark:bg-[#120815] px-1 py-0.5 rounded text-indigo-600 dark:text-fuchsia-400 font-mono text-[11px] border border-transparent dark:border-fuchsia-900/40">{'{code}'}</code>, <code className="bg-slate-100 dark:bg-[#120815] px-1 py-0.5 rounded text-indigo-600 dark:text-fuchsia-400 font-mono text-[11px] border border-transparent dark:border-fuchsia-900/40">{'{name}'}</code>, <code className="bg-slate-100 dark:bg-[#120815] px-1 py-0.5 rounded text-indigo-600 dark:text-fuchsia-400 font-mono text-[11px] border border-transparent dark:border-fuchsia-900/40">{'{receiver}'}</code>, <code className="bg-slate-100 dark:bg-[#120815] px-1 py-0.5 rounded text-indigo-600 dark:text-fuchsia-400 font-mono text-[11px] border border-transparent dark:border-fuchsia-900/40">{'{count}'}</code>.
                 </p>
               </div>
             </div>
@@ -470,16 +470,16 @@ export const AlertsValidationSettings: React.FC = () => {
               {TOAST_MESSAGE_FIELDS.map((field) => {
                 const currentValue = (toastConfig[field.key] as string) || '';
                 return (
-                  <div key={field.key} className="p-3.5 rounded-xl border border-slate-150 hover:border-slate-300 bg-slate-50/40 transition-all space-y-2">
+                  <div key={field.key} className="p-3.5 rounded-xl border border-slate-150 dark:border-fuchsia-900/30 hover:border-slate-300 dark:hover:border-fuchsia-700/50 bg-slate-50/40 dark:bg-[#120815] transition-all space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <span className="text-xs font-bold text-slate-900">{field.label}</span>
-                        <span className="text-[11px] text-slate-500 ml-2">({field.description})</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{field.label}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-2">({field.description})</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleTestToast(field.key, field.type)}
-                        className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        className="text-[11px] font-semibold text-indigo-600 dark:text-fuchsia-300 hover:text-indigo-800 dark:hover:text-fuchsia-200 bg-indigo-50 dark:bg-fuchsia-950/60 hover:bg-indigo-100 dark:hover:bg-fuchsia-900/60 border border-transparent dark:border-fuchsia-800/40 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                         title="Preview this toast message"
                       >
                         Preview Toast
@@ -490,7 +490,7 @@ export const AlertsValidationSettings: React.FC = () => {
                       value={currentValue}
                       onChange={(e) => handleToastChange(field.key, e.target.value)}
                       placeholder={DEFAULT_TOAST_CONFIG[field.key] as string}
-                      className="w-full text-xs bg-white border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800"
+                      className="w-full text-xs bg-white dark:bg-[#180F1A] border border-slate-300 dark:border-fuchsia-900/40 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 dark:text-slate-100"
                     />
                   </div>
                 );
@@ -502,14 +502,14 @@ export const AlertsValidationSettings: React.FC = () => {
 
       {/* SUB-SECTION 2: VALIDATION MESSAGES SETTINGS */}
       {subSection === 'validations' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-5 animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+        <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-xs p-6 space-y-5 animate-fade-in transition-colors">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-fuchsia-900/20">
             <div>
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <span>Form & Operational Validation Messages</span>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <span>Form &amp; Operational Validation Messages</span>
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Configure the specific warning and validation text shown when mandatory fields are missing or actions are restricted.
               </p>
             </div>
@@ -517,7 +517,7 @@ export const AlertsValidationSettings: React.FC = () => {
             <button
               type="button"
               onClick={handleResetValidations}
-              className="flex items-center space-x-1 text-xs text-slate-500 hover:text-slate-800 transition-colors"
+              className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
               title="Reset validation messages to system defaults"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -529,17 +529,17 @@ export const AlertsValidationSettings: React.FC = () => {
             {VALIDATION_MESSAGE_FIELDS.map((field) => {
               const currentValue = (validationMessages[field.key] as string) || '';
               return (
-                <div key={field.key} className="p-3.5 rounded-xl border border-slate-150 hover:border-slate-300 bg-slate-50/40 transition-all space-y-1.5">
+                <div key={field.key} className="p-3.5 rounded-xl border border-slate-150 dark:border-fuchsia-900/30 hover:border-slate-300 dark:hover:border-fuchsia-700/50 bg-slate-50/40 dark:bg-[#120815] transition-all space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-slate-900">{field.label}</span>
-                    <span className="text-[11px] text-slate-400">({field.description})</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{field.label}</span>
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">({field.description})</span>
                   </div>
                   <input
                     type="text"
                     value={currentValue}
                     onChange={(e) => handleValidationChange(field.key, e.target.value)}
                     placeholder={DEFAULT_VALIDATION_MESSAGES[field.key] as string}
-                    className="w-full text-xs bg-white border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 font-medium text-slate-800"
+                    className="w-full text-xs bg-white dark:bg-[#180F1A] border border-slate-300 dark:border-fuchsia-900/40 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 font-medium text-slate-800 dark:text-slate-100"
                   />
                 </div>
               );
@@ -550,29 +550,29 @@ export const AlertsValidationSettings: React.FC = () => {
 
       {/* SUB-SECTION 3: PERFORMANCE PAGE DISPLAY OPTIONS */}
       {subSection === 'performance' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-6 animate-fade-in">
-          <div className="pb-3 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-              <Building className="w-4 h-4 text-sky-600" />
+        <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-xs p-6 space-y-6 animate-fade-in transition-colors">
+          <div className="pb-3 border-b border-slate-100 dark:border-fuchsia-900/20">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              <Building className="w-4 h-4 text-sky-500" />
               <span>Staff Processing Performance Page Customization</span>
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Control the visibility of analytics widgets and divisional charts on the Supervisor Performance Dashboard.
             </p>
           </div>
 
           {/* Department Processing Share Toggle Card */}
-          <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-5 rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 bg-slate-50/70 dark:bg-[#120815] flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
-                <span className="text-xs font-bold text-slate-900">
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                   Department Processing Share Donut Chart
                 </span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${showDeptShare ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${showDeptShare ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40' : 'bg-slate-200 dark:bg-[#251329] text-slate-600 dark:text-slate-400'}`}>
                   {showDeptShare ? 'Currently Visible' : 'Hidden by Default'}
                 </span>
               </div>
-              <p className="text-xs text-slate-600 max-w-xl">
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xl">
                 Show or hide the "Department Processing Share" donut chart on the Staff Performance page. When hidden, the Staff Throughput Bar Chart expands across all columns for higher readability.
               </p>
             </div>
@@ -584,13 +584,13 @@ export const AlertsValidationSettings: React.FC = () => {
                 onChange={(e) => setShowDeptShare(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
+              <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
             </label>
           </div>
 
           {/* Notice for Admin */}
-          <div className="p-4 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs flex items-start space-x-2.5">
-            <Info className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
+          <div className="p-4 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/40 text-sky-800 dark:text-sky-300 text-xs flex items-start space-x-2.5 transition-colors">
+            <Info className="w-4 h-4 text-sky-500 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold mb-0.5">Admin Real-Time Control</p>
               <p>

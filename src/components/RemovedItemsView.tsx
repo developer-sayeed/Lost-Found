@@ -108,7 +108,7 @@ export const RemovedItemsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('dashboard')}
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-colors"
+              className="px-5 py-2.5 btn-primary-gradient text-white font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
             >
               Return to Dashboard
             </button>
@@ -290,13 +290,13 @@ export const RemovedItemsView: React.FC = () => {
               <Trash2 className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 Removed Items
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-semibold">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#251329] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-fuchsia-300 font-semibold">
                   {removedItems.length} {removedItems.length === 1 ? 'item' : 'items'}
                 </span>
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 Items removed from inventory are retained for 60 days before auto-purge
               </p>
             </div>
@@ -308,9 +308,9 @@ export const RemovedItemsView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('items')}
-            className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-2xs transition-colors flex items-center gap-1.5"
+            className="px-3.5 py-2 text-xs font-semibold text-white btn-primary-gradient rounded-xl shadow-xs transition-all flex items-center gap-1.5"
           >
-            <Package className="w-4 h-4 text-slate-500" />
+            <Package className="w-4 h-4 text-white" />
             <span>Active Inventory</span>
           </button>
 
@@ -319,9 +319,9 @@ export const RemovedItemsView: React.FC = () => {
               type="button"
               id="btn-empty-trash"
               onClick={() => setIsEmptyTrashModalOpen(true)}
-              className="px-4 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl shadow-2xs transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/40 rounded-xl shadow-2xs transition-colors flex items-center gap-1.5"
             >
-              <Trash2 className="w-4 h-4 text-rose-600" />
+              <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
               <span>Empty Recycle Bin</span>
             </button>
           )}
@@ -329,22 +329,22 @@ export const RemovedItemsView: React.FC = () => {
       </div>
 
       {/* 60-Day Retention Notice Card */}
-      <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-2xs">
-        <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-500/20 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-2xs">
+        <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center flex-shrink-0 mt-0.5">
           <Info className="w-4 h-4" />
         </div>
-        <div className="text-xs text-amber-900 leading-relaxed flex-1">
-          <p className="font-semibold text-amber-950 text-sm mb-0.5">
-            60-Day Data Retention & Automatic Purge Policy
+        <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed flex-1">
+          <p className="font-semibold text-amber-950 dark:text-amber-100 text-sm mb-0.5">
+            60-Day Data Retention &amp; Automatic Purge Policy
           </p>
-          <p className="text-amber-800">
-            Soft-deleted records remain securely in the system for <strong className="font-semibold text-amber-950">60 days</strong> from the deletion date. During this retention window, authorized staff can restore items back to the active catalog with full audit logs intact. Items exceeding 60 days are automatically purged during database sync.
+          <p className="text-amber-800 dark:text-amber-300">
+            Soft-deleted records remain securely in the system for <strong className="font-semibold text-amber-950 dark:text-amber-100">60 days</strong> from the deletion date. During this retention window, authorized staff can restore items back to the active catalog with full audit logs intact. Items exceeding 60 days are automatically purged during database sync.
           </p>
         </div>
       </div>
 
       {/* Search and Filters Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Search Box */}
         <div className="relative w-full md:w-96">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -357,12 +357,12 @@ export const RemovedItemsView: React.FC = () => {
               setCurrentPage(1);
             }}
             placeholder="Search by code, item, location, deleted by..."
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
               Clear
             </button>
@@ -372,14 +372,14 @@ export const RemovedItemsView: React.FC = () => {
         {/* Category & Display Controls */}
         <div className="flex items-center gap-3 w-full md:w-auto justify-end">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">Category:</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Category:</span>
             <select
               value={categoryFilter}
               onChange={e => {
                 setCategoryFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20"
             >
               <option value="All">All Categories</option>
               {categories.map(cat => (
@@ -391,14 +391,14 @@ export const RemovedItemsView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">Show:</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Show:</span>
             <select
               value={pageSize}
               onChange={e => {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -410,12 +410,12 @@ export const RemovedItemsView: React.FC = () => {
 
       {/* Batch Operations Bar (When items selected) */}
       {selectedIds.length > 0 && canManageTrash && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-3.5 px-5 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in shadow-xs">
+        <div className="bg-indigo-50 dark:bg-[#200f24] border border-indigo-200 dark:border-fuchsia-900/40 rounded-2xl p-3.5 px-5 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in shadow-xs">
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-indigo-600 dark:bg-fuchsia-600 text-white text-xs font-bold flex items-center justify-center">
               {selectedIds.length}
             </span>
-            <span className="text-xs sm:text-sm font-bold text-indigo-950">
+            <span className="text-xs sm:text-sm font-bold text-indigo-950 dark:text-fuchsia-200">
               {selectedIds.length} {selectedIds.length === 1 ? 'item' : 'items'} selected
             </span>
           </div>
@@ -425,7 +425,7 @@ export const RemovedItemsView: React.FC = () => {
               type="button"
               id="btn-batch-restore"
               onClick={() => setIsBatchRestoreModalOpen(true)}
-              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-2xs flex items-center gap-1.5 transition-colors"
+              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Restore Selected ({selectedIds.length})</span>
@@ -435,7 +435,7 @@ export const RemovedItemsView: React.FC = () => {
               type="button"
               id="btn-batch-delete"
               onClick={() => setIsBatchDeleteModalOpen(true)}
-              className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-2xs flex items-center gap-1.5 transition-colors"
+              className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Permanently Delete ({selectedIds.length})</span>
@@ -444,7 +444,7 @@ export const RemovedItemsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setSelectedIds([])}
-              className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-600 text-xs font-medium rounded-xl border border-slate-200 transition-colors"
+              className="px-3 py-1.5 bg-white dark:bg-[#180F1A] hover:bg-slate-100 dark:hover:bg-[#251329] text-slate-600 dark:text-slate-300 text-xs font-medium rounded-xl border border-slate-200 dark:border-fuchsia-900/30 transition-colors cursor-pointer"
             >
               Deselect All
             </button>
@@ -453,15 +453,15 @@ export const RemovedItemsView: React.FC = () => {
       )}
 
       {/* Items Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-2xs overflow-hidden">
         {filteredAndSortedItems.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
-            <div className="w-16 h-16 rounded-3xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400">
+            <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-[#200f24] border border-slate-200 dark:border-fuchsia-900/40 flex items-center justify-center text-slate-400 dark:text-fuchsia-400">
               <Trash2 className="w-8 h-8" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">No Removed Items Found</h3>
-              <p className="text-xs sm:text-sm text-slate-500 max-w-sm mt-1">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">No Removed Items Found</h3>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1">
                 {searchQuery || categoryFilter !== 'All'
                   ? 'No items match your active search filter criteria.'
                   : 'Recycle bin is clean. Deleted items are stored here for 60 days before auto-purge.'}
@@ -474,7 +474,7 @@ export const RemovedItemsView: React.FC = () => {
                   setSearchQuery('');
                   setCategoryFilter('All');
                 }}
-                className="mt-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-xl transition-colors"
+                className="mt-2 px-4 py-2 bg-indigo-50 dark:bg-fuchsia-950/40 hover:bg-indigo-100 dark:hover:bg-fuchsia-900/40 text-indigo-700 dark:text-fuchsia-300 text-xs font-semibold rounded-xl transition-colors border border-transparent dark:border-fuchsia-800/30"
               >
                 Reset Filters
               </button>
@@ -484,17 +484,17 @@ export const RemovedItemsView: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 uppercase tracking-wider text-[10px] font-bold select-none">
+                <tr className="bg-slate-50/80 dark:bg-[#200f24] border-b border-slate-200 dark:border-fuchsia-900/40 text-slate-600 dark:text-fuchsia-300 uppercase tracking-wider text-[10px] font-bold select-none">
                   {canManageTrash && (
                     <th className="p-3.5 pl-4 w-10">
                       <button
                         type="button"
                         onClick={handleSelectAll}
-                        className="text-slate-400 hover:text-slate-600 flex items-center"
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center"
                         title="Select All"
                       >
                         {selectedIds.length === paginatedItems.length && paginatedItems.length > 0 ? (
-                          <CheckSquare className="w-4 h-4 text-indigo-600" />
+                          <CheckSquare className="w-4 h-4 text-indigo-600 dark:text-fuchsia-400" />
                         ) : (
                           <Square className="w-4 h-4" />
                         )}
@@ -503,27 +503,27 @@ export const RemovedItemsView: React.FC = () => {
                   )}
                   <th
                     onClick={() => handleSort('code')}
-                    className="p-3.5 cursor-pointer hover:text-indigo-600 transition-colors"
+                    className="p-3.5 cursor-pointer hover:text-indigo-600 dark:hover:text-fuchsia-300 transition-colors"
                   >
                     <div className="flex items-center gap-1">
-                      <span>Item Code & Info</span>
+                      <span>Item Code &amp; Info</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
-                  <th className="p-3.5">Category & Location</th>
+                  <th className="p-3.5">Category &amp; Location</th>
                   <th
                     onClick={() => handleSort('deletedAt')}
-                    className="p-3.5 cursor-pointer hover:text-indigo-600 transition-colors"
+                    className="p-3.5 cursor-pointer hover:text-indigo-600 dark:hover:text-fuchsia-300 transition-colors"
                   >
                     <div className="flex items-center gap-1">
-                      <span>Removed On & By</span>
+                      <span>Removed On &amp; By</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
                   <th className="p-3.5">Deletion Reason</th>
                   <th
                     onClick={() => handleSort('daysLeft')}
-                    className="p-3.5 cursor-pointer hover:text-indigo-600 transition-colors text-center"
+                    className="p-3.5 cursor-pointer hover:text-indigo-600 dark:hover:text-fuchsia-300 transition-colors text-center"
                   >
                     <div className="flex items-center justify-center gap-1">
                       <span>Auto-Purge In</span>
@@ -533,7 +533,7 @@ export const RemovedItemsView: React.FC = () => {
                   <th className="p-3.5 pr-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-fuchsia-900/20 bg-white dark:bg-[#180F1A]">
                 {paginatedItems.map(item => {
                   const isSelected = selectedIds.includes(item.id);
                   const daysLeft = calculateDaysRemaining(item.deletedAt);
@@ -550,8 +550,8 @@ export const RemovedItemsView: React.FC = () => {
                   return (
                     <tr
                       key={item.id}
-                      className={`hover:bg-slate-50/70 transition-colors ${
-                        isSelected ? 'bg-indigo-50/40' : ''
+                      className={`hover:bg-slate-50/70 dark:hover:bg-[#221028] transition-colors ${
+                        isSelected ? 'bg-indigo-50/40 dark:bg-fuchsia-950/40' : ''
                       }`}
                     >
                       {/* Checkbox */}
@@ -560,10 +560,10 @@ export const RemovedItemsView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleToggleSelect(item.id)}
-                            className="text-slate-400 hover:text-slate-600 flex items-center"
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center"
                           >
                             {isSelected ? (
-                              <CheckSquare className="w-4 h-4 text-indigo-600" />
+                              <CheckSquare className="w-4 h-4 text-indigo-600 dark:text-fuchsia-400" />
                             ) : (
                               <Square className="w-4 h-4" />
                             )}
@@ -578,19 +578,19 @@ export const RemovedItemsView: React.FC = () => {
                             <img
                               src={item.imageUrl}
                               alt={item.itemName}
-                              className="w-9 h-9 rounded-xl object-cover border border-slate-200 flex-shrink-0"
+                              className="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-fuchsia-900/40 flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                            <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#251329] text-slate-500 dark:text-fuchsia-300 border border-slate-200 dark:border-fuchsia-900/40 flex items-center justify-center flex-shrink-0 font-bold text-xs">
                               <Package className="w-4 h-4" />
                             </div>
                           )}
                           <div className="min-w-0">
-                            <span className="font-mono text-xs font-bold text-slate-900 block truncate">
+                            <span className="font-mono text-xs font-bold text-slate-900 dark:text-white block truncate">
                               {item.code}
                             </span>
                             <span
-                              className="text-xs text-slate-600 font-medium truncate block max-w-xs capitalize"
+                              className="text-xs text-slate-600 dark:text-slate-300 font-medium truncate block max-w-xs capitalize"
                               style={{ textTransform: 'capitalize' }}
                             >
                               {item.itemName || item.description}
@@ -602,10 +602,10 @@ export const RemovedItemsView: React.FC = () => {
                       {/* Category & Location */}
                       <td className="p-3.5">
                         <div className="space-y-1">
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 dark:bg-fuchsia-950/40 text-indigo-700 dark:text-fuchsia-300 border border-indigo-100 dark:border-fuchsia-800/40">
                             {item.category}
                           </span>
-                          <p className="text-[11px] text-slate-500 truncate">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                             Found: {item.locationFound}
                           </p>
                         </div>
@@ -614,11 +614,11 @@ export const RemovedItemsView: React.FC = () => {
                       {/* Removed On & By */}
                       <td className="p-3.5">
                         <div className="space-y-0.5">
-                          <div className="flex items-center gap-1 text-slate-700 font-medium">
+                          <div className="flex items-center gap-1 text-slate-700 dark:text-slate-200 font-medium">
                             <Clock className="w-3 h-3 text-slate-400 flex-shrink-0" />
                             <span className="truncate">{deletedDate}</span>
                           </div>
-                          <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                          <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
                             <User className="w-3 h-3 text-slate-400 flex-shrink-0" />
                             <span>
                               {item.deletedBy || 'Staff'}{' '}
@@ -630,8 +630,8 @@ export const RemovedItemsView: React.FC = () => {
 
                       {/* Deletion Reason */}
                       <td className="p-3.5">
-                        <span className="text-slate-600 text-xs italic bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 block max-w-xs truncate">
-                          "{item.deletionReason || 'Moved to trash'}"
+                        <span className="text-slate-600 dark:text-slate-300 text-xs italic bg-slate-50 dark:bg-[#200f24] px-2 py-1 rounded-lg border border-slate-200 dark:border-fuchsia-900/30 block max-w-xs truncate">
+                          &quot;{item.deletionReason || 'Moved to trash'}&quot;
                         </span>
                       </td>
 
@@ -640,10 +640,10 @@ export const RemovedItemsView: React.FC = () => {
                         <span
                           className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${
                             daysLeft > 30
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
                               : daysLeft > 10
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200 animate-pulse'
+                              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
+                              : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 animate-pulse'
                           }`}
                         >
                           {daysLeft} {daysLeft === 1 ? 'day' : 'days'} left
@@ -657,7 +657,7 @@ export const RemovedItemsView: React.FC = () => {
                             type="button"
                             title="View Full Item Details"
                             onClick={() => openItemDetails(item)}
-                            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-fuchsia-300 hover:bg-indigo-50 dark:hover:bg-[#251329] rounded-lg transition-colors cursor-pointer"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -669,7 +669,7 @@ export const RemovedItemsView: React.FC = () => {
                               setItemToRestore(item);
                               setIsRestoreModalOpen(true);
                             }}
-                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                            className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                             <span>Restore</span>
@@ -683,7 +683,7 @@ export const RemovedItemsView: React.FC = () => {
                                 setItemToPermanentDelete(item);
                                 setIsPermanentDeleteModalOpen(true);
                               }}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -700,13 +700,13 @@ export const RemovedItemsView: React.FC = () => {
 
         {/* Pagination Footer */}
         {filteredAndSortedItems.length > 0 && (
-          <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="p-4 border-t border-slate-100 dark:border-fuchsia-900/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-[#180F1A]">
             <div>
-              Showing <span className="font-semibold text-slate-900">{(currentPage - 1) * pageSize + 1}</span> to{' '}
-              <span className="font-semibold text-slate-900">
+              Showing <span className="font-semibold text-slate-900 dark:text-white">{(currentPage - 1) * pageSize + 1}</span> to{' '}
+              <span className="font-semibold text-slate-900 dark:text-white">
                 {Math.min(currentPage * pageSize, filteredAndSortedItems.length)}
               </span>{' '}
-              of <span className="font-semibold text-slate-900">{filteredAndSortedItems.length}</span> removed records
+              of <span className="font-semibold text-slate-900 dark:text-white">{filteredAndSortedItems.length}</span> removed records
             </div>
 
             <div className="flex items-center gap-1.5">
@@ -714,18 +714,18 @@ export const RemovedItemsView: React.FC = () => {
                 type="button"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#251329] rounded-lg disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="px-2 font-medium">
+              <span className="px-2 font-medium text-slate-700 dark:text-slate-300">
                 Page {currentPage} of {totalPages}
               </span>
               <button
                 type="button"
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#251329] rounded-lg disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -747,39 +747,39 @@ export const RemovedItemsView: React.FC = () => {
         >
           <div
             ref={restoreModalRef}
-            className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-scale-up"
+            className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 dark:border-fuchsia-900/40 overflow-hidden animate-scale-up"
           >
-            <div className="p-6 pb-4 border-b border-slate-100 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+            <div className="p-6 pb-4 border-b border-slate-100 dark:border-fuchsia-900/30 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
                 <RotateCcw className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Restore Item to Inventory</h3>
-                <p className="text-xs text-slate-500 font-mono">Item Code: {itemToRestore.code}</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Restore Item to Inventory</h3>
+                <p className="text-xs text-slate-500 dark:text-fuchsia-300/70 font-mono">Item Code: {itemToRestore.code}</p>
               </div>
             </div>
 
             <div className="p-6 space-y-4 text-xs">
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <p className="font-semibold text-slate-900 text-sm">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#200f24] border border-slate-200 dark:border-fuchsia-900/30 space-y-1">
+                <p className="font-semibold text-slate-900 dark:text-white text-sm">
                   {itemToRestore.itemName || itemToRestore.description}
                 </p>
-                <p className="text-slate-500">Category: {itemToRestore.category}</p>
-                <p className="text-slate-500">Found Location: {itemToRestore.locationFound}</p>
+                <p className="text-slate-500 dark:text-slate-400">Category: {itemToRestore.category}</p>
+                <p className="text-slate-500 dark:text-slate-400">Found Location: {itemToRestore.locationFound}</p>
               </div>
 
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
                 Restoring this item will move it back to the active inventory catalog with full timeline history preserved.
               </p>
 
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-fuchsia-900/30">
                 <button
                   type="button"
                   onClick={() => {
                     setIsRestoreModalOpen(false);
                     setItemToRestore(null);
                   }}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -788,7 +788,7 @@ export const RemovedItemsView: React.FC = () => {
                   id="btn-confirm-restore"
                   disabled={isProcessing}
                   onClick={handleSingleRestore}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>{isProcessing ? 'Restoring...' : 'Restore Item'}</span>
@@ -812,38 +812,38 @@ export const RemovedItemsView: React.FC = () => {
         >
           <div
             ref={permanentDeleteModalRef}
-            className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-rose-200 overflow-hidden animate-scale-up"
+            className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-md w-full shadow-2xl border border-rose-200 dark:border-rose-900/40 overflow-hidden animate-scale-up"
           >
-            <div className="p-6 pb-4 border-b border-rose-100 bg-rose-50/50 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+            <div className="p-6 pb-4 border-b border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-950/30 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-rose-950">Permanently Delete Item?</h3>
-                <p className="text-xs text-rose-700 font-mono">Item Code: {itemToPermanentDelete.code}</p>
+                <h3 className="text-base font-bold text-rose-950 dark:text-rose-200">Permanently Delete Item?</h3>
+                <p className="text-xs text-rose-700 dark:text-rose-400 font-mono">Item Code: {itemToPermanentDelete.code}</p>
               </div>
             </div>
 
             <div className="p-6 space-y-4 text-xs">
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <p className="font-semibold text-slate-900 text-sm">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#200f24] border border-slate-200 dark:border-fuchsia-900/30 space-y-1">
+                <p className="font-semibold text-slate-900 dark:text-white text-sm">
                   {itemToPermanentDelete.itemName || itemToPermanentDelete.description}
                 </p>
-                <p className="text-slate-500">Category: {itemToPermanentDelete.category}</p>
+                <p className="text-slate-500 dark:text-slate-400">Category: {itemToPermanentDelete.category}</p>
               </div>
 
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 font-medium">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-rose-800 dark:text-rose-300 font-medium">
                 ⚠️ <strong>Irreversible Action:</strong> This item will be permanently wiped from the database. It cannot be recovered or restored after this.
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-fuchsia-900/30">
                 <button
                   type="button"
                   onClick={() => {
                     setIsPermanentDeleteModalOpen(false);
                     setItemToPermanentDelete(null);
                   }}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -852,7 +852,7 @@ export const RemovedItemsView: React.FC = () => {
                   id="btn-confirm-permanent-delete"
                   disabled={isProcessing}
                   onClick={handleSinglePermanentDelete}
-                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>{isProcessing ? 'Deleting...' : 'Permanently Delete'}</span>
@@ -875,28 +875,28 @@ export const RemovedItemsView: React.FC = () => {
         >
           <div
             ref={batchRestoreModalRef}
-            className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-scale-up"
+            className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 dark:border-fuchsia-900/40 overflow-hidden animate-scale-up"
           >
-            <div className="p-6 pb-4 border-b border-slate-100 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+            <div className="p-6 pb-4 border-b border-slate-100 dark:border-fuchsia-900/30 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
                 <RotateCcw className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Batch Restore Items</h3>
-                <p className="text-xs text-slate-500">{selectedIds.length} items selected</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Batch Restore Items</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{selectedIds.length} items selected</p>
               </div>
             </div>
 
             <div className="p-6 space-y-4 text-xs">
-              <p className="text-slate-700 leading-relaxed">
-                Are you sure you want to restore <strong className="font-bold">{selectedIds.length} items</strong> back to active inventory?
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                Are you sure you want to restore <strong className="font-bold text-slate-900 dark:text-white">{selectedIds.length} items</strong> back to active inventory?
               </p>
 
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-fuchsia-900/30">
                 <button
                   type="button"
                   onClick={() => setIsBatchRestoreModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -905,7 +905,7 @@ export const RemovedItemsView: React.FC = () => {
                   id="btn-confirm-batch-restore"
                   disabled={isProcessing}
                   onClick={handleBatchRestore}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>{isProcessing ? 'Restoring...' : `Restore ${selectedIds.length} Items`}</span>
@@ -928,28 +928,28 @@ export const RemovedItemsView: React.FC = () => {
         >
           <div
             ref={batchDeleteModalRef}
-            className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-rose-200 overflow-hidden animate-scale-up"
+            className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-md w-full shadow-2xl border border-rose-200 dark:border-rose-900/40 overflow-hidden animate-scale-up"
           >
-            <div className="p-6 pb-4 border-b border-rose-100 bg-rose-50/50 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+            <div className="p-6 pb-4 border-b border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-950/30 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-rose-950">Permanently Delete {selectedIds.length} Items?</h3>
-                <p className="text-xs text-rose-700">Bulk irreversible action</p>
+                <h3 className="text-base font-bold text-rose-950 dark:text-rose-200">Permanently Delete {selectedIds.length} Items?</h3>
+                <p className="text-xs text-rose-700 dark:text-rose-400">Bulk irreversible action</p>
               </div>
             </div>
 
             <div className="p-6 space-y-4 text-xs">
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 font-medium">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-rose-800 dark:text-rose-300 font-medium">
                 ⚠️ <strong>Warning:</strong> All {selectedIds.length} selected items will be permanently erased from both database and backup records.
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-fuchsia-900/30">
                 <button
                   type="button"
                   onClick={() => setIsBatchDeleteModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -958,7 +958,7 @@ export const RemovedItemsView: React.FC = () => {
                   id="btn-confirm-batch-delete"
                   disabled={isProcessing}
                   onClick={handleBatchPermanentDelete}
-                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>{isProcessing ? 'Deleting...' : `Permanently Delete (${selectedIds.length})`}</span>
@@ -981,32 +981,32 @@ export const RemovedItemsView: React.FC = () => {
         >
           <div
             ref={emptyTrashModalRef}
-            className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-rose-200 overflow-hidden animate-scale-up"
+            className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-md w-full shadow-2xl border border-rose-200 dark:border-rose-900/40 overflow-hidden animate-scale-up"
           >
-            <div className="p-6 pb-4 border-b border-rose-100 bg-rose-50/50 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+            <div className="p-6 pb-4 border-b border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-950/30 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-rose-950">Empty Entire Recycle Bin?</h3>
-                <p className="text-xs text-rose-700">{removedItems.length} total items will be purged</p>
+                <h3 className="text-base font-bold text-rose-950 dark:text-rose-200">Empty Entire Recycle Bin?</h3>
+                <p className="text-xs text-rose-700 dark:text-rose-400">{removedItems.length} total items will be purged</p>
               </div>
             </div>
 
             <div className="p-6 space-y-4 text-xs">
-              <p className="text-slate-700 leading-relaxed">
-                This will permanently delete all <strong className="font-bold text-rose-900">{removedItems.length} items</strong> currently in the Recycle Bin.
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                This will permanently delete all <strong className="font-bold text-rose-900 dark:text-rose-300">{removedItems.length} items</strong> currently in the Recycle Bin.
               </p>
 
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 font-medium">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-rose-800 dark:text-rose-300 font-medium">
                 ⚠️ This operation cannot be undone.
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-fuchsia-900/30">
                 <button
                   type="button"
                   onClick={() => setIsEmptyTrashModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1015,7 +1015,7 @@ export const RemovedItemsView: React.FC = () => {
                   id="btn-confirm-empty-trash"
                   disabled={isProcessing}
                   onClick={handleEmptyTrash}
-                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>{isProcessing ? 'Emptying...' : 'Empty Recycle Bin'}</span>

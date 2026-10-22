@@ -133,17 +133,17 @@ export const PREBUILT_ASSETS: LibraryAsset[] = [
   },
   {
     id: 'asset_stamp_arabic_certified',
-    name: 'Traditional Arabic Approval Stamp',
+    name: 'Executive Official Approval Stamp',
     category: 'stamps',
     type: 'svg',
-    description: 'Royal emerald Arabic seal with authenticated certificate text (ختم معتمد)',
-    tags: ['stamp', 'arabic', 'certified', 'emerald', 'traditional'],
+    description: 'Royal emerald seal with authenticated certificate text (Certified Stamp)',
+    tags: ['stamp', 'certified', 'emerald', 'traditional'],
     svgContent: `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="50" cy="50" r="44" stroke="#059669" stroke-width="3" stroke-dasharray="4 2"/>
       <circle cx="50" cy="50" r="37" stroke="#10B981" stroke-width="1.5"/>
       <polygon points="50,18 82,50 50,82 18,50" stroke="#059669" stroke-width="1" fill="none"/>
-      <text x="50" y="47" font-family="'Amiri', serif" font-size="13" font-weight="bold" fill="#047857" text-anchor="middle">معتمد رسمياً</text>
-      <text x="50" y="63" font-family="'Amiri', serif" font-size="10" font-weight="bold" fill="#059669" text-anchor="middle">فندق وارويك</text>
+      <text x="50" y="47" font-family="'Cinzel', serif" font-size="9" font-weight="bold" fill="#047857" text-anchor="middle">OFFICIALLY VERIFIED</text>
+      <text x="50" y="63" font-family="'Cinzel', serif" font-size="8" font-weight="bold" fill="#059669" text-anchor="middle">WARWICK HOTEL</text>
       <circle cx="50" cy="27" r="2.5" fill="#059669"/>
       <circle cx="50" cy="73" r="2.5" fill="#059669"/>
     </svg>`

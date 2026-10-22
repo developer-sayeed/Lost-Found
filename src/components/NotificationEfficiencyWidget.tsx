@@ -242,23 +242,23 @@ export const NotificationEfficiencyWidget: React.FC = () => {
   const displayedStaff = isExpanded ? sortedStaffList : sortedStaffList.slice(0, 4);
 
   return (
-    <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+    <section className="hotel-card-glass overflow-hidden animate-fade-in bg-white dark:bg-[#180F1A] border border-slate-200 dark:border-fuchsia-900/30 rounded-2xl shadow-sm transition-colors">
       {/* Widget Header */}
-      <div className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start space-x-3 rtl:space-x-reverse">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-fuchsia-900/20 bg-slate-50/50 dark:bg-[#180F1A] flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
+        <div className="flex items-start space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-[#200f24] border border-indigo-100 dark:border-fuchsia-900/40 text-indigo-600 dark:text-fuchsia-400 flex items-center justify-center flex-shrink-0 mt-0.5">
             <Activity className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <h2 className="text-base font-bold text-slate-900">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 Dispatch Alert & Notification Delivery Rates
               </h2>
-              <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-extrabold rounded-md uppercase tracking-wider">
+              <span className="px-2 py-0.5 bg-indigo-100 dark:bg-fuchsia-950/60 text-indigo-800 dark:text-fuchsia-300 border border-transparent dark:border-fuchsia-800/40 text-[10px] font-extrabold rounded-md uppercase tracking-wider">
                 Admin Telemetry
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Live tracking of alert delivery success and staff interaction speed for dispatch operations.
             </p>
           </div>
@@ -266,14 +266,14 @@ export const NotificationEfficiencyWidget: React.FC = () => {
 
         {/* Action Controls & Filter Toggles */}
         <div className="flex items-center flex-wrap gap-2">
-          <div className="inline-flex p-1 bg-slate-200/70 rounded-xl text-xs font-semibold">
+          <div className="inline-flex p-1 bg-slate-100 dark:bg-[#120815] border border-slate-200/80 dark:border-fuchsia-900/40 rounded-xl text-xs font-semibold shadow-2xs">
             <button
               type="button"
               onClick={() => setFilterType('dispatch')}
-              className={`flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 rounded-lg transition-all ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all ${
                 filterType === 'dispatch'
-                  ? 'bg-white text-indigo-700 shadow-xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-[#251329] text-indigo-700 dark:text-fuchsia-300 shadow-xs font-bold border border-slate-200/60 dark:border-fuchsia-800/50'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Truck className="w-3.5 h-3.5" />
@@ -282,10 +282,10 @@ export const NotificationEfficiencyWidget: React.FC = () => {
             <button
               type="button"
               onClick={() => setFilterType('all')}
-              className={`flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 rounded-lg transition-all ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all ${
                 filterType === 'all'
-                  ? 'bg-white text-indigo-700 shadow-xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-[#251329] text-indigo-700 dark:text-fuchsia-300 shadow-xs font-bold border border-slate-200/60 dark:border-fuchsia-800/50'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Bell className="w-3.5 h-3.5" />
@@ -296,7 +296,7 @@ export const NotificationEfficiencyWidget: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsBroadcastModalOpen(true)}
-            className="flex items-center space-x-1.5 rtl:space-x-reverse px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors"
+            className="flex items-center space-x-1.5 px-3.5 py-1.5 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
             <span>Send Alert</span>
@@ -305,105 +305,105 @@ export const NotificationEfficiencyWidget: React.FC = () => {
       </div>
 
       {/* 4 Summary Key KPI Tiles */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-5 sm:p-6 border-b border-slate-100 bg-white">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-5 sm:p-6 border-b border-slate-100 dark:border-fuchsia-900/20 bg-white dark:bg-[#180F1A] transition-colors">
         {/* KPI 1: Delivery Success Rate */}
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+        <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#120815] border border-slate-200/80 dark:border-fuchsia-900/30 flex flex-col justify-between transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Delivery Success
             </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-slate-900">
+            <span className="text-2xl font-black text-slate-900 dark:text-slate-100">
               {globalStats.deliveryRate}%
             </span>
-            <span className="text-[11px] font-bold text-emerald-600 flex items-center">
-              <TrendingUp className="w-3 h-3 mr-0.5 rtl:mr-0 rtl:ml-0.5" />
+            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center">
+              <TrendingUp className="w-3 h-3 mr-0.5" />
               Optimal
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">Confirmed broadcast delivery to staff devices</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Confirmed broadcast delivery to staff devices</p>
         </div>
 
         {/* KPI 2: Staff Interaction Rate */}
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+        <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#120815] border border-slate-200/80 dark:border-fuchsia-900/30 flex flex-col justify-between transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {filterType === 'dispatch' ? 'Dispatch Read Rate' : 'Notice Open Rate'}
             </span>
-            <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-fuchsia-950/50 text-indigo-600 dark:text-fuchsia-400 flex items-center justify-center">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-indigo-600">
+            <span className="text-2xl font-black text-indigo-600 dark:text-fuchsia-400">
               {globalStats.averageEfficiency}%
             </span>
-            <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+            <span className="text-[11px] font-bold text-indigo-600 dark:text-fuchsia-300 bg-indigo-50 dark:bg-fuchsia-950/60 border border-transparent dark:border-fuchsia-800/40 px-1.5 py-0.5 rounded">
               Active Sync
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">Staff interacting with dispatch warnings</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Staff interacting with dispatch warnings</p>
         </div>
 
         {/* KPI 3: Top Responding Dept */}
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+        <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#120815] border border-slate-200/80 dark:border-fuchsia-900/30 flex flex-col justify-between transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Fastest Department
             </span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Award className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-lg font-black text-slate-900 truncate">
+            <span className="text-lg font-black text-slate-900 dark:text-slate-100 truncate">
               {globalStats.topDept}
             </span>
-            <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+            <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-transparent dark:border-amber-800/40 px-1.5 py-0.5 rounded">
               Top Rank
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">Leading prompt response to alerts</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Leading prompt response to alerts</p>
         </div>
 
         {/* KPI 4: Active Dispatches / Monitored Staff */}
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+        <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#120815] border border-slate-200/80 dark:border-fuchsia-900/30 flex flex-col justify-between transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Monitored Recipients
             </span>
-            <div className="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-slate-900">
+            <span className="text-2xl font-black text-slate-900 dark:text-slate-100">
               {globalStats.totalRecipients} Staff
             </span>
-            <span className="text-[11px] font-medium text-sky-600">
+            <span className="text-[11px] font-medium text-sky-600 dark:text-sky-400">
               {relevantNotifications.length} Alerts
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">Active staff members across departments</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Active staff members across departments</p>
         </div>
       </div>
 
       {/* Main Visual Content: Staff Efficiency Leaderboard (Full Width) */}
       <div className="p-5 sm:p-6 space-y-4">
         {/* Pending Dispatches Advisory Banner */}
-        <div className="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-          <div className="flex items-center space-x-2 rtl:space-x-reverse text-indigo-900 font-medium">
-            <Clock className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+        <div className="p-3.5 bg-fuchsia-50/70 dark:bg-[#200f28] rounded-xl border border-fuchsia-200/70 dark:border-fuchsia-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs transition-colors shadow-2xs">
+          <div className="flex items-center space-x-2 text-fuchsia-950 dark:text-fuchsia-100 font-medium">
+            <Clock className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400 flex-shrink-0" />
             <span>Pending dispatches flagged to finder staff automatically for streamlined resolution</span>
           </div>
           <button
             type="button"
             onClick={() => setActiveTab('dispatch')}
-            className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 flex items-center space-x-1 rtl:space-x-reverse self-start sm:self-auto cursor-pointer"
+            className="text-[11px] font-bold text-fuchsia-700 dark:text-fuchsia-300 hover:text-fuchsia-900 dark:hover:text-fuchsia-100 flex items-center space-x-1 self-start sm:self-auto cursor-pointer"
           >
             <span>View Dispatches</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -413,29 +413,29 @@ export const NotificationEfficiencyWidget: React.FC = () => {
         {/* Staff Efficiency Leaderboard Table */}
         <div className="w-full flex flex-col justify-between space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="flex items-center space-x-2">
               <Award className="w-4 h-4 text-amber-500" />
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
                 Staff Interaction & Efficiency Ranking
               </h3>
             </div>
 
             {/* Quick Search & Sort */}
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="flex items-center space-x-2">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-2.5 rtl:left-auto rtl:right-2.5 top-2 text-slate-400" />
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400 dark:text-slate-500" />
                 <input
                   type="text"
                   placeholder="Filter staff..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-8 rtl:pl-2 rtl:pr-8 pr-2.5 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-800 w-32 sm:w-40"
+                  className="pl-8 pr-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-fuchsia-900/40 bg-white dark:bg-[#120815] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 w-32 sm:w-40"
                 />
               </div>
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as any)}
-                className="px-2 py-1 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none font-medium"
+                className="px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-fuchsia-900/40 bg-white dark:bg-[#120815] text-slate-700 dark:text-slate-200 focus:outline-none font-medium"
               >
                 <option value="efficiency">Highest Rate</option>
                 <option value="alerts">Most Alerts</option>
@@ -445,9 +445,9 @@ export const NotificationEfficiencyWidget: React.FC = () => {
           </div>
 
           {/* Staff List Table */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
+          <div className="border border-slate-200 dark:border-fuchsia-900/30 rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-fuchsia-900/20 bg-white dark:bg-[#120815] transition-colors">
             {displayedStaff.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 text-xs">
+              <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-xs">
                 No matching staff records found
               </div>
             ) : (
@@ -459,19 +459,19 @@ export const NotificationEfficiencyWidget: React.FC = () => {
                 return (
                   <div
                     key={m.staff.id || idx}
-                    className="p-3 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 text-xs"
+                    className="p-3 hover:bg-slate-50 dark:hover:bg-[#1f0d24] transition-colors flex items-center justify-between gap-3 text-xs"
                   >
                     {/* Staff Name & Details */}
-                    <div className="flex items-center space-x-3 rtl:space-x-reverse min-w-0 flex-1">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs flex-shrink-0">
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#251329] border border-slate-200 dark:border-fuchsia-900/40 flex items-center justify-center font-bold text-slate-700 dark:text-slate-300 text-xs flex-shrink-0">
                         {m.staff.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
-                          <span className="font-bold text-slate-900 truncate">{m.staff.name}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">({m.staff.staffId || m.staff.role})</span>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-bold text-slate-900 dark:text-slate-100 truncate">{m.staff.name}</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">({m.staff.staffId || m.staff.role})</span>
                         </div>
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse text-[11px] text-slate-500 mt-0.5">
+                        <div className="flex items-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                           <span>{m.staff.department}</span>
                           <span>•</span>
                           <span>{readCnt} of {totalCnt} alerts read</span>
@@ -480,9 +480,9 @@ export const NotificationEfficiencyWidget: React.FC = () => {
                     </div>
 
                     {/* Progress Bar & Rate */}
-                    <div className="flex items-center space-x-3 rtl:space-x-reverse flex-shrink-0">
+                    <div className="flex items-center space-x-3 flex-shrink-0">
                       <div className="w-20 sm:w-28 hidden sm:block">
-                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all duration-500 ${
                               effRate >= 80
@@ -496,12 +496,20 @@ export const NotificationEfficiencyWidget: React.FC = () => {
                         </div>
                       </div>
 
-                      <span className="font-black text-slate-900 w-10 text-right rtl:text-left">
+                      <span className="font-black text-slate-900 dark:text-slate-100 w-10 text-right">
                         {effRate}%
                       </span>
 
                       <span
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border uppercase tracking-wider ${m.statusColor}`}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border uppercase tracking-wider ${
+                          m.statusLabel === 'Optimal'
+                            ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800/40'
+                            : m.statusLabel === 'Good'
+                            ? 'text-indigo-700 dark:text-fuchsia-300 bg-indigo-50 dark:bg-fuchsia-950/50 border-indigo-200 dark:border-fuchsia-800/40'
+                            : m.statusLabel === 'Pending'
+                            ? 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800/40'
+                            : 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800/40'
+                        }`}
                       >
                         {m.statusLabel}
                       </span>
@@ -518,7 +526,7 @@ export const NotificationEfficiencyWidget: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1 rtl:space-x-reverse transition-colors"
+                className="text-xs text-indigo-600 dark:text-fuchsia-400 hover:text-indigo-800 dark:hover:text-fuchsia-300 font-bold flex items-center space-x-1 transition-colors cursor-pointer"
               >
                 <span>{isExpanded ? 'Show Less' : `Show All (${sortedStaffList.length} Staff)`}</span>
                 {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -530,3 +538,4 @@ export const NotificationEfficiencyWidget: React.FC = () => {
     </section>
   );
 };
+

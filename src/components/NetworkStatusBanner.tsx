@@ -99,7 +99,7 @@ export const NetworkStatusBanner: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 {/* Left side: Icon & Informative Status Message */}
-                <div className="flex items-center space-x-3 rtl:space-x-reverse min-w-0">
+                <div className="flex items-center space-x-3 min-w-0">
                   {showRestoredNotice ? (
                     <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
                       <CheckCircle2 className="w-4 h-4" />

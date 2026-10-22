@@ -104,18 +104,6 @@ export const PrintReportModal: React.FC = () => {
     }
   };
 
-  const formatLongDateAr = (dateStr?: string) => {
-    if (!dateStr) {
-      return new Date().toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' });
-    }
-    try {
-      const d = new Date(dateStr);
-      return `${d.getDate()} / ${d.getMonth() + 1} / ${d.getFullYear()} م`;
-    } catch {
-      return dateStr;
-    }
-  };
-
   const getPrintedTimestampEn = () => {
     const d = new Date();
     const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -123,18 +111,10 @@ export const PrintReportModal: React.FC = () => {
     return `${dateStr} • ${timeStr}`;
   };
 
-  const getPrintedTimestampAr = () => {
-    const d = new Date();
-    const dateStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}م`;
-    const timeStr = d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-    return `${dateStr} • ${timeStr}`;
-  };
-
   // Robust printing mechanism: Isolated iframe print + Popup Window fallback
   const handlePrint = () => {
     if (!printSheetRef.current) return;
     try {
-      const isArabic = selectedTemplate === 'warwick_arabic';
       const printContent = printSheetRef.current.innerHTML;
 
       // Remove any stale print iframes
@@ -162,13 +142,13 @@ export const PrintReportModal: React.FC = () => {
       doc.open();
       doc.write(`
         <!DOCTYPE html>
-        <html lang="${isArabic ? 'ar' : 'en'}" dir="${isArabic ? 'rtl' : 'ltr'}">
+        <html lang="en" dir="ltr">
           <head>
             <meta charset="utf-8">
-            <title>${selectedItem.code} - ${isArabic ? 'نموذج تسليم المفقودات الرسمي' : 'Lost & Found Official Handover Form'}</title>
+            <title>${selectedItem.code} - Lost & Found Official Handover Form</title>
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+            <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
             <script src="https://cdn.tailwindcss.com"></script>
             <style>
               @page { 
@@ -183,7 +163,7 @@ export const PrintReportModal: React.FC = () => {
                 padding: 0 !important;
                 background: white !important;
                 color: #0f172a !important;
-                font-family: ${isArabic ? "'Cairo', 'Amiri', system-ui, sans-serif" : "'Plus Jakarta Sans', system-ui, sans-serif"};
+                font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
@@ -266,19 +246,18 @@ export const PrintReportModal: React.FC = () => {
   const handleOpenPrintWindow = () => {
     if (!printSheetRef.current) return;
     try {
-      const isArabic = selectedTemplate === 'warwick_arabic';
       const printContent = printSheetRef.current.innerHTML;
       const printWindow = typeof window !== 'undefined' && window.open ? window.open('', '_blank', 'width=880,height=1050') : null;
       if (printWindow && printWindow.document) {
         printWindow.document.write(`
           <!DOCTYPE html>
-          <html lang="${isArabic ? 'ar' : 'en'}" dir="${isArabic ? 'rtl' : 'ltr'}">
+          <html lang="en" dir="ltr">
             <head>
               <meta charset="utf-8">
-              <title>${selectedItem.code} - ${isArabic ? 'نموذج تسليم المفقودات الرسمي' : 'Lost & Found Official Handover Form'}</title>
+              <title>${selectedItem.code} - Lost & Found Official Handover Form</title>
               <link rel="preconnect" href="https://fonts.googleapis.com">
               <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-              <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+              <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
               <script src="https://cdn.tailwindcss.com"></script>
               <style>
                 @page { 
@@ -288,7 +267,7 @@ export const PrintReportModal: React.FC = () => {
                 body {
                   background: white !important;
                   color: #0f172a !important;
-                  font-family: ${isArabic ? "'Cairo', 'Amiri', system-ui, sans-serif" : "'Plus Jakarta Sans', system-ui, sans-serif"};
+                  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
                   -webkit-print-color-adjust: exact !important;
                   print-color-adjust: exact !important;
                   margin: 0;
@@ -366,40 +345,10 @@ export const PrintReportModal: React.FC = () => {
     }
   };
 
-  const getStatusLabelAr = (status: string) => {
-    switch (status) {
-      case 'Handed Over':
-        return 'تم التسليم للنزيل';
-      case 'Dispatched':
-        return 'تم الإرسال / الشحن';
-      case 'Pending Approval':
-        return 'بانتظار الاعتماد';
-      default:
-        return 'محفوظ بالمستودع';
-    }
-  };
-
-  const getCategoryAr = (cat: string) => {
-    const map: Record<string, string> = {
-      'Electronics': 'أجهزة إلكترونية',
-      'Clothing': 'ملابس ومنسوجات',
-      'Accessories': 'إكسسوارات ومقتنيات',
-      'Documents & Cards': 'وثائق وبطاقات ثبوتية',
-      'Jewelry & Valuables': 'مجوهرات وأشياء ثمينة',
-      'Luggage & Bags': 'حقائب وأمتعة',
-      'Keys': 'مفاتيح',
-      'Personal Care': 'عناية شخصية',
-      'Cash & Wallet': 'أموال ومحافظ نقدية',
-      'Eyewear': 'نظارات وبصريات',
-      'Other': 'أخرى'
-    };
-    return map[cat] || cat;
-  };
-
   // Render Single Page Copy (Guest Copy or Hotel Copy)
-  const renderSinglePage = (copyType: 'guest' | 'hotel', isArabic: boolean) => {
+  const renderSinglePage = (copyType: 'guest' | 'hotel') => {
     const isGuest = copyType === 'guest';
-    const logoSrc = settings.certificateLogoUrl || settings.logoUrl;
+    const logoSrc = settings.certificateLogoUrl || settings.logoLightUrl || settings.logoUrl;
 
     return (
       <div className="space-y-3.5 text-slate-900 leading-normal">
@@ -412,12 +361,10 @@ export const PrintReportModal: React.FC = () => {
                 : 'bg-amber-50 text-amber-900 border-amber-300'
             }`}
           >
-            {isArabic
-              ? (isGuest ? 'الصفحة ١ من ٢ • نسخة النزيل' : 'الصفحة ٢ من ٢ • نسخة إدارة الفندق / الأرشيف')
-              : (isGuest ? 'Page 1 of 2 • GUEST COPY' : 'Page 2 of 2 • HOTEL COPY / ARCHIVE')}
+            {isGuest ? 'Page 1 of 2 • GUEST COPY' : 'Page 2 of 2 • HOTEL COPY / ARCHIVE'}
           </span>
           <span className="font-mono text-[11px] font-bold text-slate-500">
-            {isArabic ? `رقم السجل: ${selectedItem.code}` : `Ref: ${selectedItem.code}`}
+            Ref: {selectedItem.code}
           </span>
         </div>
 
@@ -437,7 +384,7 @@ export const PrintReportModal: React.FC = () => {
           )}
 
           <div className="px-4 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-xs font-bold tracking-wider text-slate-900 uppercase">
-            {isArabic ? 'نموذج تسليم المفقودات الرسمي' : 'Lost & Found Official Handover Form'}
+            Lost &amp; Found Official Handover Form
           </div>
         </div>
 
@@ -448,14 +395,14 @@ export const PrintReportModal: React.FC = () => {
         <div className="bg-[#1e293b] text-white px-4 py-2 rounded-xl flex items-center justify-between shadow-2xs">
           <div className="space-y-0.5">
             <div className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-              {isArabic ? 'الرقم المرجعي الرسمي للمادة' : 'Official Inventory Reference'}
+              Official Inventory Reference
             </div>
             <div className="font-mono text-sm sm:text-base font-bold text-amber-300">
-              {isArabic ? `رمز المادة: ${selectedItem.code}` : `Item Code: ${selectedItem.code}`}
+              Item Code: {selectedItem.code}
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+          <div className="flex items-center space-x-2">
             <span
               className={`px-3 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider shadow-2xs ${
                 isHandedOver
@@ -465,7 +412,7 @@ export const PrintReportModal: React.FC = () => {
                   : 'bg-amber-300 text-amber-950'
               }`}
             >
-              {isArabic ? getStatusLabelAr(selectedItem.status) : getStatusLabelEn(selectedItem.status)}
+              {getStatusLabelEn(selectedItem.status)}
             </span>
           </div>
         </div>
@@ -474,16 +421,16 @@ export const PrintReportModal: React.FC = () => {
         <div className="space-y-1.5">
           <div className="text-[11px] font-bold text-slate-900 border-b border-slate-200 pb-0.5 flex items-center justify-between uppercase tracking-wider">
             <span className="text-indigo-950">
-              {isArabic ? '١. بيانات المادة المفقودة ومكان العثور' : '1. Item Specifications & Discovery Data'}
+              1. Item Specifications &amp; Discovery Data
             </span>
             <span className="text-[10px] text-slate-500 font-normal">
-              {isArabic ? `تاريخ العثور: ${formatDate(selectedItem.dateFound)}` : `found on ${formatDate(selectedItem.dateFound)}`}
+              found on {formatDate(selectedItem.dateFound)}
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'اسم المادة:' : 'Item Name:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Item Name:</span>
               <span
                 className="font-bold text-slate-900 truncate capitalize"
                 style={{ textTransform: 'capitalize' }}
@@ -493,37 +440,37 @@ export const PrintReportModal: React.FC = () => {
             </div>
 
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'التصنيف:' : 'Category:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Category:</span>
               <span className="font-semibold text-slate-800">
-                {isArabic ? getCategoryAr(selectedItem.category) : selectedItem.category}
+                {selectedItem.category}
               </span>
             </div>
 
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'مكان العثور:' : 'Location Found:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Location Found:</span>
               <span className="text-slate-900 font-medium">{selectedItem.locationFound}</span>
             </div>
 
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'موقع الحفظ:' : 'Storage Location:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Storage Location:</span>
               <span className="text-indigo-700 font-bold">{selectedItem.storeLocation}</span>
             </div>
 
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'الغرفة / النزيل:' : 'Guest Room / Name:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Guest Room / Name:</span>
               <span className="text-slate-900">
-                {selectedItem.roomNumber ? `${isArabic ? 'غرفة ' : 'Room '}${selectedItem.roomNumber}` : ''}
+                {selectedItem.roomNumber ? `Room ${selectedItem.roomNumber}` : ''}
                 {selectedItem.guestName ? ` (${selectedItem.guestName})` : !selectedItem.roomNumber ? 'N/A' : ''}
               </span>
             </div>
 
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'الموظف الذي عثر:' : 'Finder Staff:'}</span>
-              <span className="text-slate-900">{selectedItem.employeeName || (isArabic ? 'موظف الفندق' : 'Staff Member')}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Finder Staff:</span>
+              <span className="text-slate-900">{selectedItem.employeeName || 'Staff Member'}</span>
             </div>
 
             <div className="flex col-span-2">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'موظف التسجيل:' : 'Registered Officer:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Registered Officer:</span>
               <span className="text-slate-900 font-bold">{selectedItem.recordedBy}</span>
             </div>
           </div>
@@ -533,75 +480,71 @@ export const PrintReportModal: React.FC = () => {
         <div className="space-y-1.5 pt-0.5">
           <div className="text-[11px] font-bold text-slate-900 border-b border-slate-200 pb-0.5 flex items-center justify-between uppercase tracking-wider">
             <span className="text-indigo-950">
-              {isArabic ? '٢. بيانات تسليم المادة والمستلم' : '2. Handover & Release Information'}
+              2. Handover &amp; Release Information
             </span>
             <span className="text-[10px] text-slate-500 font-normal">
-              {isArabic ? 'سجل التحقق والتسليم' : 'claimant / recipient record'}
+              claimant / recipient record
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'تاريخ التسليم:' : 'Handover Date:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Handover Date:</span>
               <span className="text-slate-900 font-semibold">
                 {selectedItem.handoverDetails?.handoverDate
-                  ? (isArabic ? formatLongDateAr(selectedItem.handoverDetails.handoverDate) : formatLongDateEn(selectedItem.handoverDetails.handoverDate))
+                  ? formatLongDateEn(selectedItem.handoverDetails.handoverDate)
                   : '_____________________'}
               </span>
             </div>
 
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'الموظف المسلّم:' : 'Handed Over By:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Handed Over By:</span>
               <span className="text-slate-900 font-bold">
-                {selectedItem.handoverDetails?.handedOverBy || selectedItem.recordedBy || (isArabic ? 'موظف الاستقبال' : 'Staff Officer')}
+                {selectedItem.handoverDetails?.handedOverBy || selectedItem.recordedBy || 'Staff Officer'}
               </span>
             </div>
 
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'اسم المستلم:' : 'Receiver Name:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Receiver Name:</span>
               <span className="text-slate-900 font-bold">
                 {selectedItem.handoverDetails?.receiverName || '_____________________'}
               </span>
             </div>
 
             <div className="flex">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'رقم التواصل:' : 'Contact Number:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Contact Number:</span>
               <span className="text-slate-900 font-mono font-medium">
                 {selectedItem.handoverDetails?.contactNumber || '_____________________'}
               </span>
             </div>
 
             <div className="flex col-span-2">
-              <span className="text-slate-500 font-medium w-28 shrink-0">{isArabic ? 'ملاحظات / الإثبات:' : 'Remarks / ID Ref:'}</span>
+              <span className="text-slate-500 font-medium w-28 shrink-0">Remarks / ID Ref:</span>
               <span className="text-slate-900 text-[11px]">
-                {selectedItem.handoverDetails?.remarks || (isArabic ? 'تم التحقق من مطابقة الهوية ومواصفات المادة الشخصية قبل التسليم.' : 'Identity verified against hotel registration / photo ID.')}
+                {selectedItem.handoverDetails?.remarks || 'Identity verified against hotel registration / photo ID.'}
               </span>
             </div>
           </div>
 
           {/* Handover Verification Callout Banner */}
           {isHandedOver ? (
-            <div className="p-2 bg-emerald-50 border-l-4 rtl:border-l-0 rtl:border-r-4 border-emerald-500 rounded-r-xl rtl:rounded-r-none rtl:rounded-l-xl text-xs text-emerald-900 space-y-0.5">
-              <div className="flex items-center space-x-1.5 rtl:space-x-reverse font-bold text-[11px]">
+            <div className="p-2 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl text-xs text-emerald-900 space-y-0.5">
+              <div className="flex items-center space-x-1.5 font-bold text-[11px]">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>{isArabic ? 'تم تسليم المادة رسمياً إلى صاحبها / النزيل' : 'Item Successfully Released & Handed Over'}</span>
+                <span>Item Successfully Released &amp; Handed Over</span>
               </div>
               <div className="text-[10px] text-emerald-800">
-                {isArabic
-                  ? `سُلّمت بواسطة الموظف (${selectedItem.handoverDetails?.handedOverBy || selectedItem.recordedBy}) إلى المستلم "${selectedItem.handoverDetails?.receiverName}".`
-                  : `Handed Over by ${selectedItem.handoverDetails?.handedOverBy || selectedItem.recordedBy} to guest "${selectedItem.handoverDetails?.receiverName}".`}
+                Handed Over by {selectedItem.handoverDetails?.handedOverBy || selectedItem.recordedBy} to guest "{selectedItem.handoverDetails?.receiverName}".
               </div>
             </div>
           ) : (
-            <div className="p-2 bg-slate-50 border-l-4 rtl:border-l-0 rtl:border-r-4 border-indigo-600 rounded-r-xl rtl:rounded-r-none rtl:rounded-l-xl text-xs text-slate-700 space-y-0.5">
-              <div className="flex items-center space-x-1.5 rtl:space-x-reverse font-bold text-indigo-950 text-[11px]">
+            <div className="p-2 bg-slate-50 border-l-4 border-indigo-600 rounded-r-xl text-xs text-slate-700 space-y-0.5">
+              <div className="flex items-center space-x-1.5 font-bold text-indigo-950 text-[11px]">
                 <FileText className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                <span>{isArabic ? 'سند تسليم رسمي (جاهز للتنفيذ والتوقيع)' : 'Official Handover Voucher (Ready for Execution)'}</span>
+                <span>Official Handover Voucher (Ready for Execution)</span>
               </div>
               <div className="text-[10px] text-slate-600">
-                {isArabic
-                  ? `المادة محفوظة حالياً في ${selectedItem.storeLocation}. يُعتمد هذا السند ويُوقع عند التسليم الفعلي للنزيل.`
-                  : `Item is stored at ${selectedItem.storeLocation}. To be signed and stamped upon physical property return to the guest.`}
+                Item is stored at {selectedItem.storeLocation}. To be signed and stamped upon physical property return to the guest.
               </div>
             </div>
           )}
@@ -610,22 +553,14 @@ export const PrintReportModal: React.FC = () => {
         {/* Section 3: Legal Acknowledgment & Custody Release */}
         <div className="space-y-1.5 pt-0.5">
           <div className="text-[11px] font-bold text-slate-900 border-b border-slate-200 pb-0.5 uppercase tracking-wider">
-            {isArabic ? '٣. إقرار وتعهد الاستلام وإخلاء الطرف' : '3. Legal Acknowledgment & Custody Release'}
+            3. Legal Acknowledgment &amp; Custody Release
           </div>
 
           <div className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] text-slate-700 leading-relaxed">
             {isGuest ? (
-              isArabic ? (
-                'أقر أنا الموقع أدناه بأنني قد استلمت المادة المذكورة بياناتها أعلاه كاملة وبحالة سليمة ومطابقة لما فقدته، وأؤكد أنها من ممتلكاتي الشخصية، وبموجب هذا التوقيع أبرئ ذمة إدارة الفندق وموظفيها من أي مسؤولية لاحقة تتعلق بحفظ أو تسليم هذه المادة.'
-              ) : (
-                <>I hereby acknowledge receipt of the above-mentioned property in good condition and confirm that it is my rightful personal belonging. By signing this document, I release <strong>{settings.hotelName || 'hotel management'}</strong> and its staff from any further custody liability or claims regarding this item.</>
-              )
+              <>I hereby acknowledge receipt of the above-mentioned property in good condition and confirm that it is my rightful personal belonging. By signing this document, I release <strong>{settings.hotelName || 'hotel management'}</strong> and its staff from any further custody liability or claims regarding this item.</>
             ) : (
-              isArabic ? (
-                'سجل الأرشيف الفندقي المعتمد: تم التحقق من هوية المستلم ومطابقتها لسجلات الفندق الرسمية. يُحفظ هذا النموذج في سجلات قسم التدبير الفندقي والأمن كإثبات رسمي لتسليم المادة وإخلاء طرف الفندق.'
-              ) : (
-                <>Official Hotel Archive Record: Retained permanently by the Housekeeping & Security Department following verified release of property. Confirms compliance with standard hotel lost & found operating policies.</>
-              )
+              <>Official Hotel Archive Record: Retained permanently by the Housekeeping &amp; Security Department following verified release of property. Confirms compliance with standard hotel lost &amp; found operating policies.</>
             )}
           </div>
 
@@ -634,30 +569,30 @@ export const PrintReportModal: React.FC = () => {
             {/* Guest / Claimant Signature Box */}
             <div className="p-2.5 border border-slate-300 rounded-xl bg-white space-y-1.5">
               <div className="text-[11px] font-bold text-slate-900 flex items-center justify-between">
-                <span>{isArabic ? 'توقيع المستلم / النزيل' : 'Guest / Claimant Signature'}</span>
+                <span>Guest / Claimant Signature</span>
                 <UserCheck className="w-3 h-3 text-slate-400" />
               </div>
               <div className="h-9 border-b border-dashed border-slate-300 flex items-center justify-center text-[9px] text-slate-300 italic">
-                {isArabic ? '[ التوقيع المعتمد ]' : '[ Authorized Signature ]'}
+                [ Authorized Signature ]
               </div>
               <div className="space-y-0.5 text-[10px]">
-                <div><span className="text-slate-500">{isArabic ? 'الاسم:' : 'Name:'}</span> <strong className="text-slate-900">{selectedItem.handoverDetails?.receiverName || '________________________'}</strong></div>
-                <div><span className="text-slate-500">{isArabic ? 'التاريخ:' : 'Date:'}</span> <span>{selectedItem.handoverDetails?.handoverDate ? (isArabic ? formatLongDateAr(selectedItem.handoverDetails.handoverDate) : formatLongDateEn(selectedItem.handoverDetails.handoverDate)) : (isArabic ? formatLongDateAr() : formatLongDateEn())}</span></div>
+                <div><span className="text-slate-500">Name:</span> <strong className="text-slate-900">{selectedItem.handoverDetails?.receiverName || '________________________'}</strong></div>
+                <div><span className="text-slate-500">Date:</span> <span>{selectedItem.handoverDetails?.handoverDate ? formatLongDateEn(selectedItem.handoverDetails.handoverDate) : formatLongDateEn()}</span></div>
               </div>
             </div>
 
             {/* Employee Signature Box */}
             <div className="p-2.5 border border-slate-300 rounded-xl bg-white space-y-1.5">
               <div className="text-[11px] font-bold text-slate-900 flex items-center justify-between">
-                <span>{isArabic ? 'توقيع الموظف المعتمد' : 'Employee Signature'}</span>
+                <span>Employee Signature</span>
                 <Building2 className="w-3 h-3 text-slate-400" />
               </div>
               <div className="h-9 border-b border-dashed border-slate-300 flex items-center justify-center text-[9px] text-slate-300 italic">
-                {isArabic ? '[ توقيع الموظف ]' : '[ Employee Signature ]'}
+                [ Employee Signature ]
               </div>
               <div className="space-y-0.5 text-[10px]">
-                <div><span className="text-slate-500">{isArabic ? 'الموظف:' : 'Employee:'}</span> <strong className="text-slate-900">{selectedItem.handoverDetails?.handedOverBy || selectedItem.recordedBy || (isArabic ? 'الموظف' : 'Staff')}</strong></div>
-                <div><span className="text-slate-500">{isArabic ? 'التاريخ:' : 'Date:'}</span> <span>{isArabic ? formatLongDateAr() : formatLongDateEn()}</span></div>
+                <div><span className="text-slate-500">Employee:</span> <strong className="text-slate-900">{selectedItem.handoverDetails?.handedOverBy || selectedItem.recordedBy || 'Staff'}</strong></div>
+                <div><span className="text-slate-500">Date:</span> <span>{formatLongDateEn()}</span></div>
               </div>
             </div>
           </div>
@@ -671,12 +606,12 @@ export const PrintReportModal: React.FC = () => {
             <div>Phone: {settings.phoneNumber || '017 512 2070'} • Email: {settings.emailAddress || 'warwickhotelbaha@gmail.com'}</div>
             <div className="text-indigo-600">{settings.website || 'https://www.warwickhotels.com/warwick-hotel-bahah'}</div>
             <div className="text-slate-400 pt-0.5">
-              {isArabic ? `رقم السند: WARWICK-HO-${selectedItem.code} • تاريخ وتوقيت الطباعة: ${getPrintedTimestampAr()}` : `Document Ref: WARWICK-HO-${selectedItem.code} • Printed: ${getPrintedTimestampEn()}`}
+              Document Ref: WARWICK-HO-{selectedItem.code} • Printed: {getPrintedTimestampEn()}
             </div>
           </div>
 
           {/* QR Code Verification */}
-          <div className="shrink-0 pl-3 rtl:pl-0 rtl:pr-3 flex flex-col items-center">
+          <div className="shrink-0 pl-3 flex flex-col items-center">
             {qrCodeDataUrl ? (
               <img
                 src={qrCodeDataUrl}
@@ -746,7 +681,7 @@ export const PrintReportModal: React.FC = () => {
             <button
               id="btn-trigger-print"
               onClick={handlePrint}
-              className="flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all"
+              className="flex items-center space-x-1.5 px-4 py-2 btn-primary-gradient text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Print Official PDF (2 Pages)</span>
@@ -762,37 +697,13 @@ export const PrintReportModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Dual Language Template Switcher Bar & Page Indicators */}
+        {/* Document Format & Page Indicators */}
         <div className="bg-slate-100/80 border-b border-slate-200 px-6 py-2.5 flex items-center justify-between flex-wrap gap-2 print:hidden">
           <div className="flex items-center space-x-2">
-            <Languages className="w-4 h-4 text-indigo-600" />
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Language:
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <FileText className="w-4 h-4 text-indigo-600" />
+              <span>Official Format: Standard Executive A4 (2 Pages)</span>
             </span>
-            <div className="flex items-center space-x-1">
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate('warwick_english')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  selectedTemplate === 'warwick_english'
-                    ? 'bg-slate-900 text-white shadow-2xs'
-                    : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                English
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate('warwick_arabic')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  selectedTemplate === 'warwick_arabic'
-                    ? 'bg-indigo-700 text-white shadow-2xs'
-                    : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                العربية
-              </button>
-            </div>
           </div>
 
           <div className="flex items-center space-x-2 text-xs font-semibold text-slate-600">
@@ -818,12 +729,10 @@ export const PrintReportModal: React.FC = () => {
             {/* PAGE 1: GUEST COPY (Strictly fits on single A4 page) */}
             {/* ========================================================================= */}
             <div
-              className={`handover-page handover-page-1 bg-white p-6 sm:p-8 shadow-md rounded-2xl print:border-none print:p-0 print:shadow-none print:rounded-none ${
-                isArabic ? "font-['Cairo']" : 'font-sans'
-              }`}
-              dir={isArabic ? 'rtl' : 'ltr'}
+              className="handover-page handover-page-1 bg-white p-6 sm:p-8 shadow-md rounded-2xl print:border-none print:p-0 print:shadow-none print:rounded-none font-sans"
+              dir="ltr"
             >
-              {renderSinglePage('guest', isArabic)}
+              {renderSinglePage('guest')}
             </div>
 
             {/* Visual Page Break Separator (Hidden during print) */}
@@ -831,7 +740,7 @@ export const PrintReportModal: React.FC = () => {
               <div className="h-px bg-slate-300 flex-1" />
               <span className="px-4 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider mx-3 shadow-2xs border border-slate-300 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                {isArabic ? 'فاصل الصفحات • الصفحة ٢ أدناه (نسخة الفندق)' : 'Page Break • Page 2 Below (Hotel Copy)'}
+                Page Break • Page 2 Below (Hotel Copy)
               </span>
               <div className="h-px bg-slate-300 flex-1" />
             </div>
@@ -840,12 +749,10 @@ export const PrintReportModal: React.FC = () => {
             {/* PAGE 2: HOTEL COPY (Strictly fits on single A4 page) */}
             {/* ========================================================================= */}
             <div
-              className={`handover-page handover-page-2 bg-white p-6 sm:p-8 shadow-md rounded-2xl print:border-none print:p-0 print:shadow-none print:rounded-none ${
-                isArabic ? "font-['Cairo']" : 'font-sans'
-              }`}
-              dir={isArabic ? 'rtl' : 'ltr'}
+              className="handover-page handover-page-2 bg-white p-6 sm:p-8 shadow-md rounded-2xl print:border-none print:p-0 print:shadow-none print:rounded-none font-sans"
+              dir="ltr"
             >
-              {renderSinglePage('hotel', isArabic)}
+              {renderSinglePage('hotel')}
             </div>
           </div>
         </div>

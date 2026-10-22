@@ -427,7 +427,7 @@ Password: ${lastIssuedResult.password}${expiryText}`;
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-semibold rounded-xl shadow-xs flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+                  className="px-5 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
                 >
                   {isLoading ? (
                     <span>Saving...</span>

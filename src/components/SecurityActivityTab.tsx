@@ -285,14 +285,14 @@ export const SecurityActivityTab: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+            <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-fuchsia-950/40 text-indigo-600 dark:text-fuchsia-400 border border-indigo-100 dark:border-fuchsia-800/40">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h2 className="text-base font-bold text-slate-900">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
               Security Activity &amp; Authentication History
             </h2>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Real-time audit records of login attempts, password changes, and successful logins with associated timestamps and IP addresses.
           </p>
         </div>
@@ -319,10 +319,10 @@ export const SecurityActivityTab: React.FC = () => {
             id="btn-clear-security-history"
             onClick={() => setShowClearModal(true)}
             disabled={activities.length === 0 || isLoading}
-            className="flex items-center space-x-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+            className="flex items-center space-x-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 text-rose-700 dark:text-rose-400 text-xs font-bold rounded-xl border border-rose-200 dark:border-rose-900/40 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
             title="Delete / Clear Security Activity Logs"
           >
-            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+            <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
             <span>Clear History</span>
           </button>
 
@@ -330,7 +330,7 @@ export const SecurityActivityTab: React.FC = () => {
             type="button"
             onClick={fetchSecurityActivities}
             disabled={isLoading}
-            className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs"
+            className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#180F1A] dark:hover:bg-[#221425] text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl border border-transparent dark:border-fuchsia-900/30 transition-all cursor-pointer shadow-2xs"
             title="Refresh Security Activity Feed"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -341,7 +341,7 @@ export const SecurityActivityTab: React.FC = () => {
             type="button"
             onClick={handleExportCsv}
             disabled={activities.length === 0}
-            className="flex items-center space-x-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+            className="flex items-center space-x-1.5 px-3 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs disabled:opacity-50"
             title="Export Security Activity Report to CSV"
           >
             <Download className="w-3.5 h-3.5" />
@@ -353,75 +353,75 @@ export const SecurityActivityTab: React.FC = () => {
       {/* Summary Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Security Events */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#180F1A] border border-slate-200 dark:border-fuchsia-900/30 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Total Logged Events
             </div>
-            <Activity className="w-4 h-4 text-slate-400" />
+            <Activity className="w-4 h-4 text-slate-400 dark:text-fuchsia-400" />
           </div>
-          <div className="text-xl font-extrabold text-slate-900 mt-1.5">
+          <div className="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">
             {stats.total.toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1">
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
             Persistent auth audit records
           </div>
         </div>
 
         {/* Successful Logins */}
-        <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80">
+        <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-[#180F1A] border border-emerald-200/80 dark:border-emerald-500/20 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
+            <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
               Successful Logins
             </div>
             <div className="flex items-center space-x-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <LogIn className="w-4 h-4 text-emerald-600" />
+              <LogIn className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
           </div>
-          <div className="text-xl font-extrabold text-emerald-800 mt-1.5">
+          <div className="text-xl font-extrabold text-emerald-800 dark:text-emerald-300 mt-1.5">
             {stats.successfulLogins.toLocaleString()}
           </div>
-          <div className="text-[11px] text-emerald-700/80 mt-1">
+          <div className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-1">
             Validated sessions &amp; tokens
           </div>
         </div>
 
         {/* Failed Login Attempts */}
-        <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200/80">
+        <div className="p-4 rounded-2xl bg-rose-50/60 dark:bg-[#180F1A] border border-rose-200/80 dark:border-rose-500/20 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">
+            <div className="text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
               Failed Attempts
             </div>
-            <ShieldAlert className="w-4 h-4 text-rose-600" />
+            <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />
           </div>
-          <div className="text-xl font-extrabold text-rose-800 mt-1.5">
+          <div className="text-xl font-extrabold text-rose-800 dark:text-rose-400 mt-1.5">
             {stats.failedAttempts.toLocaleString()}
           </div>
-          <div className="text-[11px] text-rose-700/80 mt-1">
+          <div className="text-[11px] text-rose-700/80 dark:text-rose-400/80 mt-1">
             Invalid passwords &amp; lockouts
           </div>
         </div>
 
         {/* Password Changes */}
-        <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200/80">
+        <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-[#180F1A] border border-indigo-200/80 dark:border-fuchsia-500/20 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="text-[11px] font-semibold text-indigo-700 uppercase tracking-wider">
+            <div className="text-[11px] font-semibold text-indigo-700 dark:text-fuchsia-400 uppercase tracking-wider">
               Password Changes
             </div>
-            <Key className="w-4 h-4 text-indigo-600" />
+            <Key className="w-4 h-4 text-indigo-600 dark:text-fuchsia-400" />
           </div>
-          <div className="text-xl font-extrabold text-indigo-800 mt-1.5">
+          <div className="text-xl font-extrabold text-indigo-800 dark:text-fuchsia-300 mt-1.5">
             {stats.passwordChanges.toLocaleString()}
           </div>
-          <div className="text-[11px] text-indigo-700/80 mt-1">
+          <div className="text-[11px] text-indigo-700/80 dark:text-fuchsia-400/80 mt-1">
             Credential updates &amp; resets
           </div>
         </div>
       </div>
 
       {/* Filter Tabs and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+      <div className="bg-white dark:bg-[#180F1A] p-4 rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-2xs space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Filter Pills */}
           <div className="flex flex-wrap items-center gap-1.5">
@@ -430,8 +430,8 @@ export const SecurityActivityTab: React.FC = () => {
               onClick={() => setEventTypeFilter('all')}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 eventTypeFilter === 'all'
-                  ? 'bg-slate-900 text-white shadow-2xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                  ? 'btn-primary-gradient text-white shadow-2xs'
+                  : 'bg-slate-100 dark:bg-[#241328] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#2f1934] border border-transparent dark:border-fuchsia-900/20'
               }`}
             >
               All Events ({stats.total})
@@ -442,7 +442,7 @@ export const SecurityActivityTab: React.FC = () => {
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 eventTypeFilter === 'login_success'
                   ? 'bg-emerald-600 text-white shadow-2xs'
-                  : 'bg-emerald-50 text-emerald-800 border border-emerald-200/60 hover:bg-emerald-100'
+                  : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/50'
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
@@ -454,7 +454,7 @@ export const SecurityActivityTab: React.FC = () => {
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 eventTypeFilter === 'login_failed'
                   ? 'bg-rose-600 text-white shadow-2xs'
-                  : 'bg-rose-50 text-rose-800 border border-rose-200/60 hover:bg-rose-100'
+                  : 'bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40 hover:bg-rose-100 dark:hover:bg-rose-950/50'
               }`}
             >
               <AlertTriangle className="w-3.5 h-3.5" />
@@ -465,8 +465,8 @@ export const SecurityActivityTab: React.FC = () => {
               onClick={() => setEventTypeFilter('password_change')}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 eventTypeFilter === 'password_change'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'bg-indigo-50 text-indigo-800 border border-indigo-200/60 hover:bg-indigo-100'
+                  ? 'bg-indigo-600 dark:bg-fuchsia-600 text-white shadow-2xs'
+                  : 'bg-indigo-50 dark:bg-fuchsia-950/30 text-indigo-800 dark:text-fuchsia-300 border border-indigo-200/60 dark:border-fuchsia-800/40 hover:bg-indigo-100 dark:hover:bg-fuchsia-950/50'
               }`}
             >
               <Key className="w-3.5 h-3.5" />
@@ -482,13 +482,13 @@ export const SecurityActivityTab: React.FC = () => {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search by user, IP, action, details..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 text-slate-900 dark:text-white rounded-xl focus:outline-hidden focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer"
               >
                 ✕
               </button>
@@ -499,16 +499,16 @@ export const SecurityActivityTab: React.FC = () => {
 
       {/* Batch Selection Action Bar */}
       {selectedIds.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between p-3.5 bg-rose-50 border border-rose-200 rounded-2xl animate-fade-in gap-3 shadow-xs">
-          <div className="flex items-center space-x-2 text-xs font-bold text-rose-900">
-            <CheckCircle2 className="w-4 h-4 text-rose-600" />
+        <div className="flex flex-wrap items-center justify-between p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 rounded-2xl animate-fade-in gap-3 shadow-xs">
+          <div className="flex items-center space-x-2 text-xs font-bold text-rose-900 dark:text-rose-300">
+            <CheckCircle2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
             <span>{selectedIds.length} security activity record{selectedIds.length !== 1 ? 's' : ''} selected</span>
           </div>
           <div className="flex items-center space-x-2">
             <button
               type="button"
               onClick={() => setSelectedIds([])}
-              className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/80 rounded-xl transition-all cursor-pointer"
+              className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer"
             >
               Clear Selection
             </button>
@@ -527,17 +527,17 @@ export const SecurityActivityTab: React.FC = () => {
       )}
 
       {/* Main Activity Table / Card List */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-xs overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center space-y-3">
-            <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin mx-auto" />
-            <p className="text-xs text-slate-500 font-medium">Loading security activity audit logs...</p>
+            <RefreshCw className="w-6 h-6 text-fuchsia-600 animate-spin mx-auto" />
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Loading security activity audit logs...</p>
           </div>
         ) : activities.length === 0 ? (
           <div className="p-12 text-center space-y-3">
-            <ShieldCheck className="w-10 h-10 text-slate-300 mx-auto" />
-            <div className="text-sm font-bold text-slate-800">No Security Activity Found</div>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
+            <ShieldCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
+            <div className="text-sm font-bold text-slate-800 dark:text-white">No Security Activity Found</div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               {searchQuery || eventTypeFilter !== 'all'
                 ? 'No authentication logs matched your current search filters. Try clearing search query or choosing "All Events".'
                 : 'Authentication attempts, password modifications, and logins will be automatically displayed here with IP addresses and timestamps.'}
@@ -549,23 +549,23 @@ export const SecurityActivityTab: React.FC = () => {
                   setSearchQuery('');
                   setEventTypeFilter('all');
                 }}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-fuchsia-600 dark:text-fuchsia-400 bg-fuchsia-50 dark:bg-fuchsia-950/40 hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/40 rounded-xl transition-all cursor-pointer"
               >
                 <span>Reset Filters</span>
               </button>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
             {/* Desktop Table Header */}
-            <div className="hidden md:grid grid-cols-12 gap-3 px-6 py-3 bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider items-center">
+            <div className="hidden md:grid grid-cols-12 gap-3 px-6 py-3 bg-slate-50/80 dark:bg-[#120815] border-b border-slate-200 dark:border-fuchsia-900/30 text-[11px] font-bold text-slate-500 dark:text-fuchsia-300/80 uppercase tracking-wider items-center">
               <div className="col-span-1 flex items-center justify-start">
                 <input
                   type="checkbox"
                   aria-label="Select all on this page"
                   checked={paginatedActivities.length > 0 && paginatedActivities.every(a => selectedIds.includes(a.id))}
                   onChange={handleToggleSelectAll}
-                  className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer w-4 h-4"
+                  className="rounded border-slate-300 dark:border-slate-700 text-rose-600 focus:ring-rose-500 cursor-pointer w-4 h-4"
                   title="Select all on this page"
                 />
               </div>
@@ -587,8 +587,8 @@ export const SecurityActivityTab: React.FC = () => {
               return (
                 <div
                   key={act.id}
-                  className={`p-4 md:px-6 md:py-3.5 hover:bg-slate-50/70 transition-all flex flex-col md:grid md:grid-cols-12 gap-2.5 md:gap-3 md:items-center group ${
-                    isSelected ? 'bg-rose-50/40 ring-1 ring-rose-200' : ''
+                  className={`p-4 md:px-6 md:py-3.5 hover:bg-slate-50/70 dark:hover:bg-fuchsia-950/20 transition-all flex flex-col md:grid md:grid-cols-12 gap-2.5 md:gap-3 md:items-center group ${
+                    isSelected ? 'bg-rose-50/40 dark:bg-rose-950/20 ring-1 ring-rose-200 dark:ring-rose-800/40' : ''
                   }`}
                 >
                   {/* Select Checkbox */}
@@ -598,21 +598,21 @@ export const SecurityActivityTab: React.FC = () => {
                       aria-label="Select this log"
                       checked={isSelected}
                       onChange={() => handleToggleSelect(act.id)}
-                      className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer w-4 h-4"
+                      className="rounded border-slate-300 dark:border-slate-700 text-rose-600 focus:ring-rose-500 cursor-pointer w-4 h-4"
                     />
                   </div>
 
                   {/* Event & Action */}
                   <div className="col-span-3 flex items-start space-x-3">
                     <div
-                      className={`p-2 rounded-xl shrink-0 mt-0.5 ${
+                      className={`p-2 rounded-xl shrink-0 mt-0.5 border ${
                         isFail
-                          ? 'bg-rose-100 text-rose-700'
+                          ? 'bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40'
                           : isPassChange
-                          ? 'bg-indigo-100 text-indigo-700'
+                          ? 'bg-fuchsia-100 dark:bg-fuchsia-950/40 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200/60 dark:border-fuchsia-800/40'
                           : isLocked
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-emerald-100 text-emerald-700'
+                          ? 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/40'
+                          : 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40'
                       }`}
                     >
                       {isFail ? (
@@ -628,24 +628,24 @@ export const SecurityActivityTab: React.FC = () => {
 
                     <div className="min-w-0">
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-xs text-slate-900 truncate">
+                        <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
                           {act.action}
                         </span>
                         <span
-                          className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider shrink-0 ${
+                          className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider shrink-0 border ${
                             isFail
-                              ? 'bg-rose-100 text-rose-800'
+                              ? 'bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40'
                               : isPassChange
-                              ? 'bg-indigo-100 text-indigo-800'
+                              ? 'bg-fuchsia-100 dark:bg-fuchsia-950/40 text-fuchsia-800 dark:text-fuchsia-200 border-fuchsia-200/60 dark:border-fuchsia-800/40'
                               : isLocked
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-emerald-100 text-emerald-800'
+                              ? 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40'
+                              : 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40'
                           }`}
                         >
                           {isFail ? 'Failed' : isPassChange ? 'Security' : isLocked ? 'Locked' : 'Success'}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1" title={act.details}>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1" title={act.details}>
                         {act.details}
                       </p>
                     </div>
@@ -653,20 +653,20 @@ export const SecurityActivityTab: React.FC = () => {
 
                   {/* User & Role */}
                   <div className="col-span-2 flex items-center space-x-2.5">
-                    <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-[#251329] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-fuchsia-300 font-bold text-xs flex items-center justify-center shrink-0">
                       {(act.performedBy || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center space-x-1.5 truncate">
-                        <span className="font-semibold text-xs text-slate-800 truncate">
+                        <span className="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate">
                           {act.performedBy}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-600 font-medium shrink-0">
+                        <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-[#251329] text-slate-600 dark:text-slate-300 font-medium shrink-0">
                           {act.performedByRole || 'Staff'}
                         </span>
                       </div>
                       {act.performedByEmail && (
-                        <span className="text-[11px] text-slate-400 block truncate">
+                        <span className="text-[11px] text-slate-400 dark:text-slate-400 block truncate">
                           {act.performedByEmail}
                         </span>
                       )}
@@ -675,17 +675,17 @@ export const SecurityActivityTab: React.FC = () => {
 
                   {/* IP Address */}
                   <div className="col-span-2 flex items-center space-x-1.5">
-                    <div className="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200/80 rounded-lg text-xs font-mono font-bold text-slate-700 transition-colors">
-                      <Globe className="w-3 h-3 text-slate-400 shrink-0" />
+                    <div className="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 dark:bg-[#251329] hover:bg-slate-200/80 dark:hover:bg-[#321738] rounded-lg text-xs font-mono font-bold text-slate-700 dark:text-slate-200 border border-transparent dark:border-fuchsia-900/30 transition-colors">
+                      <Globe className="w-3 h-3 text-slate-400 dark:text-fuchsia-400 shrink-0" />
                       <span>{act.ip || '192.168.1.45'}</span>
                       <button
                         type="button"
                         onClick={() => handleCopyIp(act.ip || '192.168.1.45')}
-                        className="ml-1 text-slate-400 hover:text-indigo-600 p-0.5 rounded cursor-pointer"
+                        className="ml-1 text-slate-400 hover:text-fuchsia-500 p-0.5 rounded cursor-pointer"
                         title="Copy IP Address"
                       >
                         {copiedIp === (act.ip || '192.168.1.45') ? (
-                          <Check className="w-3 h-3 text-emerald-600" />
+                          <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                         ) : (
                           <Copy className="w-3 h-3" />
                         )}
@@ -695,14 +695,14 @@ export const SecurityActivityTab: React.FC = () => {
 
                   {/* Device & Browser */}
                   <div className="col-span-2 flex items-center space-x-2">
-                    <div className="p-1 rounded-md bg-slate-100 shrink-0">
+                    <div className="p-1 rounded-md bg-slate-100 dark:bg-[#251329] text-slate-600 dark:text-fuchsia-300 shrink-0">
                       {getDeviceIcon(act.deviceType)}
                     </div>
                     <div className="min-w-0">
-                      <span className="text-xs font-medium text-slate-800 block truncate">
+                      <span className="text-xs font-medium text-slate-800 dark:text-slate-100 block truncate">
                         {act.browser || 'Chrome'}
                       </span>
-                      <span className="text-[11px] text-slate-400 block truncate">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-400 block truncate">
                         {act.deviceType || 'Desktop • Windows'}
                       </span>
                     </div>
@@ -711,10 +711,10 @@ export const SecurityActivityTab: React.FC = () => {
                   {/* Timestamp & Actions */}
                   <div className="col-span-2 flex items-center justify-between md:justify-end space-x-2">
                     <div className="text-left md:text-right">
-                      <span className="text-xs font-semibold text-slate-700 block">
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block">
                         {new Date(act.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
-                      <span className="text-[11px] text-slate-400 font-medium block">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-400 font-medium block">
                         {new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({getRelativeTime(act.timestamp)})
                       </span>
                     </div>
@@ -723,7 +723,7 @@ export const SecurityActivityTab: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setLogToDelete(act)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-100 transition-all cursor-pointer opacity-70 group-hover:opacity-100 border border-transparent hover:border-rose-200"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-950/40 transition-all cursor-pointer opacity-70 group-hover:opacity-100 border border-transparent hover:border-rose-200 dark:hover:border-rose-900/40"
                       title="Delete this activity log record"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -737,19 +737,19 @@ export const SecurityActivityTab: React.FC = () => {
 
         {/* Pagination Footer */}
         {activities.length > 0 && (
-          <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="p-4 bg-slate-50 dark:bg-[#120815] border-t border-slate-200 dark:border-fuchsia-900/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
             <div className="flex items-center space-x-2">
               <span>Showing</span>
-              <span className="font-bold text-slate-800">
+              <span className="font-bold text-slate-800 dark:text-white">
                 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, activities.length)}
               </span>
               <span>of</span>
-              <span className="font-bold text-slate-800">{activities.length}</span>
+              <span className="font-bold text-slate-800 dark:text-white">{activities.length}</span>
               <span>events</span>
 
-              <span className="text-slate-300">|</span>
+              <span className="text-slate-300 dark:text-slate-700">|</span>
 
-              <label htmlFor="select-security-page-size" className="text-slate-500">Per page:</label>
+              <label htmlFor="select-security-page-size" className="text-slate-500 dark:text-slate-400">Per page:</label>
               <select
                 id="select-security-page-size"
                 value={pageSize}
@@ -757,7 +757,7 @@ export const SecurityActivityTab: React.FC = () => {
                   setPageSize(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 focus:outline-hidden"
+                className="bg-white dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-slate-200 focus:outline-hidden"
               >
                 <option value={10}>10</option>
                 <option value={20}>20</option>
@@ -772,13 +772,13 @@ export const SecurityActivityTab: React.FC = () => {
                 type="button"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none text-slate-700 cursor-pointer"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-fuchsia-900/40 bg-white dark:bg-[#120815] hover:bg-slate-100 dark:hover:bg-[#251329] disabled:opacity-40 disabled:pointer-events-none text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"
                 title="Previous Page"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
-              <span className="px-3 py-1 font-semibold text-slate-800">
+              <span className="px-3 py-1 font-semibold text-slate-800 dark:text-white">
                 Page {currentPage} of {totalPages}
               </span>
 
@@ -786,7 +786,7 @@ export const SecurityActivityTab: React.FC = () => {
                 type="button"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage >= totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none text-slate-700 cursor-pointer"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-fuchsia-900/40 bg-white dark:bg-[#120815] hover:bg-slate-100 dark:hover:bg-[#251329] disabled:opacity-40 disabled:pointer-events-none text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"
                 title="Next Page"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -799,23 +799,23 @@ export const SecurityActivityTab: React.FC = () => {
       {/* MODAL 1: Clear History Batch Modal */}
       {showClearModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-scale-up">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-fuchsia-900/40 space-y-5 animate-scale-up">
             <div className="flex items-start space-x-3.5">
-              <div className="p-3 bg-rose-100 text-rose-700 rounded-2xl shrink-0">
+              <div className="p-3 bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 rounded-2xl shrink-0">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Clear Security Activity History?
                 </h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   Choose which authentication activity logs you wish to purge permanently from the system audit log.
                 </p>
               </div>
             </div>
 
             <div className="space-y-2 text-xs">
-              <label className="font-semibold text-slate-700 block">Deletion Scope:</label>
+              <label className="font-semibold text-slate-700 dark:text-slate-300 block">Deletion Scope:</label>
 
               <div className="space-y-1.5">
                 {[
@@ -829,8 +829,8 @@ export const SecurityActivityTab: React.FC = () => {
                     key={opt.id}
                     className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
                       clearFilter === opt.id
-                        ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-500/20 text-rose-900 font-semibold'
-                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                        ? 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700 ring-1 ring-rose-500/20 text-rose-900 dark:text-rose-200 font-semibold'
+                        : 'bg-slate-50 dark:bg-[#200f24] border-slate-200 dark:border-fuchsia-900/30 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#281329]'
                     }`}
                   >
                     <div className="flex items-center space-x-2.5">
@@ -843,7 +843,7 @@ export const SecurityActivityTab: React.FC = () => {
                       />
                       <span>{opt.label}</span>
                     </div>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-white dark:bg-[#180F1A] border border-slate-200 dark:border-fuchsia-900/40 text-slate-600 dark:text-fuchsia-300">
                       {opt.count} logs
                     </span>
                   </label>
@@ -851,8 +851,8 @@ export const SecurityActivityTab: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start space-x-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-xl text-xs text-amber-800 dark:text-amber-200 flex items-start space-x-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <p>This action cannot be undone. Purged authentication logs will be permanently removed from persistent storage.</p>
             </div>
 
@@ -861,7 +861,7 @@ export const SecurityActivityTab: React.FC = () => {
                 type="button"
                 onClick={() => setShowClearModal(false)}
                 disabled={isDeleting}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-all cursor-pointer"
               >
                 Cancel
               </button>
@@ -883,26 +883,26 @@ export const SecurityActivityTab: React.FC = () => {
       {/* MODAL 2: Single Row Delete Confirmation */}
       {logToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-scale-up">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-fuchsia-900/40 space-y-4 animate-scale-up">
             <div className="flex items-start space-x-3">
-              <div className="p-2.5 bg-rose-100 text-rose-700 rounded-xl shrink-0">
+              <div className="p-2.5 bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 rounded-xl shrink-0">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                   Delete Activity Record?
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Are you sure you want to delete this specific authentication log?
                 </p>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1 text-slate-600">
-              <div className="font-bold text-slate-800">{logToDelete.action}</div>
-              <div className="text-[11px] text-slate-500">User: {logToDelete.performedBy} ({logToDelete.performedByRole})</div>
-              <div className="text-[11px] font-mono text-slate-500">IP: {logToDelete.ip}</div>
-              <div className="text-[11px] text-slate-400">Date: {new Date(logToDelete.timestamp).toLocaleString()}</div>
+            <div className="p-3 bg-slate-50 dark:bg-[#200f24] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 text-xs space-y-1 text-slate-600 dark:text-slate-300">
+              <div className="font-bold text-slate-800 dark:text-white">{logToDelete.action}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">User: {logToDelete.performedBy} ({logToDelete.performedByRole})</div>
+              <div className="text-[11px] font-mono text-slate-500 dark:text-fuchsia-300">IP: {logToDelete.ip}</div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-400">Date: {new Date(logToDelete.timestamp).toLocaleString()}</div>
             </div>
 
             <div className="flex items-center justify-end space-x-2 pt-2">
@@ -910,7 +910,7 @@ export const SecurityActivityTab: React.FC = () => {
                 type="button"
                 onClick={() => setLogToDelete(null)}
                 disabled={isDeleting}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-lg cursor-pointer transition-colors"
               >
                 Cancel
               </button>
@@ -930,23 +930,23 @@ export const SecurityActivityTab: React.FC = () => {
       {/* MODAL 3: Batch Delete Selected Confirmation */}
       {showBatchDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-scale-up">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-fuchsia-900/40 space-y-4 animate-scale-up">
             <div className="flex items-start space-x-3">
-              <div className="p-2.5 bg-rose-100 text-rose-700 rounded-xl shrink-0">
+              <div className="p-2.5 bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 rounded-xl shrink-0">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                   Delete {selectedIds.length} Selected Records?
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Are you sure you want to permanently delete these {selectedIds.length} authentication and security activity records?
                 </p>
               </div>
             </div>
 
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start space-x-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-xl text-xs text-amber-800 dark:text-amber-200 flex items-start space-x-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <p>This action cannot be undone. Selected log records will be permanently removed.</p>
             </div>
 
@@ -955,7 +955,7 @@ export const SecurityActivityTab: React.FC = () => {
                 type="button"
                 onClick={() => setShowBatchDeleteModal(false)}
                 disabled={isDeleting}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-lg cursor-pointer transition-colors"
               >
                 Cancel
               </button>

@@ -2,9 +2,25 @@ import { ThemePreset, HotelSettings } from '../types';
 
 export const DEFAULT_THEME_PRESETS: ThemePreset[] = [
   {
+    id: 'preset-plum-purple',
+    name: 'Plum Purple, Fuchsia & Violet',
+    badge: 'Default',
+    description: 'Sophisticated royal plum purple, electric fuchsia, and radiant violet system.',
+    primaryColor: '#5E1E6C',
+    secondaryColor: '#F5EFF6',
+    buttonColor: '#5E1E6C',
+    buttonHoverColor: '#491754',
+    buttonTextColor: '#ffffff',
+    headingColor: '#1A0C1D',
+    accentColor: '#A32EB8',
+    fontFamily: 'Plus Jakarta Sans',
+    buttonRadius: 'rounded-xl',
+    isCustom: false
+  },
+  {
     id: 'preset-royal-navy',
     name: 'Royal Warwick Navy',
-    badge: 'Default',
+    badge: 'Classic',
     description: 'Official deep navy & indigo palette crafted for prestigious hotel operations.',
     primaryColor: '#0f172a',
     secondaryColor: '#4f46e5',
@@ -238,16 +254,17 @@ export function applyDynamicTheme(settings?: Partial<HotelSettings> | null | und
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
-  // Default system color values (Warwick slate & indigo signature)
-  const primary = '#0f172a';
-  const secondary = '#4f46e5';
-  const button = '#4f46e5';
-  const buttonHover = '#4338ca';
-  const buttonText = '#ffffff';
-  const heading = '#0f172a';
-  const accent = '#059669';
+  // Default system color values (Plum Purple, Fuchsia & Violet signature)
+  const isDark = root.classList.contains('dark');
+  const primary = isDark ? '#E67BF9' : (settings?.primaryColor && settings.primaryColor !== '#0f172a' ? settings.primaryColor : '#5E1E6C');
+  const secondary = isDark ? '#261929' : (settings?.secondaryColor && settings.secondaryColor !== '#4f46e5' ? settings.secondaryColor : '#F5EFF6');
+  const button = isDark ? '#E67BF9' : (settings?.buttonColor && settings.buttonColor !== '#4f46e5' ? settings.buttonColor : '#5E1E6C');
+  const buttonHover = isDark ? '#DF55F7' : (settings?.buttonHoverColor && settings.buttonHoverColor !== '#4338ca' ? settings.buttonHoverColor : '#491754');
+  const buttonText = isDark ? '#2A0D30' : (settings?.buttonTextColor || '#ffffff');
+  const heading = isDark ? '#F7F3F7' : (settings?.headingColor && settings.headingColor !== '#0f172a' ? settings.headingColor : '#1A0C1D');
+  const accent = isDark ? '#E67BF9' : (settings?.accentColor && settings.accentColor !== '#059669' ? settings.accentColor : '#A32EB8');
   const fontFamily = settings?.fontFamily || 'Plus Jakarta Sans';
-  const radius = '0.75rem';
+  const radius = settings?.buttonRadius ? getRadiusPixels(settings.buttonRadius) : '0.75rem';
 
   // 1. Set standard CSS Custom Properties
   root.style.setProperty('--color-primary', primary);
@@ -258,7 +275,7 @@ export function applyDynamicTheme(settings?: Partial<HotelSettings> | null | und
   root.style.setProperty('--color-heading', heading);
   root.style.setProperty('--color-accent', accent);
   root.style.setProperty('--btn-radius', radius);
-  root.style.setProperty('--theme-font', `"${fontFamily}", system-ui, -apple-system, sans-serif`);
+  root.style.setProperty('--theme-font', `"${fontFamily}", "Noto Sans Bengali", system-ui, -apple-system, sans-serif`);
 
   // 2. Remove any previous invasive runtime custom style element that overrode Tailwind button/heading classes
   const styleEl = document.getElementById(STYLE_ELEMENT_ID);
@@ -268,7 +285,7 @@ export function applyDynamicTheme(settings?: Partial<HotelSettings> | null | und
 
   // 3. Ensure body font-family is clean
   if (document.body) {
-    document.body.style.fontFamily = `"${fontFamily}", system-ui, -apple-system, sans-serif`;
+    document.body.style.fontFamily = `"${fontFamily}", "Noto Sans Bengali", system-ui, -apple-system, sans-serif`;
   }
 }
 

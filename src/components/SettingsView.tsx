@@ -84,6 +84,7 @@ import {
   getRadiusPixels,
   ThemePresetManager
 } from '../lib/themeEngine';
+import { DEFAULT_LIGHT_LOGO_SVG, DEFAULT_DARK_LOGO_SVG } from '../utils/logoHelper';
 
 const PRIMARY_COLOR_PRESETS = [
   { hex: '#0f172a', name: 'Slate Navy (Default)' },
@@ -259,7 +260,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
   // Hotel Info State
   const [hotelName, setHotelName] = useState(settings.hotelName);
-  const [hotelArabicName, setHotelArabicName] = useState(settings.hotelArabicName || 'ورويك الباحة');
+  const [hotelArabicName, setHotelArabicName] = useState(settings.hotelArabicName || '');
   const [hotelSubTitle, setHotelSubTitle] = useState(settings.hotelSubTitle || 'Hotels and Resorts');
   const [address, setAddress] = useState(settings.address);
   const [phoneNumber, setPhoneNumber] = useState(settings.phoneNumber);
@@ -274,6 +275,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   const [codePrefix, setCodePrefix] = useState(settings.codePrefix || 'LF');
   const [links, setLinks] = useState<HotelLink[]>(settings.additionalLinks || []);
   const [logoPreview, setLogoPreview] = useState(settings.logoUrl);
+  const [logoLightPreview, setLogoLightPreview] = useState<string>(settings.logoLightUrl || '');
+  const [logoDarkPreview, setLogoDarkPreview] = useState<string>(settings.logoDarkUrl || '');
+  const [previewThemeTab, setPreviewThemeTab] = useState<'light' | 'dark'>(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+    return 'light';
+  });
   const [logoWidth, setLogoWidth] = useState<number>(settings.logoWidth || 140);
   const [logoHeight, setLogoHeight] = useState<number>(settings.logoHeight || 48);
   const [logoFit, setLogoFit] = useState<'contain' | 'cover' | 'fill'>(settings.logoFit || 'contain');
@@ -321,7 +330,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
   useEffect(() => {
     setHotelName(settings.hotelName);
-    setHotelArabicName(settings.hotelArabicName || 'ورويك الباحة');
+    setHotelArabicName(settings.hotelArabicName || '');
     setHotelSubTitle(settings.hotelSubTitle || 'Hotels and Resorts');
     setAddress(settings.address);
     setPhoneNumber(settings.phoneNumber);
@@ -332,6 +341,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     setCodePrefix(settings.codePrefix || 'LF');
     setLinks(settings.additionalLinks || []);
     setLogoPreview(settings.logoUrl);
+    setLogoLightPreview(settings.logoLightUrl || '');
+    setLogoDarkPreview(settings.logoDarkUrl || '');
     setLogoWidth(settings.logoWidth || 140);
     setLogoHeight(settings.logoHeight || 48);
     setLogoFit(settings.logoFit || 'contain');
@@ -738,6 +749,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     }
   };
 
+  const handleLightLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          const dataUrl = reader.result as string;
+          setLogoLightPreview(dataUrl);
+          saveRecentLogo(dataUrl, `[Light] ${file.name}`);
+          updateSettings({ logoLightUrl: dataUrl });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDarkLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          const dataUrl = reader.result as string;
+          setLogoDarkPreview(dataUrl);
+          saveRecentLogo(dataUrl, `[Dark] ${file.name}`);
+          updateSettings({ logoDarkUrl: dataUrl });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const addLink = () => {
     const newLink: HotelLink = {
       id: `link-${Date.now()}`,
@@ -923,6 +966,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       codePrefix,
       additionalLinks: links,
       logoUrl: logoPreview,
+      logoLightUrl: logoLightPreview,
+      logoDarkUrl: logoDarkPreview,
       logoWidth: Number(logoWidth),
       logoHeight: Number(logoHeight),
       logoFit,
@@ -1031,15 +1076,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       )}
 
       {/* Settings Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-fuchsia-900/30 pb-3 transition-colors">
         {canAccessHotel && (
           <button
             type="button"
             onClick={() => setActiveTab('hotel')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'hotel'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <Building className="w-3.5 h-3.5" />
@@ -1054,8 +1099,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             onClick={() => setActiveTab('certificate')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'certificate'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <Crown className="w-3.5 h-3.5" />
@@ -1069,8 +1114,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             onClick={() => setActiveTab('categories')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'categories'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <Tags className="w-3.5 h-3.5" />
@@ -1084,8 +1129,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             onClick={() => setActiveTab('alerts_validation')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'alerts_validation'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <Bell className="w-3.5 h-3.5" />
@@ -1099,8 +1144,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             onClick={() => setActiveTab('login_page')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'login_page'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <LogIn className="w-3.5 h-3.5" />
@@ -1113,8 +1158,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           onClick={() => setActiveTab('security')}
           className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
             activeTab === 'security'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
           }`}
         >
           <Lock className="w-3.5 h-3.5" />
@@ -1126,8 +1171,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           onClick={() => setActiveTab('shortcuts')}
           className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
             activeTab === 'shortcuts'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
           }`}
         >
           <Keyboard className="w-3.5 h-3.5" />
@@ -1142,13 +1187,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             onClick={() => setActiveTab('database')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'database'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <Database className="w-3.5 h-3.5" />
             <span>Database Integrations</span>
-            <span className={`w-2 h-2 rounded-full ${mongoStatus?.connected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-300'}`} />
+            <span className={`w-2 h-2 rounded-full ${mongoStatus?.connected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-300 dark:bg-slate-700'}`} />
           </button>
         )}
 
@@ -1160,8 +1205,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             onClick={() => setActiveTab('google_drive')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'google_drive'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <Cloud className="w-3.5 h-3.5 text-blue-300" />
@@ -1169,7 +1214,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             {settings.googleDriveBackup?.autoBackupEnabled ? (
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             ) : (
-              <span className="w-2 h-2 rounded-full bg-slate-300" />
+              <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700" />
             )}
           </button>
         )}
@@ -1181,8 +1226,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
               onClick={() => setActiveTab('import_data')}
               className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
                 activeTab === 'import_data'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -1195,15 +1240,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
               onClick={() => setActiveTab('sync')}
               className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
                 activeTab === 'sync'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'btn-primary-gradient !text-white shadow-xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
               <Laptop className="w-3.5 h-3.5" />
               <span>Connected Devices</span>
               {sessions.length > 0 && (
-                <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-bold ${
-                  activeTab === 'sync' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === 'sync'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 dark:bg-fuchsia-950/70 text-slate-700 dark:text-fuchsia-300 border border-slate-300/80 dark:border-fuchsia-800/50'
                 }`}>
                   {sessions.length}
                 </span>
@@ -1316,29 +1363,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           </form>
 
           {/* Inactivity Auto-Logout Security Status */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-4 animate-fade-in">
-            <div className="flex items-center space-x-2 text-slate-900 pb-2 border-b border-slate-100">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-sm p-6 sm:p-8 space-y-4 animate-fade-in transition-colors">
+            <div className="flex items-center space-x-2 text-slate-900 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-fuchsia-900/20">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <h2 className="text-sm font-bold">Automatic Logout System (Permanently Stopped)</h2>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Per system administrator configuration, the automatic logout system is completely stopped and disabled. Sessions remain permanently active and authenticated across all devices until manually signed out.
             </p>
-            <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl flex items-center justify-between">
+            <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl flex items-center justify-between transition-colors shadow-2xs">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/50 flex items-center justify-center font-bold text-xs">
                   ✓
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-emerald-900">
-                    Automatic Logout: Stopped & Disabled
+                  <div className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                    Automatic Logout: Stopped &amp; Disabled
                   </div>
-                  <div className="text-[11px] text-emerald-700">
+                  <div className="text-[11px] text-emerald-700 dark:text-emerald-400">
                     Never auto-logout. Hotel staff and admin sessions remain continuously preserved.
                   </div>
                 </div>
               </div>
-              <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[11px] font-semibold">
+              <span className="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700/50 rounded-full text-[11px] font-semibold">
                 Disabled / Active
               </span>
             </div>
@@ -1438,76 +1485,220 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
         {/* ========================================================================= */}
         {activeTab === 'hotel' && (
           <div className="space-y-6 animate-fade-in">
-            {/* Hotel Logo & Crown Header Card */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-              <div>
-                <div className="flex items-center space-x-2 text-slate-900 mb-1">
-                  <Upload className="w-4 h-4 text-indigo-600" />
-                  <h2 className="text-sm font-bold">Hotel Logo & Brand Emblem</h2>
-                </div>
-                <p className="text-xs text-slate-500">
-                  Displays on printable PDF receipts, vouchers, reports, and dynamic portal sidebar.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                {logoPreview ? (
-                  <div className="w-52 h-28 bg-white border-2 border-indigo-200 rounded-xl flex flex-col items-center justify-center p-3 shadow-2xs text-center relative group">
-                    <img
-                      src={logoPreview}
-                      alt="Hotel Logo Preview"
-                      className="max-h-16 max-w-[180px] object-contain"
-                      referrerPolicy="no-referrer"
-                    />
-                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full mt-1 border border-indigo-100">
-                      Custom Logo Active
+            {/* Hotel Logo: Dynamic Dual-Theme Brand Logos (Light Mode & Dark Mode) */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center space-x-2 text-slate-900 dark:text-white mb-1">
+                    <Upload className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400" />
+                    <h2 className="text-sm font-bold">Dynamic Hotel Brand Logos (Light Mode &amp; Dark Mode)</h2>
+                    <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-fuchsia-50 dark:bg-fuchsia-950 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-800">
+                      Dual Theme Responsive
                     </span>
                   </div>
-                ) : (
-                  <div className="w-52 h-28 bg-slate-50 border border-slate-200 rounded-xl flex flex-col items-center justify-center p-3 shadow-2xs text-center">
-                    <Crown className="w-6 h-6 text-slate-800 mb-0.5" strokeWidth={1.4} />
-                    <div className="text-[10px] font-serif text-slate-700 tracking-wider">
-                      {hotelArabicName || 'ورويك الباحة'}
-                    </div>
-                    <div className="text-xs font-serif font-bold text-slate-900 tracking-widest uppercase">
-                      WARWICK
-                    </div>
-                    <div className="text-[8px] text-indigo-600 font-semibold tracking-wider uppercase">
-                      {hotelSubTitle || 'Hotels and Resorts'}
-                    </div>
-                  </div>
-                )}
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Upload separate logos tailored for Light Mode (bright background) and Dark Mode (dark/nighttime background). The system dynamically renders the matching logo in real-time.
+                  </p>
+                </div>
 
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="cursor-pointer inline-flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 shadow-2xs transition-all">
-                      <Upload className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>{logoPreview ? 'Change Custom Logo' : 'Upload Custom Logo'}</span>
-                      <input
-                        type="file"
-                        accept="image/png,image/jpeg,image/svg+xml"
-                        onChange={handleLogoChange}
-                        className="hidden"
-                      />
-                    </label>
-                    {logoPreview && (
+                {/* Instant Theme Simulator Switch */}
+                <div className="flex items-center space-x-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewThemeTab('light')}
+                    className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                      previewThemeTab === 'light'
+                        ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    <Sun className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Light View</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewThemeTab('dark')}
+                    className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                      previewThemeTab === 'dark'
+                        ? 'bg-slate-900 text-white shadow-2xs font-bold'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Moon className="w-3.5 h-3.5 text-fuchsia-400" />
+                    <span>Dark View</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Dual-Card Grid for Light and Dark Logos */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
+                {/* 1. LIGHT MODE LOGO CARD */}
+                <div className={`p-5 rounded-2xl border transition-all ${
+                  previewThemeTab === 'light'
+                    ? 'border-fuchsia-400/60 ring-2 ring-fuchsia-400/20 bg-slate-50/70 dark:bg-slate-800/40'
+                    : 'border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/20'
+                }`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600">
+                        <Sun className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Light Mode Logo
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                      Daytime Canvas
+                    </span>
+                  </div>
+
+                  {/* Preview Canvas on Light Canvas */}
+                  <div className="w-full h-32 bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center p-3 shadow-2xs relative group overflow-hidden">
+                    <img
+                      src={logoLightPreview || logoPreview || DEFAULT_LIGHT_LOGO_SVG}
+                      alt="Light Mode Logo Preview"
+                      className="max-h-20 max-w-[90%] object-contain transition-transform group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="absolute bottom-2 right-2 text-[9px] font-bold text-amber-700 bg-amber-50/90 px-2 py-0.5 rounded-full border border-amber-200/80">
+                      {logoLightPreview ? 'Custom Light' : logoPreview ? 'Fallback Primary' : 'Warwick Crest'}
+                    </span>
+                  </div>
+
+                  {/* Action Controls for Light Logo */}
+                  <div className="mt-3.5 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-2xs transition-all">
+                        <Upload className="w-3.5 h-3.5 text-fuchsia-600" />
+                        <span>{logoLightPreview ? 'Change Light Logo' : 'Upload Light Logo'}</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                          onChange={handleLightLogoChange}
+                          className="hidden"
+                        />
+                      </label>
+
                       <button
                         type="button"
                         onClick={() => {
-                          setLogoPreview(undefined);
-                          updateSettings({ logoUrl: undefined });
+                          setLogoLightPreview(DEFAULT_LIGHT_LOGO_SVG);
+                          updateSettings({ logoLightUrl: DEFAULT_LIGHT_LOGO_SVG });
                         }}
-                        className="inline-flex items-center space-x-1.5 px-3 py-2 border border-rose-200 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-all"
+                        className="inline-flex items-center space-x-1 px-2.5 py-1.5 text-[11px] font-semibold text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-50 dark:bg-fuchsia-950/60 hover:bg-fuchsia-100 rounded-xl border border-fuchsia-200 dark:border-fuchsia-800 transition-all"
+                        title="Reset to Warwick Royal Plum & Gold vector emblem"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Remove Logo</span>
+                        <Sparkles className="w-3 h-3 text-fuchsia-600" />
+                        <span>Preset Crest</span>
                       </button>
-                    )}
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    PNG, JPG, or SVG. Dynamically saved and rendered in high resolution across the application and PDF documents.
+
+                      {logoLightPreview && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLogoLightPreview('');
+                            updateSettings({ logoLightUrl: '' });
+                          }}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1.5 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition-all"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Clear</span>
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Renders when the system is set to Light Mode. Transparent PNG or SVG recommended.
+                    </p>
                   </div>
                 </div>
+
+                {/* 2. DARK MODE LOGO CARD */}
+                <div className={`p-5 rounded-2xl border transition-all ${
+                  previewThemeTab === 'dark'
+                    ? 'border-fuchsia-400/60 ring-2 ring-fuchsia-400/20 bg-slate-900/40 dark:bg-slate-900/60'
+                    : 'border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/20'
+                }`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400">
+                        <Moon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Dark Mode Logo
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-fuchsia-400 uppercase tracking-wider">
+                      Obsidian Canvas
+                    </span>
+                  </div>
+
+                  {/* Preview Canvas on Luxury Obsidian Canvas */}
+                  <div className="w-full h-32 bg-[#0F0911] border border-fuchsia-900/40 rounded-xl flex flex-col items-center justify-center p-3 shadow-2xs relative group overflow-hidden">
+                    <img
+                      src={logoDarkPreview || logoPreview || DEFAULT_DARK_LOGO_SVG}
+                      alt="Dark Mode Logo Preview"
+                      className="max-h-20 max-w-[90%] object-contain transition-transform group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="absolute bottom-2 right-2 text-[9px] font-bold text-fuchsia-300 bg-fuchsia-950/80 px-2 py-0.5 rounded-full border border-fuchsia-800">
+                      {logoDarkPreview ? 'Custom Dark' : logoPreview ? 'Fallback Primary' : 'Luminescent Gold'}
+                    </span>
+                  </div>
+
+                  {/* Action Controls for Dark Logo */}
+                  <div className="mt-3.5 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-2xs transition-all">
+                        <Upload className="w-3.5 h-3.5 text-fuchsia-400" />
+                        <span>{logoDarkPreview ? 'Change Dark Logo' : 'Upload Dark Logo'}</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                          onChange={handleDarkLogoChange}
+                          className="hidden"
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLogoDarkPreview(DEFAULT_DARK_LOGO_SVG);
+                          updateSettings({ logoDarkUrl: DEFAULT_DARK_LOGO_SVG });
+                        }}
+                        className="inline-flex items-center space-x-1 px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 rounded-xl border border-amber-200 dark:border-amber-800 transition-all"
+                        title="Reset to Warwick Luminescent Gold vector emblem"
+                      >
+                        <Sparkles className="w-3 h-3 text-amber-500" />
+                        <span>Preset Crest</span>
+                      </button>
+
+                      {logoDarkPreview && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLogoDarkPreview('');
+                            updateSettings({ logoDarkUrl: '' });
+                          }}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1.5 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition-all"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Clear</span>
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Renders when the system is set to Dark Mode. Crisp white, gold, or silver emblems work best.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informational Intelligence Banner */}
+              <div className="flex items-start space-x-2.5 p-3 rounded-xl bg-fuchsia-50/60 dark:bg-fuchsia-950/30 border border-fuchsia-100 dark:border-fuchsia-900/50 text-xs text-slate-600 dark:text-slate-300">
+                <Sparkles className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400 flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  <strong>Automatic Theme Switching:</strong> The navigation sidebar, header, and login portal automatically select the appropriate logo based on whether Light or Dark theme is active. If only one logo is uploaded, it is automatically shared across both themes.
+                </p>
               </div>
 
               {/* DYNAMIC SIDEBAR LOGO WIDTH & HEIGHT CONTROLS */}
@@ -2128,21 +2319,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Hotel Name (Arabic)
-                  </label>
-                  <input
-                    id="input-settings-arabic-name"
-                    type="text"
-                    dir="rtl"
-                    value={hotelArabicName}
-                    onChange={e => setHotelArabicName(e.target.value)}
-                    placeholder="ورويك الباحة"
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Brand Subtitle
                   </label>
                   <input
@@ -2356,7 +2532,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
         {activeTab === 'sync' && (
           <div className="space-y-6 animate-fade-in">
             {/* Connected Devices Sub-Tabs Navigation */}
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#180F1A] p-2.5 rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-2xs">
               <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   type="button"
@@ -2364,19 +2540,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                   onClick={() => setConnectedDevicesSubTab('terminals')}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     connectedDevicesSubTab === 'terminals'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'btn-primary-gradient text-white shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Laptop className="w-3.5 h-3.5" />
                   <span>Active Devices &amp; Terminals</span>
                   <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
-                    connectedDevicesSubTab === 'terminals' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'
+                    connectedDevicesSubTab === 'terminals' ? 'bg-black/20 text-white' : 'bg-slate-200 dark:bg-[#251329] text-slate-700 dark:text-slate-300'
                   }`}>
                     {valid24hSessions.length}
                   </span>
                   {onlineSessions.length > 0 && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1" />
                       {onlineSessions.length} Online Now
                     </span>
@@ -2390,7 +2566,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                   className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     connectedDevicesSubTab === 'blocked_devices'
                       ? 'bg-rose-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Ban className="w-3.5 h-3.5" />
@@ -2399,8 +2575,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     connectedDevicesSubTab === 'blocked_devices'
                       ? 'bg-rose-700 text-white'
                       : blockedDevices.length > 0
-                      ? 'bg-rose-100 text-rose-800'
-                      : 'bg-slate-200 text-slate-700'
+                      ? 'bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300'
+                      : 'bg-slate-200 dark:bg-[#251329] text-slate-700 dark:text-slate-300'
                   }`}>
                     {blockedDevices.length}
                   </span>
@@ -2412,14 +2588,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                   onClick={() => setConnectedDevicesSubTab('security_activity')}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     connectedDevicesSubTab === 'security_activity'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'btn-primary-gradient text-white shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>Security Activity</span>
                   <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
-                    connectedDevicesSubTab === 'security_activity' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'
+                    connectedDevicesSubTab === 'security_activity' ? 'bg-black/20 text-white' : 'bg-slate-200 dark:bg-[#251329] text-slate-700 dark:text-slate-300'
                   }`}>
                     Live History
                   </span>
@@ -2433,10 +2609,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     id="btn-clear-cache-sync-tab"
                     onClick={() => setShowClearCacheModal(true)}
                     disabled={isClearingCache || isSyncing}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-xl border border-amber-200 shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-950/50 text-amber-800 dark:text-amber-300 text-xs font-semibold rounded-xl border border-amber-200 dark:border-amber-800/40 shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
                     title="Purge stale application cache and force real-time client synchronization"
                   >
-                    <Zap className={`w-3.5 h-3.5 text-amber-600 ${isClearingCache ? 'animate-bounce' : ''}`} />
+                    <Zap className={`w-3.5 h-3.5 text-amber-600 dark:text-amber-400 ${isClearingCache ? 'animate-bounce' : ''}`} />
                     <span>{isClearingCache ? 'Purging Cache...' : 'Clear System Cache'}</span>
                   </button>
                   <button
@@ -2446,7 +2622,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       fetchBlockedDevices();
                     }}
                     disabled={isLoadingSessions}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#251329] dark:hover:bg-[#2f1934] text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl border border-transparent dark:border-fuchsia-900/30 transition-all cursor-pointer shadow-2xs"
                     title="Refresh Connected Devices"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoadingSessions ? 'animate-spin' : ''}`} />
@@ -2458,8 +2634,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     onClick={simulateOfflineToggle}
                     className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer border shadow-2xs ${
                       isSyncPaused
-                        ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                        ? 'bg-amber-100 dark:bg-amber-950/40 hover:bg-amber-200 dark:hover:bg-amber-900/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800/40'
+                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#251329] dark:hover:bg-[#2f1934] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-fuchsia-900/30'
                     }`}
                     title="Toggle simulated offline state to test the network banner & sync pause notification"
                   >
@@ -2509,12 +2685,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
             {/* Sub-Tab 1: Connected Terminals (Now Online + Login Device Information + Block Device) */}
             {connectedDevicesSubTab === 'terminals' && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+              <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-sm p-6 space-y-6">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white">
                     Active Devices, Live Terminals &amp; Login Information
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Real-time monitoring of all logged-in devices. Track currently online terminals, inspect hardware and IP data, or block suspicious devices.
                   </p>
                 </div>
@@ -2522,70 +2698,70 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 {/* Status Metric Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Online Now Highlight Card */}
-                  <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/20 shadow-xs">
                     <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider flex items-center space-x-1.5">
+                      <div className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider flex items-center space-x-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                         <span>Online Right Now</span>
                       </div>
-                      <Wifi className="w-4 h-4 text-emerald-600" />
+                      <Wifi className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <div className="text-2xl font-extrabold text-emerald-900 mt-1.5 flex items-baseline space-x-2">
+                    <div className="text-2xl font-extrabold text-emerald-900 dark:text-emerald-300 mt-1.5 flex items-baseline space-x-2">
                       <span>{onlineSessions.length}</span>
-                      <span className="text-xs font-semibold text-emerald-700">active terminal{onlineSessions.length !== 1 ? 's' : ''}</span>
+                      <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">active terminal{onlineSessions.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="text-[11px] text-emerald-700 mt-1">
+                    <div className="text-[11px] text-emerald-700 dark:text-emerald-400/80 mt-1">
                       Live heartbeat within last 3 minutes
                     </div>
                   </div>
 
                   {/* Mobile Devices Logged In (Last 24 Hours) */}
-                  <div className="p-4 rounded-2xl bg-sky-50/70 border border-sky-200">
+                  <div className="p-4 rounded-2xl bg-sky-50/70 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-500/20 shadow-xs">
                     <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-semibold text-sky-800 uppercase tracking-wider flex items-center space-x-1.5">
-                        <Smartphone className="w-3.5 h-3.5 text-sky-600" />
+                      <div className="text-[11px] font-semibold text-sky-800 dark:text-sky-400 uppercase tracking-wider flex items-center space-x-1.5">
+                        <Smartphone className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                         <span>Mobiles (24 Hours)</span>
                       </div>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-200/60 text-sky-800">24h Logins</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-200/60 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border border-transparent dark:border-sky-800/40">24h Logins</span>
                     </div>
-                    <div className="text-2xl font-extrabold text-sky-900 mt-1.5 flex items-baseline space-x-2">
+                    <div className="text-2xl font-extrabold text-sky-900 dark:text-sky-300 mt-1.5 flex items-baseline space-x-2">
                       <span>{mobileSessions.length}</span>
-                      <span className="text-xs font-semibold text-sky-700">mobile device{mobileSessions.length !== 1 ? 's' : ''}</span>
+                      <span className="text-xs font-semibold text-sky-700 dark:text-sky-400">mobile device{mobileSessions.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="text-[11px] text-sky-700 mt-1">
+                    <div className="text-[11px] text-sky-700 dark:text-sky-400/80 mt-1">
                       Logged in from smartphone within 24h
                     </div>
                   </div>
 
                   {/* Connected Terminals Total (24 Hours) */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#180F1A] border border-slate-200 dark:border-fuchsia-900/30 shadow-xs">
                     <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                      <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Total Active (24h)
                       </div>
-                      <Laptop className="w-4 h-4 text-slate-400" />
+                      <Laptop className="w-4 h-4 text-slate-400 dark:text-fuchsia-400" />
                     </div>
-                    <div className="text-2xl font-extrabold text-slate-900 mt-1.5 flex items-baseline space-x-2">
+                    <div className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1.5 flex items-baseline space-x-2">
                       <span>{valid24hSessions.length}</span>
-                      <span className="text-xs font-semibold text-slate-500">device{valid24hSessions.length !== 1 ? 's' : ''}</span>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">device{valid24hSessions.length !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-1">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                       Real user logins in last 24 hours
                     </div>
                   </div>
 
                   {/* Blocked Devices Counter */}
-                  <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200">
+                  <div className="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-500/20 shadow-xs">
                     <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">
+                      <div className="text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
                         Blocked Devices
                       </div>
-                      <Ban className="w-4 h-4 text-rose-600" />
+                      <Ban className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                     </div>
-                    <div className="text-2xl font-extrabold text-rose-900 mt-1.5">
+                    <div className="text-2xl font-extrabold text-rose-900 dark:text-rose-300 mt-1.5">
                       {blockedDevices.length}
                     </div>
-                    <div className="text-[11px] text-rose-700 mt-1">
+                    <div className="text-[11px] text-rose-700 dark:text-rose-400/80 mt-1">
                       Prohibited from system access
                     </div>
                   </div>
@@ -2599,8 +2775,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       onClick={() => setDeviceFilter('all')}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                         deviceFilter === 'all'
-                          ? 'bg-slate-900 text-white shadow-2xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-slate-900 dark:bg-fuchsia-600 text-white shadow-2xs'
+                          : 'bg-slate-100 dark:bg-[#251329] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#301635] border border-transparent dark:border-fuchsia-900/30'
                       }`}
                     >
                       All Real Logins ({valid24hSessions.length})
@@ -2612,7 +2788,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                         deviceFilter === 'online'
                           ? 'bg-emerald-600 text-white shadow-2xs'
-                          : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                          : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
                       }`}
                     >
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -2625,7 +2801,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                         deviceFilter === 'mobile'
                           ? 'bg-sky-600 text-white shadow-2xs'
-                          : 'bg-sky-50 text-sky-800 border border-sky-200 hover:bg-sky-100'
+                          : 'bg-sky-50 dark:bg-sky-950/30 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800/40 hover:bg-sky-100 dark:hover:bg-sky-900/40'
                       }`}
                     >
                       <Smartphone className="w-3.5 h-3.5" />
@@ -2637,8 +2813,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       onClick={() => setDeviceFilter('desktop')}
                       className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                         deviceFilter === 'desktop'
-                          ? 'bg-indigo-600 text-white shadow-2xs'
-                          : 'bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100'
+                          ? 'bg-indigo-600 dark:bg-fuchsia-600 text-white shadow-2xs'
+                          : 'bg-indigo-50 dark:bg-fuchsia-950/30 text-indigo-800 dark:text-fuchsia-300 border border-indigo-200 dark:border-fuchsia-800/40 hover:bg-indigo-100 dark:hover:bg-fuchsia-900/40'
                       }`}
                     >
                       <Laptop className="w-3.5 h-3.5" />
@@ -2650,8 +2826,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       onClick={() => setDeviceFilter('recent')}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                         deviceFilter === 'recent'
-                          ? 'bg-slate-900 text-white shadow-2xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-slate-900 dark:bg-fuchsia-600 text-white shadow-2xs'
+                          : 'bg-slate-100 dark:bg-[#251329] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#301635] border border-transparent dark:border-fuchsia-900/30'
                       }`}
                     >
                       Idle ({idleSessions.length})
@@ -2666,13 +2842,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       value={deviceSearch}
                       onChange={e => setDeviceSearch(e.target.value)}
                       placeholder="Filter device by user, IP, OS..."
-                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500"
                     />
                     {deviceSearch && (
                       <button
                         type="button"
                         onClick={() => setDeviceSearch('')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
                       >
                         ✕
                       </button>
@@ -2683,15 +2859,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 {/* Active Terminal Sessions List */}
                 <div className="space-y-3 pt-1">
                   {isLoadingSessions ? (
-                    <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200">
-                      <RefreshCw className="w-5 h-5 text-indigo-600 animate-spin mx-auto mb-2" />
-                      <p className="text-xs text-slate-500">Refreshing live connected devices...</p>
+                    <div className="p-8 text-center bg-slate-50 dark:bg-[#140c16] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30">
+                      <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-fuchsia-400 animate-spin mx-auto mb-2" />
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Refreshing live connected devices...</p>
                     </div>
                   ) : displayedSessions.length === 0 ? (
-                    <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                      <Laptop className="w-8 h-8 text-slate-300 mx-auto" />
-                      <div className="text-sm font-bold text-slate-700">No matching connected devices</div>
-                      <p className="text-xs text-slate-500">
+                    <div className="p-8 text-center bg-slate-50 dark:bg-[#140c16] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 space-y-2">
+                      <Laptop className="w-8 h-8 text-slate-300 dark:text-fuchsia-400/50 mx-auto" />
+                      <div className="text-sm font-bold text-slate-700 dark:text-white">No matching connected devices</div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {deviceFilter === 'online'
                           ? 'No devices currently online in the last 3 minutes.'
                           : deviceFilter === 'mobile'
@@ -2722,10 +2898,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                             key={session.deviceId}
                             className={`p-4 rounded-2xl border transition-all space-y-3 ${
                               isCurrent
-                                ? 'bg-indigo-50/40 border-indigo-200 ring-1 ring-indigo-500/20'
+                                ? 'bg-indigo-50/40 dark:bg-[#200f24] border-indigo-200 dark:border-fuchsia-500/30 ring-1 ring-indigo-500/20 dark:ring-fuchsia-500/30'
                                 : isOnlineNow
-                                ? 'bg-emerald-50/30 border-emerald-200/80 hover:bg-emerald-50/50'
-                                : 'bg-slate-50/80 border-slate-200 hover:bg-slate-50'
+                                ? 'bg-emerald-50/30 dark:bg-[#181a1a] border-emerald-200/80 dark:border-emerald-800/30 hover:bg-emerald-50/50 dark:hover:bg-[#1e2420]'
+                                : 'bg-slate-50/80 dark:bg-[#140c16] border-slate-200 dark:border-fuchsia-900/20 hover:bg-slate-50 dark:hover:bg-[#180F1A]'
                             }`}
                           >
                             {/* Top Card Row */}
@@ -2734,10 +2910,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                                 <div
                                   className={`p-2.5 rounded-xl ${
                                     isCurrent
-                                      ? 'bg-indigo-600 text-white'
+                                      ? 'btn-primary-gradient text-white'
                                       : isOnlineNow
                                       ? 'bg-emerald-600 text-white'
-                                      : 'bg-slate-200 text-slate-700'
+                                      : 'bg-slate-200 dark:bg-[#251329] text-slate-700 dark:text-slate-300'
                                   }`}
                                 >
                                   <DeviceIcon className="w-5 h-5" />
@@ -2745,13 +2921,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
                                 <div>
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <span className="font-bold text-xs text-slate-900">
+                                    <span className="font-bold text-xs text-slate-900 dark:text-white">
                                       {session.os || 'Desktop OS'} • {session.browser || 'Web Browser'}
                                     </span>
 
                                     {/* Current Terminal Badge */}
                                     {isCurrent && (
-                                      <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-md flex items-center space-x-1">
+                                      <span className="px-2 py-0.5 bg-indigo-100 dark:bg-fuchsia-950/50 text-indigo-700 dark:text-fuchsia-300 text-[10px] font-bold rounded-md flex items-center space-x-1 border border-transparent dark:border-fuchsia-800/40">
                                         <CheckCircle2 className="w-3 h-3" />
                                         <span>Current Device (This Terminal)</span>
                                       </span>
@@ -2759,19 +2935,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
                                     {/* Real-time Online Indicator */}
                                     {isOnlineNow ? (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5" />
                                         Online Now
                                       </span>
                                     ) : (
-                                      <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                      <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#251329] px-2 py-0.5 rounded-md border border-transparent dark:border-fuchsia-900/20">
                                         Idle ({Math.floor(timeSinceSeen / 60)}m ago)
                                       </span>
                                     )}
                                   </div>
 
-                                  <div className="text-[11px] text-slate-500 mt-1 flex flex-wrap items-center gap-x-2">
-                                    <span>Session: <code className="font-mono text-slate-700 font-bold">{session.deviceId}</code></span>
+                                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap items-center gap-x-2">
+                                    <span>Session: <code className="font-mono text-slate-700 dark:text-fuchsia-300 font-bold">{session.deviceId}</code></span>
                                     <span>•</span>
                                     <span>Last Seen: {new Date(session.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                   </div>
@@ -2785,17 +2961,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                                     <button
                                       type="button"
                                       onClick={() => handleOpenBlockModal(session)}
-                                      className="flex items-center space-x-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 text-xs font-bold rounded-xl border border-rose-200 transition-all shadow-2xs cursor-pointer"
+                                      className="flex items-center space-x-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 text-rose-700 hover:text-rose-800 dark:text-rose-400 text-xs font-bold rounded-xl border border-rose-200 dark:border-rose-900/40 transition-all shadow-2xs cursor-pointer"
                                       title="Block this device temporarily or permanently"
                                     >
-                                      <Ban className="w-3.5 h-3.5 text-rose-600" />
+                                      <Ban className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                                       <span>Block Device</span>
                                     </button>
 
                                     <button
                                       type="button"
                                       onClick={() => deleteSession(session.deviceId)}
-                                      className="flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition-all shadow-2xs cursor-pointer"
+                                      className="flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#251329] dark:hover:bg-[#2f1934] text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl border border-slate-200 dark:border-fuchsia-900/30 transition-all shadow-2xs cursor-pointer"
                                       title="Terminate remote session"
                                     >
                                       <LogOut className="w-3.5 h-3.5" />
@@ -2803,7 +2979,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                                     </button>
                                   </>
                                 ) : (
-                                  <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-200">
+                                  <span className="text-[11px] font-semibold text-indigo-700 dark:text-fuchsia-300 bg-indigo-50 dark:bg-fuchsia-950/40 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-fuchsia-800/40">
                                     Protected Active Terminal
                                   </span>
                                 )}
@@ -2811,78 +2987,78 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                             </div>
 
                             {/* Full Login Device Information Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 text-xs">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 dark:border-fuchsia-900/30 text-xs">
                               {/* Logged in User */}
-                              <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/80 flex items-center space-x-2">
-                                <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
+                              <div className="bg-white/80 dark:bg-[#1c0f20] p-2.5 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30 flex items-center space-x-2">
+                                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-[#2a1330] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-fuchsia-300 font-bold text-xs flex items-center justify-center shrink-0">
                                   {(session.userName || 'S').charAt(0).toUpperCase()}
                                 </div>
                                 <div className="min-w-0">
-                                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Logged-in User</span>
-                                  <span className="font-bold text-slate-800 truncate block text-xs">
+                                  <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-fuchsia-300/70 block">Logged-in User</span>
+                                  <span className="font-bold text-slate-800 dark:text-white truncate block text-xs">
                                     {session.userName || 'Unknown Staff'}
                                   </span>
-                                  <span className="text-[10px] text-slate-500 capitalize block">
+                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 capitalize block">
                                     {session.role || 'Staff'} {session.userEmail ? `• ${session.userEmail}` : ''}
                                   </span>
                                 </div>
                               </div>
 
                               {/* IP Address */}
-                              <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/80">
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block">IP Address</span>
+                              <div className="bg-white/80 dark:bg-[#1c0f20] p-2.5 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-fuchsia-300/70 block">IP Address</span>
                                 <div className="flex items-center justify-between mt-0.5">
-                                  <span className="font-mono font-bold text-slate-800 text-xs truncate">
+                                  <span className="font-mono font-bold text-slate-800 dark:text-white text-xs truncate">
                                     {session.ip || '192.168.1.45'}
                                   </span>
                                   <button
                                     type="button"
                                     onClick={() => handleCopyClipboard(session.ip || '192.168.1.45')}
-                                    className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100 cursor-pointer"
+                                    className="p-1 rounded text-slate-400 hover:text-fuchsia-500 hover:bg-slate-100 dark:hover:bg-[#251329] cursor-pointer"
                                     title="Copy IP"
                                   >
                                     {copiedText === (session.ip || '192.168.1.45') ? (
-                                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                                     ) : (
                                       <Copy className="w-3.5 h-3.5" />
                                     )}
                                   </button>
                                 </div>
-                                <span className="text-[10px] text-slate-400 block">Local / Network Terminal</span>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-400 block">Local / Network Terminal</span>
                               </div>
 
                               {/* Device Type & Platform */}
-                              <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/80">
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Hardware &amp; Platform</span>
-                                <span className="font-bold text-slate-800 truncate block text-xs mt-0.5">
+                              <div className="bg-white/80 dark:bg-[#1c0f20] p-2.5 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-fuchsia-300/70 block">Hardware &amp; Platform</span>
+                                <span className="font-bold text-slate-800 dark:text-white truncate block text-xs mt-0.5">
                                   {session.deviceType || 'Desktop'} ({session.os || 'Windows'})
                                 </span>
-                                <span className="text-[10px] text-slate-500 truncate block">
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block">
                                   {session.browser || 'Google Chrome'}
                                 </span>
                               </div>
 
                               {/* Connection & Device ID */}
-                              <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200/80">
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block">Device Identifier &amp; Login Time</span>
+                              <div className="bg-white/80 dark:bg-[#1c0f20] p-2.5 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-fuchsia-300/70 block">Device Identifier &amp; Login Time</span>
                                 <div className="flex items-center justify-between mt-0.5">
-                                  <span className="font-mono text-slate-700 text-xs font-semibold truncate">
+                                  <span className="font-mono text-slate-700 dark:text-slate-300 text-xs font-semibold truncate">
                                     {session.deviceId}
                                   </span>
                                   <button
                                     type="button"
                                     onClick={() => handleCopyClipboard(session.deviceId)}
-                                    className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100 cursor-pointer"
+                                    className="p-1 rounded text-slate-400 hover:text-fuchsia-500 hover:bg-slate-100 dark:hover:bg-[#251329] cursor-pointer"
                                     title="Copy Device ID"
                                   >
                                     {copiedText === session.deviceId ? (
-                                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                                     ) : (
                                       <Copy className="w-3.5 h-3.5" />
                                     )}
                                   </button>
                                 </div>
-                                <div className="flex items-center justify-between text-[10px] text-slate-500 mt-0.5">
+                                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                                   <span>{isOnlineNow ? '🟢 Active Heartbeat' : '⚪ Standby (within 24h)'}</span>
                                   {session.loginAt && (
                                     <span className="text-slate-400">
@@ -2933,7 +3109,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       type="button"
                       onClick={() => fetchBlockedDevices()}
                       disabled={isLoadingBlockedDevices}
-                      className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs"
+                      className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#251329] dark:hover:bg-[#2f1934] text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl border border-transparent dark:border-fuchsia-900/30 transition-all cursor-pointer shadow-2xs"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isLoadingBlockedDevices ? 'animate-spin' : ''}`} />
                       <span>Refresh</span>
@@ -2944,13 +3120,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 {isLoadingBlockedDevices ? (
                   <div className="p-12 text-center space-y-3">
                     <RefreshCw className="w-6 h-6 text-rose-600 animate-spin mx-auto" />
-                    <p className="text-xs text-slate-500 font-medium">Checking blocked devices list...</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Checking blocked devices list...</p>
                   </div>
                 ) : blockedDevices.length === 0 ? (
-                  <div className="p-12 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="p-12 text-center bg-slate-50 dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 space-y-3">
                     <ShieldCheck className="w-10 h-10 text-emerald-500 mx-auto" />
-                    <div className="text-sm font-bold text-slate-800">No Blocked Devices</div>
-                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    <div className="text-sm font-bold text-slate-800 dark:text-white">No Blocked Devices</div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
                       All authorized terminals and staff devices are currently granted system access. To prohibit a device, click &quot;Block Device&quot; in the Active Devices tab or add a custom rule above.
                     </p>
                   </div>
@@ -2965,27 +3141,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       return (
                         <div
                           key={blocked.deviceId}
-                          className="p-4 rounded-2xl border border-rose-200 bg-rose-50/30 hover:bg-rose-50/50 transition-all space-y-3"
+                          className="p-4 rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/20 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 transition-all space-y-3"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="flex items-start space-x-3">
-                              <div className="p-2.5 rounded-xl bg-rose-100 text-rose-700 shrink-0 mt-0.5">
+                              <div className="p-2.5 rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 shrink-0 mt-0.5">
                                 <Ban className="w-5 h-5" />
                               </div>
 
                               <div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <span className="font-bold text-xs text-slate-900">
+                                  <span className="font-bold text-xs text-slate-900 dark:text-white">
                                     {blocked.userName || 'Unknown Staff'}
                                   </span>
 
                                   {isPermanent ? (
-                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300 flex items-center space-x-1">
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800/40 flex items-center space-x-1">
                                       <Lock className="w-3 h-3" />
                                       <span>Permanent Block</span>
                                     </span>
                                   ) : (
-                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 flex items-center space-x-1">
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800/40 flex items-center space-x-1">
                                       <Clock className="w-3 h-3" />
                                       <span>
                                         Temporary Block ({remainingHours > 1 ? `${remainingHours}h remaining` : `${remainingMins}m remaining`})
@@ -2994,15 +3170,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                                   )}
                                 </div>
 
-                                <div className="text-[11px] text-slate-600 mt-1 flex flex-wrap items-center gap-x-2">
-                                  <span>Device: <code className="font-mono font-bold text-slate-800">{blocked.deviceId}</code></span>
+                                <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 flex flex-wrap items-center gap-x-2">
+                                  <span>Device: <code className="font-mono font-bold text-slate-800 dark:text-fuchsia-300">{blocked.deviceId}</code></span>
                                   <span>•</span>
-                                  <span>IP: <code className="font-mono font-bold text-slate-800">{blocked.ip || 'All IPs'}</code></span>
+                                  <span>IP: <code className="font-mono font-bold text-slate-800 dark:text-fuchsia-300">{blocked.ip || 'All IPs'}</code></span>
                                   <span>•</span>
                                   <span>Platform: {blocked.deviceType || 'Desktop'} ({blocked.os || 'OS'})</span>
                                 </div>
 
-                                <div className="text-xs text-rose-800 font-medium mt-1">
+                                <div className="text-xs text-rose-800 dark:text-rose-400 font-medium mt-1">
                                   Reason: {blocked.reason || 'Security policy enforcement'}
                                 </div>
                               </div>
@@ -3020,7 +3196,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                             </div>
                           </div>
 
-                          <div className="pt-2 border-t border-rose-200/60 flex flex-wrap items-center justify-between text-[11px] text-slate-500">
+                          <div className="pt-2 border-t border-rose-200/60 dark:border-rose-900/40 flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                             <span>Blocked By: <strong>{blocked.blockedBy}</strong> ({blocked.blockedByRole || 'Super Admin'})</span>
                             <span>Blocked At: {new Date(blocked.blockedAt).toLocaleString()}</span>
                             {blocked.blockedUntil && (
@@ -3061,33 +3237,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       {/* Clear System Cache Confirmation Modal */}
       {showClearCacheModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-scale-up">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-fuchsia-900/40 space-y-5 animate-scale-up">
             <div className="flex items-start space-x-3.5">
-              <div className="p-3 bg-amber-100 text-amber-700 rounded-2xl shrink-0">
+              <div className="p-3 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-2xl shrink-0">
                 <Zap className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Clear System Cache?
                 </h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   This will purge all server memory buffers, clean inactive device sessions, and broadcast an immediate refresh event to all connected employee terminals and dashboards.
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2 text-slate-600">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#200f24] border border-slate-200 dark:border-fuchsia-900/30 text-xs space-y-2 text-slate-600 dark:text-slate-300">
               <div className="flex justify-between font-medium">
                 <span>Current Sync Build:</span>
-                <span className="font-bold text-slate-800">v{settings.version || 1}</span>
+                <span className="font-bold text-slate-800 dark:text-white">v{settings.version || 1}</span>
               </div>
               <div className="flex justify-between font-medium">
                 <span>Active Cached Items:</span>
-                <span className="font-bold text-slate-800">{items.length} records</span>
+                <span className="font-bold text-slate-800 dark:text-white">{items.length} records</span>
               </div>
               <div className="flex justify-between font-medium">
                 <span>Connected Terminals:</span>
-                <span className="font-bold text-slate-800">{sessions.length || 1} devices</span>
+                <span className="font-bold text-slate-800 dark:text-white">{sessions.length || 1} devices</span>
               </div>
             </div>
 
@@ -3096,7 +3272,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 type="button"
                 onClick={() => setShowClearCacheModal(false)}
                 disabled={isClearingCache}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-all cursor-pointer"
               >
                 Cancel
               </button>
@@ -3118,50 +3294,50 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       {/* MODAL 1: Block Active Device (Temporary & Permanent) */}
       {deviceToBlock && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-scale-up">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-fuchsia-900/40 space-y-5 animate-scale-up">
             <div className="flex items-start space-x-3.5">
-              <div className="p-3 bg-rose-100 text-rose-700 rounded-2xl shrink-0">
+              <div className="p-3 bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 rounded-2xl shrink-0">
                 <Ban className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Block Device &amp; Terminal Access
                 </h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   Prohibit this device from logging in or syncing data. Its current active session will be immediately destroyed.
                 </p>
               </div>
             </div>
 
             {/* Device Info Summary */}
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1.5 text-slate-700">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#200f24] border border-slate-200 dark:border-fuchsia-900/30 text-xs space-y-1.5 text-slate-700 dark:text-slate-300">
               <div className="flex justify-between">
-                <span className="text-slate-400 font-semibold">User:</span>
-                <span className="font-bold text-slate-900">{deviceToBlock.userName} ({deviceToBlock.role || 'Staff'})</span>
+                <span className="text-slate-400 dark:text-fuchsia-300/70 font-semibold">User:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{deviceToBlock.userName} ({deviceToBlock.role || 'Staff'})</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400 font-semibold">IP Address:</span>
-                <span className="font-mono font-bold text-slate-800">{deviceToBlock.ip || '192.168.1.45'}</span>
+                <span className="text-slate-400 dark:text-fuchsia-300/70 font-semibold">IP Address:</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-fuchsia-300">{deviceToBlock.ip || '192.168.1.45'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400 font-semibold">Platform:</span>
-                <span>{deviceToBlock.deviceType || 'Desktop'} • {deviceToBlock.os || 'Windows'} ({deviceToBlock.browser || 'Chrome'})</span>
+                <span className="text-slate-400 dark:text-fuchsia-300/70 font-semibold">Platform:</span>
+                <span className="text-slate-700 dark:text-slate-300">{deviceToBlock.deviceType || 'Desktop'} • {deviceToBlock.os || 'Windows'} ({deviceToBlock.browser || 'Chrome'})</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400 font-semibold">Device ID:</span>
-                <code className="font-mono text-[11px] text-slate-600">{deviceToBlock.deviceId}</code>
+                <span className="text-slate-400 dark:text-fuchsia-300/70 font-semibold">Device ID:</span>
+                <code className="font-mono text-[11px] text-slate-600 dark:text-slate-400">{deviceToBlock.deviceId}</code>
               </div>
             </div>
 
             {/* Block Type Selection */}
             <div className="space-y-2 text-xs">
-              <label className="font-bold text-slate-800 block">Select Block Mode:</label>
+              <label className="font-bold text-slate-800 dark:text-white block">Select Block Mode:</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label
                   className={`flex flex-col p-3 rounded-xl border transition-all cursor-pointer ${
                     blockType === 'temporary'
-                      ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-500/20 text-amber-950'
-                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 ring-1 ring-amber-500/20 text-amber-950 dark:text-amber-200'
+                      : 'bg-white dark:bg-[#120815] border-slate-200 dark:border-fuchsia-900/30 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1f0f22]'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -3174,7 +3350,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     />
                     <span className="font-bold">⏱️ Temporary Block</span>
                   </div>
-                  <span className="text-[11px] text-slate-500 mt-1 pl-5">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 pl-5">
                     Automatically unblocks after specified duration
                   </span>
                 </label>
@@ -3182,8 +3358,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 <label
                   className={`flex flex-col p-3 rounded-xl border transition-all cursor-pointer ${
                     blockType === 'permanent'
-                      ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-500/20 text-rose-950'
-                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700 ring-1 ring-rose-500/20 text-rose-950 dark:text-rose-200'
+                      : 'bg-white dark:bg-[#120815] border-slate-200 dark:border-fuchsia-900/30 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1f0f22]'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -3196,7 +3372,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     />
                     <span className="font-bold">🚫 Permanent Block</span>
                   </div>
-                  <span className="text-[11px] text-slate-500 mt-1 pl-5">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 pl-5">
                     Remains blacklisted until admin explicitly unblocks
                   </span>
                 </label>
@@ -3206,7 +3382,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             {/* Temporary Duration Selector */}
             {blockType === 'temporary' && (
               <div className="space-y-2 text-xs">
-                <label className="font-bold text-slate-800 block">Block Duration:</label>
+                <label className="font-bold text-slate-800 dark:text-white block">Block Duration:</label>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {[
                     { label: '15 Min', hours: 0.25 },
@@ -3223,7 +3399,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       className={`py-2 px-2 text-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         blockDurationHours === d.hours
                           ? 'bg-amber-600 text-white shadow-2xs'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                          : 'bg-slate-100 dark:bg-[#200f24] hover:bg-slate-200 dark:hover:bg-[#281329] text-slate-700 dark:text-slate-300 border border-transparent dark:border-fuchsia-900/30'
                       }`}
                     >
                       {d.label}
@@ -3235,7 +3411,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
             {/* Block Reason */}
             <div className="space-y-2 text-xs">
-              <label className="font-bold text-slate-800 block">Reason for Block:</label>
+              <label className="font-bold text-slate-800 dark:text-white block">Reason for Block:</label>
               <div className="flex flex-wrap gap-1.5 mb-1.5">
                 {[
                   'Suspicious login activity',
@@ -3247,7 +3423,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     key={r}
                     type="button"
                     onClick={() => setBlockReason(r)}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-medium text-slate-700 transition-all cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#200f24] hover:bg-slate-200 dark:hover:bg-[#281329] text-[11px] font-medium text-slate-700 dark:text-slate-300 border border-transparent dark:border-fuchsia-900/30 transition-all cursor-pointer"
                   >
                     {r}
                   </button>
@@ -3258,12 +3434,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 value={blockReason}
                 onChange={e => setBlockReason(e.target.value)}
                 placeholder="Enter block reason or security note..."
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 text-slate-900 dark:text-white rounded-xl focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
               />
             </div>
 
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start space-x-2">
-              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-xs text-rose-800 dark:text-rose-300 flex items-start space-x-2">
+              <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
               <p>
                 The active session for this terminal will be destroyed immediately and future requests from this device or IP will be rejected with HTTP 403 Forbidden.
               </p>
@@ -3274,7 +3450,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 type="button"
                 onClick={() => setDeviceToBlock(null)}
                 disabled={isSubmittingBlock}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-all cursor-pointer"
               >
                 Cancel
               </button>
@@ -3296,16 +3472,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       {/* MODAL 2: Block Custom IP / Device ID */}
       {showCustomBlockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-scale-up">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-fuchsia-900/40 space-y-4 animate-scale-up">
             <div className="flex items-start space-x-3">
-              <div className="p-2.5 bg-rose-100 text-rose-700 rounded-xl shrink-0">
+              <div className="p-2.5 bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 rounded-xl shrink-0">
                 <Ban className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                   Block Custom IP or Device Identifier
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Blacklist a specific IP address or terminal hardware ID from accessing the system.
                 </p>
               </div>
@@ -3313,40 +3489,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">IP Address to Block:</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">IP Address to Block:</label>
                 <input
                   type="text"
                   value={customBlockIp}
                   onChange={e => setCustomBlockIp(e.target.value)}
                   placeholder="e.g. 192.168.1.100 or 46.240.73.235"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 text-slate-900 dark:text-white rounded-xl font-mono text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Device ID (Optional):</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Device ID (Optional):</label>
                 <input
                   type="text"
                   value={customBlockDeviceId}
                   onChange={e => setCustomBlockDeviceId(e.target.value)}
                   placeholder="e.g. dev-suspicious-01"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 text-slate-900 dark:text-white rounded-xl font-mono text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Staff / Label Description:</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Staff / Label Description:</label>
                 <input
                   type="text"
                   value={customBlockUserName}
                   onChange={e => setCustomBlockUserName(e.target.value)}
                   placeholder="e.g. Unknown Remote Terminal"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 text-slate-900 dark:text-white rounded-xl text-xs focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Block Mode:</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Block Mode:</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -3354,7 +3530,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
                       blockType === 'temporary'
                         ? 'bg-amber-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-[#200f24] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#281329] border border-transparent dark:border-fuchsia-900/30'
                     }`}
                   >
                     ⏱️ Temporary (24h)
@@ -3365,7 +3541,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
                       blockType === 'permanent'
                         ? 'bg-rose-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-[#200f24] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#281329] border border-transparent dark:border-fuchsia-900/30'
                     }`}
                   >
                     🚫 Permanent
@@ -3374,13 +3550,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Reason:</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Reason:</label>
                 <input
                   type="text"
                   value={blockReason}
                   onChange={e => setBlockReason(e.target.value)}
                   placeholder="e.g. Rogue terminal security block"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/30 text-slate-900 dark:text-white rounded-xl text-xs"
                 />
               </div>
             </div>
@@ -3390,7 +3566,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 type="button"
                 onClick={() => setShowCustomBlockModal(false)}
                 disabled={isSubmittingBlock}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-lg cursor-pointer transition-colors"
               >
                 Cancel
               </button>
@@ -3410,25 +3586,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       {/* MODAL 3: Unblock Device Confirmation */}
       {deviceToUnblock && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-scale-up">
+          <div className="bg-white dark:bg-[#180F1A] rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-fuchsia-900/40 space-y-4 animate-scale-up">
             <div className="flex items-start space-x-3">
-              <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl shrink-0">
+              <div className="p-2.5 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 rounded-xl shrink-0">
                 <Unlock className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                   Unblock Device?
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Are you sure you want to unblock this terminal? It will regain access to connect and authenticate.
                 </p>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1 text-slate-700">
-              <div className="font-bold text-slate-900">{deviceToUnblock.userName || 'Device'}</div>
-              <div className="font-mono text-[11px] text-slate-500">ID: {deviceToUnblock.deviceId}</div>
-              <div className="font-mono text-[11px] text-slate-500">IP: {deviceToUnblock.ip || 'N/A'}</div>
+            <div className="p-3 bg-slate-50 dark:bg-[#200f24] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 text-xs space-y-1 text-slate-700 dark:text-slate-300">
+              <div className="font-bold text-slate-900 dark:text-white">{deviceToUnblock.userName || 'Device'}</div>
+              <div className="font-mono text-[11px] text-slate-500 dark:text-fuchsia-300">ID: {deviceToUnblock.deviceId}</div>
+              <div className="font-mono text-[11px] text-slate-500 dark:text-fuchsia-300">IP: {deviceToUnblock.ip || 'N/A'}</div>
             </div>
 
             <div className="flex items-center justify-end space-x-2 pt-2">
@@ -3436,7 +3612,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 type="button"
                 onClick={() => setDeviceToUnblock(null)}
                 disabled={isUnblocking}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-lg cursor-pointer transition-colors"
               >
                 Cancel
               </button>

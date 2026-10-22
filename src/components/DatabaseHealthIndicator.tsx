@@ -108,7 +108,7 @@ export const DatabaseHealthIndicator: React.FC = () => {
         type="button"
         id="btn-db-health-indicator"
         onClick={() => setIsOpen(prev => !prev)}
-        className={`flex items-center space-x-2 rtl:space-x-reverse px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all duration-200 cursor-pointer shadow-2xs select-none ${
+        className={`flex items-center space-x-2 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all duration-200 cursor-pointer shadow-2xs select-none ${
           isDropOrTimeout
             ? 'bg-rose-50 border-rose-300 text-rose-800 hover:bg-rose-100 ring-2 ring-rose-300/40 animate-pulse'
             : isDegraded
@@ -176,11 +176,11 @@ export const DatabaseHealthIndicator: React.FC = () => {
       {isOpen && (
         <div
           id="popover-db-health"
-          className="absolute right-0 rtl:left-0 rtl:right-auto mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 p-4 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 p-4 animate-in fade-in zoom-in-95 duration-150"
         >
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="flex items-center space-x-2">
               <div className={`p-2 rounded-xl ${isDropOrTimeout ? 'bg-rose-100 text-rose-600' : 'bg-indigo-50 text-indigo-600'}`}>
                 {isDropOrTimeout ? <AlertTriangle className="w-4 h-4" /> : <Server className="w-4 h-4" />}
               </div>
@@ -277,7 +277,7 @@ export const DatabaseHealthIndicator: React.FC = () => {
 
           {/* Quick Action Buttons */}
           <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="flex items-center space-x-2">
               {/* Test Ping Now */}
               <button
                 type="button"

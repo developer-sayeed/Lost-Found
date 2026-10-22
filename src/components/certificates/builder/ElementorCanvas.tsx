@@ -649,13 +649,13 @@ export const ElementorCanvas: React.FC<ElementorCanvasProps> = ({
         return (
           <div className="text-center py-1">
             <span
-              className="text-lg leading-relaxed drop-shadow-xs font-serif"
+              className="text-lg leading-relaxed drop-shadow-xs font-serif font-bold tracking-wider"
               style={{
                 color: elem.textColor || settings.accentColor,
-                fontFamily: "'Amiri', 'Traditional Arabic', serif"
+                fontFamily: "'Playfair Display', serif"
               }}
             >
-              {elem.content || 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'}
+              {elem.content || 'IN THE PURSUIT OF HOSPITALITY EXCELLENCE'}
             </span>
           </div>
         );
@@ -679,15 +679,15 @@ export const ElementorCanvas: React.FC<ElementorCanvasProps> = ({
       case 'recipient_arabic_name':
         return (
           <h2
-            dir="rtl"
+            dir="ltr"
             className="font-serif font-bold text-center drop-shadow-sm py-1"
             style={{
               fontSize: `${elem.fontSize || 28}px`,
               color: elem.textColor || settings.primaryColor,
-              fontFamily: "'Amiri', 'Traditional Arabic', serif"
+              fontFamily: "'Playfair Display', serif"
             }}
           >
-            {elem.content || 'محمد أبو سعيد رضاي'}
+            {elem.content || 'Honored Recipient'}
           </h2>
         );
 

@@ -51,7 +51,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
       >
         {/* Header */}
         <div className="p-5 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+          <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
               <Keyboard className="w-5 h-5" />
             </div>
@@ -77,7 +77,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
 
         {/* Platform Awareness & Search Bar */}
         <div className="p-4 border-b border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center space-x-2 rtl:space-x-reverse text-xs text-slate-600">
+          <div className="flex items-center space-x-2 text-xs text-slate-600">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-medium">
               {isMac ? 'Apple macOS layout detected (⌘ Command)' : 'Windows / Linux layout detected (Ctrl)'}
@@ -86,13 +86,13 @@ export const KeyboardShortcutsModal: React.FC = () => {
 
           {/* Quick Filter */}
           <div className="relative w-full sm:w-60">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 rtl:left-auto rtl:right-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={filterQuery}
               onChange={e => setFilterQuery(e.target.value)}
               placeholder="Filter shortcuts..."
-              className="w-full text-xs pl-8 rtl:pl-3 rtl:pr-8 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className="w-full text-xs pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
             />
           </div>
         </div>
@@ -106,7 +106,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
 
             return (
               <div key={cat.key} className="pt-4 first:pt-0">
-                <div className="flex items-center space-x-2 rtl:space-x-reverse mb-3">
+                <div className="flex items-center space-x-2 mb-3">
                   <Icon className="w-4 h-4 text-indigo-600" />
                   <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                     {cat.label}
@@ -122,7 +122,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
                         key={shortcut.id}
                         className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 transition-colors"
                       >
-                        <div className="min-w-0 pr-4 rtl:pr-0 rtl:pl-4">
+                        <div className="min-w-0 pr-4">
                           <h4 className="text-xs font-bold text-slate-900">
                             {shortcut.title}
                           </h4>
@@ -131,7 +131,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
                           </p>
                         </div>
 
-                        <div className="flex items-center space-x-1.5 rtl:space-x-reverse flex-shrink-0">
+                        <div className="flex items-center space-x-1.5 flex-shrink-0">
                           {keys.map((k, idx) => (
                             <React.Fragment key={idx}>
                               <kbd className="min-w-[24px] px-2 py-1 text-center text-xs font-mono font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg shadow-2xs">
@@ -175,7 +175,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
               closeShortcutsModal();
               openCommandPalette();
             }}
-            className="flex items-center space-x-1.5 rtl:space-x-reverse text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+            className="flex items-center space-x-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
           >
             <Command className="w-3.5 h-3.5" />
             <span>Open Command Palette ({isMac ? '⌘K' : 'Ctrl+K'})</span>

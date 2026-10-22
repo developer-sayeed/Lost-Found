@@ -527,6 +527,8 @@ export interface HotelSettings {
   hotelArabicName?: string;
   hotelSubTitle?: string;
   logoUrl: string;
+  logoLightUrl?: string; // Dedicated logo optimized for Light theme backgrounds
+  logoDarkUrl?: string;  // Dedicated logo optimized for Dark theme backgrounds
   logoWidth?: number;
   logoHeight?: number;
   logoFit?: 'contain' | 'cover' | 'fill';
@@ -579,14 +581,22 @@ export interface HotelSettings {
   loginPageSubtitle?: string;
   loginPageTagline?: string;
   loginLogoUrl?: string;
+  loginLogoLightUrl?: string;
+  loginLogoDarkUrl?: string;
   loginLogoWidth?: number;
   loginLogoHeight?: number;
   loginLogoFit?: 'contain' | 'cover' | 'fill';
   showLoginCrownBadge?: boolean;
-  loginBackgroundStyle?: 'luxury-dark' | 'royal-indigo' | 'hotel-emerald' | 'minimal-clean' | 'custom-color' | 'custom-image';
+  loginBackgroundStyle?: 'luxury-dark' | 'royal-indigo' | 'hotel-emerald' | 'minimal-clean' | 'custom-color' | 'custom-gradient' | 'custom-image' | 'custom-video' | 'plum-violet';
   loginBgColor?: string;
+  loginGradientStart?: string;
+  loginGradientEnd?: string;
+  loginGradientDirection?: 'to right' | 'to bottom' | 'to bottom right' | 'to top right' | 'radial';
   loginHeaderBgColor?: string;
   loginBgImageUrl?: string;
+  loginBgVideoUrl?: string;
+  loginVideoBlurEnabled?: boolean;
+  loginVideoBlurAmount?: number; // 0 to 100%
   loginCardBlur?: boolean;
   loginBannerNotice?: string;
   loginBannerType?: 'none' | 'info' | 'warning' | 'shield';

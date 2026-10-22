@@ -94,7 +94,7 @@ export const BroadcastModal: React.FC = () => {
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 to-indigo-950 px-6 py-5 text-white flex items-center justify-between border-b border-indigo-900/40">
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+          <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
               <Bell className="w-5 h-5" />
             </div>
@@ -119,14 +119,14 @@ export const BroadcastModal: React.FC = () => {
         {/* Content */}
         <form onSubmit={handleSend} className="p-6 space-y-5">
           {successMessage && (
-            <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center space-x-3 rtl:space-x-reverse text-emerald-800 text-xs font-semibold animate-fade-in">
+            <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center space-x-3 text-emerald-800 text-xs font-semibold animate-fade-in">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
 
           {errorMessage && (
-            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center space-x-3 rtl:space-x-reverse text-rose-800 text-xs font-semibold animate-fade-in">
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center space-x-3 text-rose-800 text-xs font-semibold animate-fade-in">
               <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
               <span>{errorMessage}</span>
             </div>
@@ -339,12 +339,12 @@ export const BroadcastModal: React.FC = () => {
 
           {/* Footer Actions */}
           <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-            <div className="flex items-center space-x-1.5 rtl:space-x-reverse text-[11px] text-slate-400">
+            <div className="flex items-center space-x-1.5 text-[11px] text-slate-400">
               <Info className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
               <span>Broadcasts deliver immediately without requiring page refresh</span>
             </div>
 
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={handleClose}
@@ -355,7 +355,7 @@ export const BroadcastModal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSending || !title.trim() || !message.trim()}
-                className="flex items-center space-x-2 rtl:space-x-reverse px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-indigo-600/20"
+                className="flex items-center space-x-2 px-5 py-2 btn-primary-gradient disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer"
               >
                 <Send className={`w-3.5 h-3.5 ${isSending ? 'animate-pulse' : ''}`} />
                 <span>{isSending ? 'Sending...' : 'Broadcast Notice'}</span>

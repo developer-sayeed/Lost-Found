@@ -39,7 +39,10 @@ export const MobileFooterNav: React.FC = () => {
     <nav
       id="mobile-bottom-footer-nav"
       aria-label="Mobile Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-2 py-1.5 transition-all"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl border-t border-fuchsia-500/30 shadow-[0_-8px_30px_rgba(45,12,52,0.55)] px-2 py-1.5 transition-all select-none"
+      style={{
+        background: 'linear-gradient(135deg, #3d1246 0%, #260a2d 55%, #18071c 100%)'
+      }}
     >
       <div className="flex items-center justify-around max-w-lg mx-auto">
         {/* 1. Home / Dashboard */}
@@ -49,11 +52,11 @@ export const MobileFooterNav: React.FC = () => {
           onClick={() => setActiveTab('dashboard')}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             currentPath === '/' || currentPath === '/dashboard'
-              ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              ? 'text-white font-bold bg-white/15 shadow-2xs'
+              : 'text-fuchsia-200/75 hover:text-white'
           }`}
         >
-          <Home className="w-5 h-5 mb-0.5" />
+          <Home className={`w-5 h-5 mb-0.5 ${currentPath === '/' || currentPath === '/dashboard' ? 'text-white' : 'text-fuchsia-300/80'}`} />
           <span className="text-[10px] tracking-tight">{t.dashboard}</span>
         </Link>
 
@@ -65,11 +68,11 @@ export const MobileFooterNav: React.FC = () => {
             onClick={() => setActiveTab('items')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
               currentPath === '/items'
-                ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'text-white font-bold bg-white/15 shadow-2xs'
+                : 'text-fuchsia-200/75 hover:text-white'
             }`}
           >
-            <Package className="w-5 h-5 mb-0.5" />
+            <Package className={`w-5 h-5 mb-0.5 ${currentPath === '/items' ? 'text-white' : 'text-fuchsia-300/80'}`} />
             <span className="text-[10px] tracking-tight">{t.totalItems}</span>
           </Link>
         )}
@@ -85,10 +88,10 @@ export const MobileFooterNav: React.FC = () => {
             className="flex flex-col items-center justify-center -mt-5 group"
             title={t.addItem}
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-105 active:scale-95 transition-all border-4 border-white dark:border-slate-900">
-              <PlusCircle className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-full btn-primary-gradient text-white flex items-center justify-center shadow-lg shadow-fuchsia-950/60 group-hover:scale-105 active:scale-95 transition-all border-4 border-[#3d1246]">
+              <PlusCircle className="w-6 h-6 text-white" />
             </div>
-            <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+            <span className="text-[10px] font-bold text-fuchsia-200 mt-0.5">
               {t.addItem}
             </span>
           </button>
@@ -99,11 +102,11 @@ export const MobileFooterNav: React.FC = () => {
             onClick={() => setActiveTab('certificates')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
               currentPath === '/certificates'
-                ? 'text-amber-600 dark:text-amber-400 font-bold'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'text-white font-bold bg-white/15 shadow-2xs'
+                : 'text-fuchsia-200/75 hover:text-white'
             }`}
           >
-            <Award className="w-5 h-5 mb-0.5 text-amber-500" />
+            <Award className={`w-5 h-5 mb-0.5 ${currentPath === '/certificates' ? 'text-white' : 'text-fuchsia-300/80'}`} />
             <span className="text-[10px] tracking-tight">Awards</span>
           </Link>
         ) : null}
@@ -116,11 +119,11 @@ export const MobileFooterNav: React.FC = () => {
             onClick={() => setActiveTab('dispatch')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
               currentPath === '/dispatch'
-                ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'text-white font-bold bg-white/15 shadow-2xs'
+                : 'text-fuchsia-200/75 hover:text-white'
             }`}
           >
-            <Clock className="w-5 h-5 mb-0.5" />
+            <Clock className={`w-5 h-5 mb-0.5 ${currentPath === '/dispatch' ? 'text-white' : 'text-fuchsia-300/80'}`} />
             <span className="text-[10px] tracking-tight">{t.dispatch}</span>
           </Link>
         ) : canPerformance ? (
@@ -130,11 +133,11 @@ export const MobileFooterNav: React.FC = () => {
             onClick={() => setActiveTab('performance')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
               currentPath === '/performance'
-                ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'text-white font-bold bg-white/15 shadow-2xs'
+                : 'text-fuchsia-200/75 hover:text-white'
             }`}
           >
-            <TrendingUp className="w-5 h-5 mb-0.5" />
+            <TrendingUp className={`w-5 h-5 mb-0.5 ${currentPath === '/performance' ? 'text-white' : 'text-fuchsia-300/80'}`} />
             <span className="text-[10px] tracking-tight">{t.performance}</span>
           </Link>
         ) : canCertificates && canAddItem ? (
@@ -144,11 +147,11 @@ export const MobileFooterNav: React.FC = () => {
             onClick={() => setActiveTab('certificates')}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
               currentPath === '/certificates'
-                ? 'text-amber-600 dark:text-amber-400 font-bold'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'text-white font-bold bg-white/15 shadow-2xs'
+                : 'text-fuchsia-200/75 hover:text-white'
             }`}
           >
-            <Award className="w-5 h-5 mb-0.5" />
+            <Award className={`w-5 h-5 mb-0.5 ${currentPath === '/certificates' ? 'text-white' : 'text-fuchsia-300/80'}`} />
             <span className="text-[10px] tracking-tight">Awards</span>
           </Link>
         ) : null}
@@ -162,13 +165,13 @@ export const MobileFooterNav: React.FC = () => {
           }}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
             currentPath === '/profile'
-              ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              ? 'text-white font-bold bg-white/15 shadow-2xs'
+              : 'text-fuchsia-200/75 hover:text-white'
           }`}
         >
           <div className="relative">
-            <UserIcon className="w-5 h-5 mb-0.5" />
-            <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-emerald-500 border border-white dark:border-slate-900" />
+            <UserIcon className={`w-5 h-5 mb-0.5 ${currentPath === '/profile' ? 'text-white' : 'text-fuchsia-300/80'}`} />
+            <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-emerald-400 border border-[#3d1246]" />
           </div>
           <span className="text-[10px] tracking-tight">{t.myProfile}</span>
         </Link>

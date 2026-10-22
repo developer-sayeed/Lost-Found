@@ -78,9 +78,11 @@ export const DEFAULT_ITEM_CATEGORIES: CategoryConfig[] = [
 export const INITIAL_HOTEL_SETTINGS: HotelSettings = {
   id: 'hotel-warwick-baha-01',
   hotelName: 'Warwick Hotels and Resorts',
-  hotelArabicName: 'ورويك الباحة',
+  hotelArabicName: '',
   hotelSubTitle: 'Hotels and Resorts',
   logoUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80',
+  logoLightUrl: '',
+  logoDarkUrl: '',
   logoWidth: 140,
   logoHeight: 48,
   logoFit: 'contain',

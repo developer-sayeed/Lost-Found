@@ -146,9 +146,9 @@ export const NoticeDetailModal: React.FC = () => {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
+          <div className="flex items-center space-x-2.5">
             <span
-              className={`inline-flex items-center space-x-1.5 rtl:space-x-reverse px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeInfo.bg}`}
+              className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeInfo.bg}`}
             >
               <BadgeIcon className="w-3.5 h-3.5" />
               <span>{badgeInfo.label}</span>
@@ -184,7 +184,7 @@ export const NoticeDetailModal: React.FC = () => {
             <h2 className="text-lg font-bold text-slate-900 leading-snug">
               {notif.title}
             </h2>
-            <div className="flex items-center space-x-2 rtl:space-x-reverse text-xs text-slate-400 mt-1">
+            <div className="flex items-center space-x-2 text-xs text-slate-400 mt-1">
               <Calendar className="w-3.5 h-3.5" />
               <span>{formatDate(notif.createdAt)}</span>
             </div>
@@ -198,7 +198,7 @@ export const NoticeDetailModal: React.FC = () => {
                 <User className="w-3.5 h-3.5 text-slate-400" />
                 Sender:
               </span>
-              <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+              <div className="flex items-center space-x-1.5">
                 <span className="font-semibold text-slate-800">
                   {notif.senderName || 'System'}
                 </span>
@@ -248,7 +248,7 @@ export const NoticeDetailModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleViewItem}
-                  className="inline-flex items-center space-x-1.5 rtl:space-x-reverse px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-mono text-[11px] font-bold transition-colors cursor-pointer"
+                  className="inline-flex items-center space-x-1.5 px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-mono text-[11px] font-bold transition-colors cursor-pointer"
                   title="Click to view full item details"
                 >
                   <span>{notif.itemCode || 'View Item'}</span>
@@ -267,7 +267,7 @@ export const NoticeDetailModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCopyMessage}
-                className="inline-flex items-center space-x-1 rtl:space-x-reverse text-xs text-slate-400 hover:text-slate-700 transition-colors"
+                className="inline-flex items-center space-x-1 text-xs text-slate-400 hover:text-slate-700 transition-colors"
                 title="Copy text"
               >
                 {copied ? (
@@ -296,7 +296,7 @@ export const NoticeDetailModal: React.FC = () => {
             type="button"
             id="btn-toggle-read-notice"
             onClick={handleToggleRead}
-            className="inline-flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition-colors"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition-colors"
           >
             {isRead ? (
               <>
@@ -311,13 +311,13 @@ export const NoticeDetailModal: React.FC = () => {
             )}
           </button>
 
-          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+          <div className="flex items-center space-x-2">
             {/* Delete for current user */}
             <button
               type="button"
               id="btn-delete-notice-for-me"
               onClick={handleDeleteForMe}
-              className="inline-flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors"
               title="Remove this notice from your inbox only"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -330,7 +330,7 @@ export const NoticeDetailModal: React.FC = () => {
                 type="button"
                 id="btn-delete-notice-for-all"
                 onClick={handleDeleteForEveryone}
-                className="hidden sm:inline-flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-slate-100 transition-colors"
+                className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-slate-100 transition-colors"
                 title="Permanently remove notice for all staff"
               >
                 <span>Delete for All</span>

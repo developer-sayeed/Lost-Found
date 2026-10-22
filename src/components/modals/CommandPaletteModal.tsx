@@ -140,17 +140,7 @@ export const CommandPaletteModal: React.FC = () => {
           toggleSidebarCollapse();
         }
       },
-      {
-        id: 'action-switch-language',
-        title: language === 'en' ? 'Switch to Arabic (العربية)' : 'Switch to English',
-        description: language === 'en' ? 'تفعيل الواجهة العربية بالكامل' : 'Change interface language to English',
-        category: 'action',
-        icon: Languages,
-        action: () => {
-          closeCommandPalette();
-          setLanguage(language === 'en' ? 'ar' : 'en');
-        }
-      },
+
       {
         id: 'action-refresh-sync',
         title: 'Refresh & Synchronize Data',
@@ -482,7 +472,7 @@ export const CommandPaletteModal: React.FC = () => {
         onKeyDown={handleKeyDown}
       >
         {/* Top Search Input Box */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center space-x-3 rtl:space-x-reverse bg-slate-50/50">
+        <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center space-x-3 bg-slate-50/50">
           <Search className="w-5 h-5 text-indigo-600 flex-shrink-0" />
           <input
             ref={inputRef}
@@ -518,7 +508,7 @@ export const CommandPaletteModal: React.FC = () => {
         </div>
 
         {/* Filter Pills */}
-        <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center space-x-1.5 rtl:space-x-reverse overflow-x-auto text-xs">
+        <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center space-x-1.5 overflow-x-auto text-xs">
           <button
             type="button"
             onClick={() => setFilterType('all')}
@@ -533,7 +523,7 @@ export const CommandPaletteModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilterType('items')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center space-x-1 rtl:space-x-reverse ${
+            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center space-x-1 ${
               filterType === 'items'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
@@ -545,7 +535,7 @@ export const CommandPaletteModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilterType('actions')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center space-x-1 rtl:space-x-reverse ${
+            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center space-x-1 ${
               filterType === 'actions'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
@@ -557,7 +547,7 @@ export const CommandPaletteModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilterType('nav')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center space-x-1 rtl:space-x-reverse ${
+            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center space-x-1 ${
               filterType === 'nav'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
@@ -585,7 +575,7 @@ export const CommandPaletteModal: React.FC = () => {
                     setEditingItem(null);
                     setIsAddModalOpen(true);
                   }}
-                  className="mt-4 inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+                  className="mt-4 inline-flex items-center space-x-1.5 px-4 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>Register "{query}" as New Item</span>
@@ -621,7 +611,7 @@ export const CommandPaletteModal: React.FC = () => {
                               : 'hover:bg-slate-50 text-slate-700 border border-transparent'
                           }`}
                         >
-                          <div className="flex items-center space-x-3 rtl:space-x-reverse min-w-0">
+                          <div className="flex items-center space-x-3 min-w-0">
                             <div
                               className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                                 isSelected
@@ -647,7 +637,7 @@ export const CommandPaletteModal: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center space-x-2 rtl:space-x-reverse flex-shrink-0 ml-2">
+                          <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
                             {cmd.shortcut && (
                               <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-medium text-slate-500 bg-white border border-slate-200 rounded shadow-2xs">
                                 {cmd.shortcut}
@@ -697,7 +687,7 @@ export const CommandPaletteModal: React.FC = () => {
                               : 'hover:bg-slate-50 text-slate-700 border border-transparent'
                           }`}
                         >
-                          <div className="flex items-center space-x-3 rtl:space-x-reverse min-w-0">
+                          <div className="flex items-center space-x-3 min-w-0">
                             <div
                               className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border transition-colors ${
                                 isSelected
@@ -709,7 +699,7 @@ export const CommandPaletteModal: React.FC = () => {
                             </div>
 
                             <div className="min-w-0">
-                              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                              <div className="flex items-center space-x-2">
                                 <span className="font-mono font-bold text-xs text-indigo-600">
                                   {itemCode}
                                 </span>
@@ -726,7 +716,7 @@ export const CommandPaletteModal: React.FC = () => {
                                 </span>
                               </div>
 
-                              <div className="flex items-center space-x-3 rtl:space-x-reverse text-[11px] text-slate-500 mt-0.5">
+                              <div className="flex items-center space-x-3 text-[11px] text-slate-500 mt-0.5">
                                 <span className="flex items-center space-x-1">
                                   <MapPin className="w-3 h-3 text-slate-400" />
                                   <span className="truncate max-w-[140px]">
@@ -745,7 +735,7 @@ export const CommandPaletteModal: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center space-x-2 rtl:space-x-reverse flex-shrink-0 ml-2">
+                          <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
                             <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-medium hidden sm:inline">
                               {item.category}
                             </span>
@@ -767,7 +757,7 @@ export const CommandPaletteModal: React.FC = () => {
 
         {/* Operational Footer with Shortcuts Guide */}
         <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 text-slate-500 text-[11px] flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+          <div className="flex items-center space-x-3">
             <span className="flex items-center space-x-1">
               <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-700 font-mono text-[10px] shadow-2xs">
                 ↑

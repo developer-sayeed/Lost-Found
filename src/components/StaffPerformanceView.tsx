@@ -486,7 +486,6 @@ export const StaffPerformanceView: React.FC = () => {
   // Robust Executive Performance Audit Report HTML Generator
   const generatePerformancePrintReport = () => {
     const hotelName = settings?.hotelName || 'Warwick Hotels & Resorts';
-    const hotelArabic = settings?.hotelArabicName || 'ورويك الباحة';
     const hotelSub = settings?.hotelSubTitle || 'Hotels and Resorts';
     const logoUrl = settings?.logoUrl || '';
     const dateFormatted = new Date().toLocaleDateString('en-GB', {
@@ -611,7 +610,7 @@ export const StaffPerformanceView: React.FC = () => {
             <td style="vertical-align: middle;">
               ${logoUrl ? `<img src="${logoUrl}" style="max-height: 44px; max-width: 150px; object-fit: contain; margin-bottom: 4px;" /><br/>` : ''}
               <span style="font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #0f172a;">${hotelName}</span><br/>
-              <span style="font-size: 11px; color: #475569; font-weight: 500;">${hotelArabic} &bull; ${hotelSub}</span>
+              <span style="font-size: 11px; color: #475569; font-weight: 500;">${hotelSub}</span>
             </td>
             <td style="text-align: right; vertical-align: middle;">
               <span style="display: inline-block; padding: 4px 10px; border-radius: 4px; background: #e0e7ff; color: #3730a3; font-weight: 800; font-size: 11px; text-transform: uppercase;">
@@ -746,7 +745,7 @@ export const StaffPerformanceView: React.FC = () => {
       {/* Top Header & Supervisor Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
+          <div className="flex items-center space-x-2.5">
             <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-md">
               <TrendingUp className="w-5 h-5" />
             </div>
@@ -788,10 +787,10 @@ export const StaffPerformanceView: React.FC = () => {
             type="button"
             onClick={handleExportExcel}
             id="btn-export-performance-excel"
-            className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 px-3.5 py-2 btn-primary-gradient text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
             title="Export Excel Worksheet"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-3.5 h-3.5 text-white" />
             <span className="hidden sm:inline">Export Excel</span>
           </button>
 
@@ -799,10 +798,10 @@ export const StaffPerformanceView: React.FC = () => {
             type="button"
             onClick={() => handlePrint()}
             id="btn-print-performance-report"
-            className="flex items-center space-x-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer shadow-2xs group"
+            className="flex items-center space-x-1.5 px-3.5 py-2 btn-primary-gradient text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer group"
             title="Print Official Performance Audit Report"
           >
-            <Printer className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform" />
+            <Printer className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform" />
             <span className="hidden sm:inline">Print Report</span>
           </button>
         </div>

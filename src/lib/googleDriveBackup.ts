@@ -30,15 +30,79 @@ let cachedFolderId: string | null = null;
 let cachedUserProfile: any = null;
 let isSigningIn = false;
 
-// Check localStorage on client-side startup to restore connection permanently across tabs and reloads
+export class GoogleDriveAuthExpiredError extends Error {
+  isAuthExpired = true;
+  constructor(message = 'Your Google Drive session has expired. Please connect your Google account again.') {
+    super(message);
+    this.name = 'GoogleDriveAuthExpiredError';
+  }
+}
+
+export const isDriveAuthError = (status?: number, message?: string): boolean => {
+  if (status === 401 || status === 403) {
+    if (!message) return true;
+  }
+  if (!message) return false;
+  const lower = message.toLowerCase();
+  return (
+    lower.includes('invalid authentication credentials') ||
+    lower.includes('expected oauth 2 access token') ||
+    lower.includes('unauthenticated') ||
+    lower.includes('invalid credentials') ||
+    lower.includes('token expired') ||
+    lower.includes('access token expired') ||
+    lower.includes('login cookie or other valid authentication credential')
+  );
+};
+
+export const storeDriveAccessToken = (token: string, profile?: any, expiresInSeconds = 3500) => {
+  cachedAccessToken = token;
+  if (profile) cachedUserProfile = profile;
+  const expiresAt = Date.now() + expiresInSeconds * 1000;
+  try {
+    localStorage.setItem('gdrive_access_token', token);
+    localStorage.setItem('gdrive_token_expires_at', String(expiresAt));
+    if (profile) localStorage.setItem('gdrive_user_profile', JSON.stringify(profile));
+    sessionStorage.setItem('gdrive_access_token', token);
+    sessionStorage.setItem('gdrive_token_expires_at', String(expiresAt));
+    if (profile) sessionStorage.setItem('gdrive_user_profile', JSON.stringify(profile));
+  } catch {}
+};
+
+export const handleDriveAuthExpiry = (reason?: string) => {
+  cachedAccessToken = null;
+  cachedFolderId = null;
+  cachedUserProfile = null;
+  try {
+    localStorage.removeItem('gdrive_access_token');
+    localStorage.removeItem('gdrive_user_profile');
+    localStorage.removeItem('gdrive_token_expires_at');
+    sessionStorage.removeItem('gdrive_access_token');
+    sessionStorage.removeItem('gdrive_user_profile');
+    sessionStorage.removeItem('gdrive_token_expires_at');
+  } catch {}
+  notifyAuthListeners(null, null);
+  if (reason) {
+    console.warn(`[Google Drive Auth] Session expired: ${reason}`);
+  }
+};
+
+// Check localStorage on client-side startup to restore connection safely across tabs and reloads
 if (typeof window !== 'undefined') {
   try {
     const savedToken = localStorage.getItem('gdrive_access_token') || sessionStorage.getItem('gdrive_access_token');
     const savedProfile = localStorage.getItem('gdrive_user_profile') || sessionStorage.getItem('gdrive_user_profile');
+    const savedExpiry = localStorage.getItem('gdrive_token_expires_at') || sessionStorage.getItem('gdrive_token_expires_at');
+
     if (savedToken) {
-      cachedAccessToken = savedToken;
-      if (savedProfile) {
-        cachedUserProfile = JSON.parse(savedProfile);
+      // If token expired or was from previous session without expiration recorded, discard it immediately
+      if (!savedExpiry || Date.now() >= Number(savedExpiry)) {
+        handleDriveAuthExpiry('Startup cache expired');
+      } else {
+        cachedAccessToken = savedToken;
+        if (savedProfile) {
+          cachedUserProfile = JSON.parse(savedProfile);
+        }
       }
     }
   } catch {}
@@ -174,14 +238,9 @@ export const requestAccessTokenViaGis = async (): Promise<{ user: any; accessTok
           }
           try {
             const profile = await fetchGoogleUserProfile(response.access_token);
-            cachedAccessToken = response.access_token;
-            cachedUserProfile = profile;
-            try {
-              sessionStorage.setItem('gdrive_access_token', response.access_token);
-              sessionStorage.setItem('gdrive_user_profile', JSON.stringify(profile));
-            } catch {}
+            storeDriveAccessToken(response.access_token, profile, Number(response.expires_in) || 3500);
             notifyAuthListeners(profile, cachedAccessToken);
-            resolve({ user: profile, accessToken: cachedAccessToken });
+            resolve({ user: profile, accessToken: cachedAccessToken! });
           } catch (profileErr) {
             reject(profileErr);
           }
@@ -205,15 +264,7 @@ export const connectWithDirectToken = async (token: string): Promise<{ user: any
 
   // Validate token with Google APIs
   const profile = await fetchGoogleUserProfile(clean);
-  cachedAccessToken = clean;
-  cachedUserProfile = profile;
-
-  try {
-    localStorage.setItem('gdrive_access_token', clean);
-    localStorage.setItem('gdrive_user_profile', JSON.stringify(profile));
-    sessionStorage.setItem('gdrive_access_token', clean);
-    sessionStorage.setItem('gdrive_user_profile', JSON.stringify(profile));
-  } catch {}
+  storeDriveAccessToken(clean, profile, 3500);
 
   notifyAuthListeners(profile, cachedAccessToken);
   return {
@@ -285,30 +336,12 @@ export const signInWithGoogleDrive = async (): Promise<{
       throw new Error('Google Drive access token was not returned by Google Authentication.');
     }
 
-    cachedAccessToken = credential.accessToken;
-    cachedUserProfile = result.user;
-    try {
-      localStorage.setItem('gdrive_access_token', cachedAccessToken);
-      localStorage.setItem('gdrive_user_profile', JSON.stringify({
-        displayName: result.user.displayName,
-        email: result.user.email,
-        photoURL: result.user.photoURL,
-        uid: result.user.uid
-      }));
-      sessionStorage.setItem('gdrive_access_token', cachedAccessToken);
-      sessionStorage.setItem('gdrive_user_profile', JSON.stringify({
-        displayName: result.user.displayName,
-        email: result.user.email,
-        photoURL: result.user.photoURL,
-        uid: result.user.uid
-      }));
-    } catch {}
-
+    storeDriveAccessToken(credential.accessToken, result.user, 3500);
     notifyAuthListeners(result.user, cachedAccessToken);
 
     return {
       user: result.user,
-      accessToken: cachedAccessToken
+      accessToken: cachedAccessToken!
     };
   } catch (error: any) {
     const errorCode = error?.code || '';
@@ -352,7 +385,7 @@ export const signInWithGoogleDrive = async (): Promise<{
       }
     }
 
-    console.warn('[Google Drive Auth] Sign in failed:', error?.message || error);
+    console.warn('[Google Drive Auth] Sign in notice:', error?.message || error);
     throw error;
   } finally {
     isSigningIn = false;
@@ -375,16 +408,7 @@ export const disconnectGoogleDrive = async (): Promise<void> => {
   } catch (err) {
     console.warn('[Google Drive Auth] Error signing out:', err);
   } finally {
-    cachedAccessToken = null;
-    cachedFolderId = null;
-    cachedUserProfile = null;
-    try {
-      localStorage.removeItem('gdrive_access_token');
-      localStorage.removeItem('gdrive_user_profile');
-      sessionStorage.removeItem('gdrive_access_token');
-      sessionStorage.removeItem('gdrive_user_profile');
-    } catch {}
-    notifyAuthListeners(null, null);
+    handleDriveAuthExpiry('User requested disconnect');
   }
 };
 
@@ -417,6 +441,11 @@ export const ensureDriveBackupFolder = async (accessToken: string): Promise<stri
       }
     );
 
+    if (searchRes.status === 401 || searchRes.status === 403) {
+      handleDriveAuthExpiry('HTTP ' + searchRes.status + ' on search folder');
+      throw new GoogleDriveAuthExpiredError();
+    }
+
     if (searchRes.ok) {
       const searchData = await searchRes.json();
       if (searchData.files && searchData.files.length > 0) {
@@ -439,16 +468,28 @@ export const ensureDriveBackupFolder = async (accessToken: string): Promise<stri
       })
     });
 
+    if (createRes.status === 401 || createRes.status === 403) {
+      handleDriveAuthExpiry('HTTP ' + createRes.status + ' on folder create');
+      throw new GoogleDriveAuthExpiredError();
+    }
+
     if (createRes.ok) {
       const newFolder = await createRes.json();
       cachedFolderId = newFolder.id;
       return cachedFolderId;
     } else {
       const errJson = await createRes.json().catch(() => ({}));
+      if (isDriveAuthError(createRes.status, errJson?.error?.message)) {
+        handleDriveAuthExpiry(errJson?.error?.message);
+        throw new GoogleDriveAuthExpiredError();
+      }
       console.warn('[Google Drive] Folder create warning, falling back to root:', errJson);
       return undefined;
     }
   } catch (err: any) {
+    if (err instanceof GoogleDriveAuthExpiredError || err?.isAuthExpired) {
+      throw err;
+    }
     console.warn('[Google Drive] Folder resolution warning, continuing with root storage:', err);
     return undefined;
   }
@@ -477,7 +518,13 @@ export const listGoogleDriveBackups = async (
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Failed to list files from Google Drive (HTTP ${res.status})`);
+      const msg = err.error?.message || `Failed to list files from Google Drive (HTTP ${res.status})`;
+      if (res.status === 401 || res.status === 403 || isDriveAuthError(res.status, msg)) {
+        handleDriveAuthExpiry(msg);
+        return [];
+      }
+      console.warn('[Google Drive] List backups non-auth response:', msg);
+      return [];
     }
 
     const data = await res.json();
@@ -513,8 +560,16 @@ export const listGoogleDriveBackups = async (
 
     return files;
   } catch (err: any) {
-    console.error('[Google Drive] List backups error:', err);
-    throw err;
+    if (
+      err instanceof GoogleDriveAuthExpiredError ||
+      err?.isAuthExpired ||
+      isDriveAuthError(err?.status, err?.message)
+    ) {
+      handleDriveAuthExpiry(err?.message);
+      return [];
+    }
+    console.warn('[Google Drive] List backups notice:', err?.message || err);
+    return [];
   }
 };
 
@@ -571,7 +626,12 @@ export const uploadBackupToGoogleDrive = async (
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Failed to upload backup to Google Drive (HTTP ${res.status})`);
+      const msg = err.error?.message || `Failed to upload backup to Google Drive (HTTP ${res.status})`;
+      if (isDriveAuthError(res.status, msg)) {
+        handleDriveAuthExpiry(msg);
+        throw new GoogleDriveAuthExpiredError();
+      }
+      throw new Error(msg);
     }
 
     const uploaded = await res.json();
@@ -591,7 +651,10 @@ export const uploadBackupToGoogleDrive = async (
       }
     };
   } catch (err: any) {
-    console.error('[Google Drive] Upload error:', err);
+    if (err instanceof GoogleDriveAuthExpiredError || err?.isAuthExpired) {
+      throw err;
+    }
+    console.warn('[Google Drive] Upload notice:', err?.message || err);
     throw err;
   }
 };
@@ -611,13 +674,22 @@ export const downloadBackupFromGoogleDrive = async (
     });
 
     if (!res.ok) {
-      throw new Error(`Failed to download backup file from Google Drive (HTTP ${res.status})`);
+      const err = await res.json().catch(() => ({}));
+      const msg = err.error?.message || `Failed to download backup file from Google Drive (HTTP ${res.status})`;
+      if (isDriveAuthError(res.status, msg)) {
+        handleDriveAuthExpiry(msg);
+        throw new GoogleDriveAuthExpiredError();
+      }
+      throw new Error(msg);
     }
 
     const data: FullSystemBackupPackage = await res.json();
     return data;
   } catch (err: any) {
-    console.error('[Google Drive] Download error:', err);
+    if (err instanceof GoogleDriveAuthExpiredError || err?.isAuthExpired) {
+      throw err;
+    }
+    console.warn('[Google Drive] Download notice:', err?.message || err);
     throw err;
   }
 };
@@ -640,12 +712,20 @@ export const deleteBackupFromGoogleDrive = async (
 
     if (!res.ok && res.status !== 204) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Failed to delete file from Google Drive (HTTP ${res.status})`);
+      const msg = err.error?.message || `Failed to delete file from Google Drive (HTTP ${res.status})`;
+      if (isDriveAuthError(res.status, msg)) {
+        handleDriveAuthExpiry(msg);
+        throw new GoogleDriveAuthExpiredError();
+      }
+      throw new Error(msg);
     }
 
     return true;
   } catch (err: any) {
-    console.error('[Google Drive] Delete file error:', err);
+    if (err instanceof GoogleDriveAuthExpiredError || err?.isAuthExpired) {
+      throw err;
+    }
+    console.warn('[Google Drive] Delete file notice:', err?.message || err);
     throw err;
   }
 };

@@ -539,28 +539,39 @@ export const UserProfileView: React.FC = () => {
         </div>
       )}
 
-      {/* Main Profile Info Card with Gradient Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white">
-          <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 sm:gap-6">
-            <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 w-full xl:w-auto">
+      {/* Main Profile Info Card with EcomDrive Signature Deep Plum Gradient */}
+      <div className="bg-white dark:bg-[#180F1A] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-fuchsia-500/25 shadow-xl shadow-fuchsia-950/15 overflow-hidden transition-all">
+        <div 
+          className="p-5 sm:p-7 lg:p-9 text-white relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #3d1246 0%, #260a2d 55%, #18071c 100%)'
+          }}
+        >
+          {/* Ambient EcomDrive Fuchsia Glow in top-right */}
+          <div 
+            aria-hidden="true" 
+            className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-fuchsia-500/15 blur-3xl pointer-events-none" 
+          />
+
+          <div className="relative z-10 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 sm:gap-7">
+            <div className="flex items-start sm:items-center space-x-3.5 sm:space-x-5 w-full xl:w-auto">
               <UserAvatar
                 name={displayName || 'User'}
                 avatarUrl={currentStaffMatch?.avatar || (user as any)?.avatar}
-                sizeClassName="w-14 h-14 sm:w-20 sm:h-20"
-                className="rounded-xl sm:rounded-2xl border-2 border-indigo-400/40 shadow-xl flex-shrink-0"
+                sizeClassName="w-16 h-16 sm:w-20 sm:h-20"
+                className="rounded-2xl border-2 border-fuchsia-400/40 shadow-xl shadow-fuchsia-950/40 flex-shrink-0"
               />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2.5 flex-wrap">
                   <h1
                     id="user-profile-card-name"
-                    className="text-base sm:text-xl font-bold !text-white user-profile-name flex items-center gap-1.5 break-words"
+                    className="text-lg sm:text-2xl font-bold !text-white user-profile-name flex items-center gap-2 break-words tracking-tight"
                     style={{ color: '#ffffff' }}
                   >
                     <span className="!text-white user-profile-name" style={{ color: '#ffffff' }}>
                       {displayName}
                     </span>
-                    <BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400 flex-shrink-0" />
+                    <BadgeCheck className="w-5 h-5 text-fuchsia-400 flex-shrink-0" />
                   </h1>
 
                   {/* Pen / Edit Icon for modifying staff data */}
@@ -571,53 +582,54 @@ export const UserProfileView: React.FC = () => {
                       onClick={handleStartEdit}
                       title="Edit Staff Profile"
                       aria-label="Edit Staff Profile"
-                      className="inline-flex items-center justify-center p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white hover:text-indigo-200 border border-white/20 transition-all shadow-xs cursor-pointer group"
+                      className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white hover:text-fuchsia-200 border border-white/15 backdrop-blur-md transition-all shadow-xs cursor-pointer group"
                     >
-                      <Edit3 className="w-4 h-4 text-white group-hover:text-indigo-200 transition-colors" />
-                      <span className="text-xs font-semibold text-white ml-1.5 hidden sm:inline group-hover:text-indigo-200">
+                      <Edit3 className="w-3.5 h-3.5 text-fuchsia-300 group-hover:text-white transition-colors" />
+                      <span className="text-xs font-semibold text-white ml-1.5 hidden sm:inline">
                         Edit Profile
                       </span>
                     </button>
                   )}
                 </div>
 
-                <p className="text-xs sm:text-sm text-indigo-200 flex flex-wrap items-center gap-1.5 mt-0.5 break-words">
+                <p className="text-xs sm:text-sm text-fuchsia-200/90 flex flex-wrap items-center gap-1.5 mt-1 break-words font-medium">
                   <span>{displayPosition || displayDept}</span>
-                  <span>•</span>
+                  <span className="text-fuchsia-400">•</span>
                   <span>{displayWorkplace}</span>
                 </p>
-                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/15 text-indigo-200 border border-white/20 whitespace-nowrap">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3">
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-500/30 backdrop-blur-sm whitespace-nowrap">
                     {displayRole}
                   </span>
-                  <span className="px-2 py-0.5 bg-white/10 rounded-lg text-[10px] sm:text-[11px] font-mono text-indigo-100 border border-white/10">
+                  <span className="px-2.5 py-1 bg-white/10 rounded-lg text-[10px] sm:text-[11px] font-mono text-fuchsia-100 border border-white/10">
                     Staff ID: {displayStaffId}
                   </span>
                   {displayIqama && (
-                    <span className="px-2 py-0.5 bg-white/10 rounded-lg text-[10px] sm:text-[11px] font-mono text-indigo-100 border border-white/10">
+                    <span className="px-2.5 py-1 bg-white/10 rounded-lg text-[10px] sm:text-[11px] font-mono text-fuchsia-100 border border-white/10">
                       Iqama: {displayIqama}
                     </span>
                   )}
-                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-lg text-[10px] sm:text-[11px] font-semibold border border-emerald-500/30">
-                    Active Staff Member
+                  <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-lg text-[10px] sm:text-[11px] font-semibold border border-emerald-500/30 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Active Staff Member</span>
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Quick Performance Badge Banner */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 p-2.5 sm:p-4 bg-white/10 backdrop-blur-xs rounded-xl border border-white/10 w-full xl:w-auto">
-              <div className="text-center px-1">
-                <p className="text-[10px] sm:text-xs text-indigo-200 leading-tight whitespace-nowrap">Total Items</p>
-                <p className="text-base sm:text-2xl font-bold text-white mt-0.5">{totalItemsAdded}</p>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4 bg-black/25 backdrop-blur-md rounded-2xl border border-white/10 w-full xl:w-auto shadow-inner">
+              <div className="text-center px-2">
+                <p className="text-[10px] sm:text-xs text-fuchsia-200/80 leading-tight uppercase font-semibold tracking-wider whitespace-nowrap">Total Items</p>
+                <p className="text-lg sm:text-2xl font-extrabold text-white mt-1">{totalItemsAdded}</p>
               </div>
-              <div className="text-center px-1 border-x border-white/20">
-                <p className="text-[10px] sm:text-xs text-indigo-200 leading-tight whitespace-nowrap">Handover</p>
-                <p className="text-base sm:text-2xl font-bold text-emerald-300 mt-0.5">{successfulHandovers}</p>
+              <div className="text-center px-2 border-x border-white/10">
+                <p className="text-[10px] sm:text-xs text-fuchsia-200/80 leading-tight uppercase font-semibold tracking-wider whitespace-nowrap">Handover</p>
+                <p className="text-lg sm:text-2xl font-extrabold text-emerald-400 mt-1">{successfulHandovers}</p>
               </div>
-              <div className="text-center px-1">
-                <p className="text-[10px] sm:text-xs text-indigo-200 leading-tight whitespace-nowrap">Pending</p>
-                <p className="text-base sm:text-2xl font-bold text-amber-300 mt-0.5">{itemsPending}</p>
+              <div className="text-center px-2">
+                <p className="text-[10px] sm:text-xs text-fuchsia-200/80 leading-tight uppercase font-semibold tracking-wider whitespace-nowrap">Pending</p>
+                <p className="text-lg sm:text-2xl font-extrabold text-amber-400 mt-1">{itemsPending}</p>
               </div>
             </div>
           </div>
@@ -798,7 +810,7 @@ export const UserProfileView: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSaving || hasDuplicateError}
-                  className="w-full sm:w-auto flex items-center justify-center space-x-1.5 px-5 py-2.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer min-h-[44px] sm:min-h-0"
+                  className="w-full sm:w-auto flex items-center justify-center space-x-1.5 px-5 py-2.5 sm:py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer min-h-[44px] sm:min-h-0"
                 >
                   <Save className="w-4 h-4" />
                   <span>{isSaving ? 'Saving Changes...' : 'Save Profile Data'}</span>
@@ -807,83 +819,123 @@ export const UserProfileView: React.FC = () => {
             </div>
           </form>
         ) : (
-          <div className="p-3.5 sm:p-6 lg:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 bg-slate-50/40">
-            <div className="space-y-1 bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-slate-100 sm:border-0">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                <CreditCard className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                <span>Iqama / ID Number</span>
-              </span>
-              <p className="text-xs font-semibold text-slate-800 font-mono break-all">
+          <div className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6 bg-slate-50/60 dark:bg-[#150a17]">
+            {/* Card 1: Iqama */}
+            <div className="bg-white dark:bg-[#1c0f20] p-4 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30 shadow-xs hover:border-fuchsia-400 dark:hover:border-fuchsia-500/50 transition-all flex flex-col justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-fuchsia-50 dark:bg-fuchsia-950/60 border border-fuchsia-100 dark:border-fuchsia-800/40 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-fuchsia-300/70 truncate">
+                  Iqama / ID Number
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white font-mono break-all pt-2.5">
                 {displayIqama || 'Not Provided'}
               </p>
             </div>
 
-            <div className="space-y-1 bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-slate-100 sm:border-0">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                <Calendar className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                <span>Date of Birth</span>
-              </span>
-              <p className="text-xs font-semibold text-slate-800">
+            {/* Card 2: DOB */}
+            <div className="bg-white dark:bg-[#1c0f20] p-4 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30 shadow-xs hover:border-fuchsia-400 dark:hover:border-fuchsia-500/50 transition-all flex flex-col justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-100 dark:border-purple-800/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-fuchsia-300/70 truncate">
+                  Date of Birth
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white pt-2.5">
                 {displayDOB || 'Not Provided'}
               </p>
             </div>
 
-            <div className="space-y-1 bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-slate-100 sm:border-0">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                <Mail className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                <span>Email Address</span>
-              </span>
-              <p className="text-xs font-semibold text-slate-800 break-all">
+            {/* Card 3: Email */}
+            <div className="bg-white dark:bg-[#1c0f20] p-4 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30 shadow-xs hover:border-fuchsia-400 dark:hover:border-fuchsia-500/50 transition-all flex flex-col justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-800/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-fuchsia-300/70 truncate">
+                  Email Address
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white break-all pt-2.5">
                 {displayEmail || 'Not Provided'}
               </p>
             </div>
 
-            <div className="space-y-1 bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-slate-100 sm:border-0">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                <Phone className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                <span>Phone Contact</span>
-              </span>
-              <p className="text-xs font-semibold text-slate-800 break-all">
+            {/* Card 4: Phone */}
+            <div className="bg-white dark:bg-[#1c0f20] p-4 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30 shadow-xs hover:border-fuchsia-400 dark:hover:border-fuchsia-500/50 transition-all flex flex-col justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-800/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-fuchsia-300/70 truncate">
+                  Phone Contact
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white break-all pt-2.5">
                 {displayPhone || 'Not Provided'}
               </p>
             </div>
 
-            <div className="space-y-1 bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-slate-100 sm:border-0">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                <Building className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                <span>Workplace Property</span>
-              </span>
-              <p className="text-xs font-semibold text-slate-800 break-words">
+            {/* Card 5: Property */}
+            <div className="bg-white dark:bg-[#1c0f20] p-4 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30 shadow-xs hover:border-fuchsia-400 dark:hover:border-fuchsia-500/50 transition-all flex flex-col justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-100 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <Building className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-fuchsia-300/70 truncate">
+                  Workplace Property
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white break-words pt-2.5">
                 {displayWorkplace}
               </p>
             </div>
 
-            <div className="space-y-1 bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-slate-100 sm:border-0">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                <Briefcase className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                <span>Department & Position</span>
-              </span>
-              <p className="text-xs font-semibold text-slate-800 break-words">
+            {/* Card 6: Dept */}
+            <div className="bg-white dark:bg-[#1c0f20] p-4 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30 shadow-xs hover:border-fuchsia-400 dark:hover:border-fuchsia-500/50 transition-all flex flex-col justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <Briefcase className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-fuchsia-300/70 truncate">
+                  Department &amp; Position
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white break-words pt-2.5">
                 {displayDept} - {displayPosition || 'Staff'}
               </p>
             </div>
 
-            <div className="space-y-1 bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-slate-100 sm:border-0">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                <Shield className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                <span>System Role</span>
-              </span>
-              <p className="text-xs font-semibold text-slate-800">
+            {/* Card 7: Role */}
+            <div className="bg-white dark:bg-[#1c0f20] p-4 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30 shadow-xs hover:border-fuchsia-400 dark:hover:border-fuchsia-500/50 transition-all flex flex-col justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-fuchsia-50 dark:bg-fuchsia-950/60 border border-fuchsia-100 dark:border-fuchsia-800/40 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center shrink-0">
+                  <Shield className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-fuchsia-300/70 truncate">
+                  System Role
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white pt-2.5">
                 {displayRole}
               </p>
             </div>
 
-            <div className="space-y-1 bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-slate-100 sm:border-0">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                <Phone className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Emergency Contact</span>
-              </span>
-              <p className="text-xs font-semibold text-slate-800 break-words">
+            {/* Card 8: Emergency Contact */}
+            <div className="bg-white dark:bg-[#1c0f20] p-4 rounded-xl border border-slate-200/80 dark:border-fuchsia-900/30 shadow-xs hover:border-fuchsia-400 dark:hover:border-fuchsia-500/50 transition-all flex flex-col justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-100 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-fuchsia-300/70 truncate">
+                  Emergency Contact
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white break-words pt-2.5">
                 {displayEmergency || 'Not Provided'}
               </p>
             </div>
@@ -894,109 +946,109 @@ export const UserProfileView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 5 DYNAMIC METRIC CARDS (PLACED DIRECTLY AFTER USER PROFILE SECTION) */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* Card 1: Total Items Added */}
-        <div className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-indigo-300 transition-all">
+        <div className="bg-white dark:bg-[#180F1A] p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-fuchsia-500/20 shadow-sm hover:border-fuchsia-400 dark:hover:border-fuchsia-500/50 flex flex-col justify-between transition-all group">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate mr-1">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate mr-1">
               TOTAL ADDED
             </span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/25 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
               <Package className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-2 sm:mt-3">
-            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+          <div className="mt-3">
+            <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
               {totalItemsAdded}
             </p>
-            <p className="text-[10px] sm:text-[11px] text-indigo-600 font-medium mt-0.5 truncate">
+            <p className="text-[10px] sm:text-[11px] text-fuchsia-600 dark:text-fuchsia-400 font-medium mt-1 truncate">
               Deposited by {displayName.split(' ')[0]}
             </p>
           </div>
         </div>
 
         {/* Card 2: Currently Stored */}
-        <div className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-blue-300 transition-all">
+        <div className="bg-white dark:bg-[#180F1A] p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-blue-500/20 shadow-sm hover:border-blue-400 dark:hover:border-blue-500/50 flex flex-col justify-between transition-all group">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate mr-1">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate mr-1">
               STORED ITEMS
             </span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
               <Layers className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-2 sm:mt-3">
-            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600">
+          <div className="mt-3">
+            <p className="text-2xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400">
               {storedItemsCount}
             </p>
-            <p className="text-[10px] sm:text-[11px] text-blue-600 font-medium mt-0.5 truncate">
+            <p className="text-[10px] sm:text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-1 truncate">
               In custody / warehouse
             </p>
           </div>
         </div>
 
         {/* Card 3: Items Pending */}
-        <div className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-amber-300 transition-all">
+        <div className="bg-white dark:bg-[#180F1A] p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm hover:border-amber-400 dark:hover:border-amber-500/50 flex flex-col justify-between transition-all group">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold text-amber-700 uppercase tracking-wider truncate mr-1">
+            <span className="text-[10px] sm:text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider truncate mr-1">
               ITEMS PENDING
             </span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
               <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-2 sm:mt-3">
-            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-600">
+          <div className="mt-3">
+            <p className="text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400">
               {itemsPending}
             </p>
-            <p className="text-[10px] sm:text-[11px] text-amber-600 font-medium mt-0.5 truncate">
+            <p className="text-[10px] sm:text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-1 truncate">
               Approval & dispatch
             </p>
           </div>
         </div>
 
         {/* Card 4: Successful Handovers */}
-        <div className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-emerald-300 transition-all">
+        <div className="bg-white dark:bg-[#180F1A] p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-emerald-500/20 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-500/50 flex flex-col justify-between transition-all group">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 uppercase tracking-wider truncate mr-1">
+            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider truncate mr-1">
               HANDOVERS
             </span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
               <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-2 sm:mt-3">
+          <div className="mt-3">
             <div className="flex items-baseline space-x-1.5 flex-wrap">
-              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-600">
+              <p className="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
                 {successfulHandovers}
               </p>
               {totalItemsAdded > 0 && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">
+                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/25 whitespace-nowrap">
                   {successRate}% rate
                 </span>
               )}
             </div>
-            <p className="text-[10px] sm:text-[11px] text-emerald-600 font-medium mt-0.5 truncate">
+            <p className="text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1 truncate">
               Returned to guests
             </p>
           </div>
         </div>
 
         {/* Card 5: Total Dispatched */}
-        <div className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-purple-300 transition-all col-span-2 sm:col-span-1">
+        <div className="bg-white dark:bg-[#180F1A] p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-purple-500/20 shadow-sm hover:border-purple-400 dark:hover:border-purple-500/50 flex flex-col justify-between transition-all col-span-2 sm:col-span-1 group">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold text-purple-700 uppercase tracking-wider truncate mr-1">
+            <span className="text-[10px] sm:text-[11px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider truncate mr-1">
               DISPATCHED
             </span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
               <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-2 sm:mt-3">
-            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-600">
+          <div className="mt-3">
+            <p className="text-2xl sm:text-3xl font-extrabold text-purple-600 dark:text-purple-400">
               {dispatchedItemsCount}
             </p>
-            <p className="text-[10px] sm:text-[11px] text-purple-600 font-medium mt-0.5 truncate">
+            <p className="text-[10px] sm:text-[11px] text-purple-600 dark:text-purple-400 font-medium mt-1 truncate">
               Handed to finder staff
             </p>
           </div>
@@ -1006,16 +1058,16 @@ export const UserProfileView: React.FC = () => {
       {/* ========================================================================= */}
       {/* ITEM SUBMISSION DATA TABLE & ACTIVITY SECTION */}
       {/* ========================================================================= */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
+      <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-sm overflow-hidden space-y-4">
         {/* Section Header with Actions */}
-        <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-slate-50/50">
+        <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-fuchsia-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-slate-50/50 dark:bg-[#1c0f20]">
           <div>
-            <h2 className="text-base font-bold text-slate-900 flex items-center space-x-2">
-              <Boxes className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-              <span>Deposited Items & Inventory Records ({userSubmittedItems.length})</span>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+              <Boxes className="w-5 h-5 text-indigo-600 dark:text-fuchsia-400 flex-shrink-0" />
+              <span>Deposited Items &amp; Inventory Records ({userSubmittedItems.length})</span>
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Interactive record list for lost & found items found and registered by {displayName}
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Interactive record list for lost &amp; found items found and registered by {displayName}
             </p>
           </div>
 
@@ -1023,10 +1075,10 @@ export const UserProfileView: React.FC = () => {
             <button
               onClick={handleExportExcel}
               disabled={filteredAndSortedItems.length === 0}
-              className="w-full sm:w-auto flex items-center justify-center space-x-1.5 px-3.5 py-2.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              className="w-full sm:w-auto flex items-center justify-center space-x-1.5 px-3.5 py-2.5 sm:py-2 btn-primary-gradient disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
               title="Download full item list as Excel (.xlsx)"
             >
-              <FileSpreadsheet className="w-4 h-4" />
+              <FileSpreadsheet className="w-4 h-4 text-white" />
               <span>Export Excel</span>
             </button>
           </div>
@@ -1045,7 +1097,7 @@ export const UserProfileView: React.FC = () => {
                 setSearchFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-10 pr-3.5 py-2.5 sm:py-2 text-base sm:text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 min-h-[44px] sm:min-h-0"
+              className="w-full pl-10 pr-3.5 py-2.5 sm:py-2 text-base sm:text-xs rounded-xl border border-slate-200 dark:border-fuchsia-900/30 bg-white dark:bg-[#120815] focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 min-h-[44px] sm:min-h-0"
             />
           </div>
 
@@ -1057,7 +1109,7 @@ export const UserProfileView: React.FC = () => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 min-h-[44px] sm:min-h-0"
+              className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-xs rounded-xl border border-slate-200 dark:border-fuchsia-900/30 bg-white dark:bg-[#120815] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 min-h-[44px] sm:min-h-0"
             >
               <option value="All">All Statuses ({userSubmittedItems.length})</option>
               <option value="Stored">Stored ({storedItemsCount})</option>
@@ -1075,7 +1127,7 @@ export const UserProfileView: React.FC = () => {
                 setCategoryFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 min-h-[44px] sm:min-h-0"
+              className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-xs rounded-xl border border-slate-200 dark:border-fuchsia-900/30 bg-white dark:bg-[#120815] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 min-h-[44px] sm:min-h-0"
             >
               <option value="All">All Categories</option>
               {availableCategories.map(cat => (
@@ -1086,14 +1138,14 @@ export const UserProfileView: React.FC = () => {
 
           {/* Page Size Selector */}
           <div className="sm:col-span-2 lg:col-span-2 flex items-center justify-between sm:justify-end space-x-2">
-            <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Show:</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Show:</span>
             <select
               value={pageSize}
               onChange={e => {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="flex-1 sm:flex-initial px-3 py-2.5 sm:py-2 text-base sm:text-xs rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 min-h-[44px] sm:min-h-0"
+              className="flex-1 sm:flex-initial px-3 py-2.5 sm:py-2 text-base sm:text-xs rounded-xl border border-slate-200 dark:border-fuchsia-900/30 bg-white dark:bg-[#120815] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 min-h-[44px] sm:min-h-0"
             >
               <option value={10}>10 items</option>
               <option value={25}>25 items</option>

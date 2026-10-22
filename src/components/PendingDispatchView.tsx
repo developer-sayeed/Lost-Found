@@ -404,21 +404,21 @@ export const PendingDispatchView: React.FC = () => {
           }}
           className={`p-6 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
             activeCategoryFilter === 'all'
-              ? 'bg-indigo-50/90 border-indigo-300 ring-2 ring-indigo-500/20 shadow-xs'
-              : 'bg-white border-slate-200 shadow-sm hover:border-indigo-200'
+              ? 'bg-fuchsia-50/90 dark:bg-fuchsia-950/50 border-fuchsia-300 dark:border-fuchsia-600 ring-2 ring-fuchsia-500/20 shadow-xs'
+              : 'bg-gradient-to-br from-fuchsia-50/50 via-white/80 to-purple-50/40 dark:from-[#241328]/70 dark:via-[#1a0c1d]/70 dark:to-[#120815]/70 border-fuchsia-200/70 dark:border-fuchsia-500/20 shadow-sm hover:border-fuchsia-400 dark:hover:border-fuchsia-400'
           }`}
         >
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
               {t.pendingDispatchMetric || 'TOTAL PENDING'}
             </p>
-            <p className="text-2xl font-bold text-slate-900">{pendingItems.length}</p>
-            <div className="mt-2 flex items-center text-xs text-indigo-600 font-medium">
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{pendingItems.length}</p>
+            <div className="mt-2 flex items-center text-xs text-fuchsia-600 dark:text-fuchsia-400 font-medium">
               <span className="mr-1">•</span>
               {t.awaitingFulfillment || 'Awaiting fulfillment'}
             </div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <div className="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center flex-shrink-0 shadow-2xs">
             <Package className="w-6 h-6" />
           </div>
         </div>
@@ -431,21 +431,21 @@ export const PendingDispatchView: React.FC = () => {
           }}
           className={`p-6 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
             activeCategoryFilter === 'overdue'
-              ? 'bg-rose-50 border-rose-300 ring-2 ring-rose-500/20 shadow-xs'
-              : 'bg-white border-slate-200 shadow-sm hover:border-rose-200'
+              ? 'bg-rose-50/90 dark:bg-rose-950/50 border-rose-300 dark:border-rose-600 ring-2 ring-rose-500/20 shadow-xs'
+              : 'bg-gradient-to-br from-rose-50/40 via-white/80 to-purple-50/30 dark:from-[#28131d]/70 dark:via-[#1a0c1d]/70 dark:to-[#120815]/70 border-rose-200/70 dark:border-rose-500/20 shadow-sm hover:border-rose-300 dark:hover:border-rose-400'
           }`}
         >
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
               {t.overdue || 'OVERDUE'}
             </p>
-            <p className="text-2xl font-bold text-rose-600">{overdueItems.length}</p>
-            <div className="mt-2 flex items-center text-xs text-rose-600 font-medium">
+            <p className="text-2xl font-bold text-rose-600 dark:text-rose-400">{overdueItems.length}</p>
+            <div className="mt-2 flex items-center text-xs text-rose-600 dark:text-rose-400 font-medium">
               <span className="mr-1">•</span>
               {t.pastPolicyWindow || 'Past policy window'}
             </div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 shadow-2xs">
             <AlertTriangle className="w-6 h-6" />
           </div>
         </div>
@@ -458,21 +458,21 @@ export const PendingDispatchView: React.FC = () => {
           }}
           className={`p-6 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
             activeCategoryFilter === 'today'
-              ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-500/20 shadow-xs'
-              : 'bg-white border-slate-200 shadow-sm hover:border-amber-200'
+              ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-300 dark:border-amber-600 ring-2 ring-amber-500/20 shadow-xs'
+              : 'bg-gradient-to-br from-amber-50/40 via-white/80 to-purple-50/30 dark:from-[#281d13]/70 dark:via-[#1a0c1d]/70 dark:to-[#120815]/70 border-amber-200/70 dark:border-amber-500/20 shadow-sm hover:border-amber-300 dark:hover:border-amber-400'
           }`}
         >
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
               {t.dueToday || 'DUE TODAY'}
             </p>
-            <p className="text-2xl font-bold text-amber-600">{todayDueItems.length}</p>
-            <div className="mt-2 flex items-center text-xs text-amber-600 font-medium">
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{todayDueItems.length}</p>
+            <div className="mt-2 flex items-center text-xs text-amber-600 dark:text-amber-400 font-medium">
               <span className="mr-1">•</span>
               {t.immediateAction || 'Immediate action'}
             </div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 shadow-2xs">
             <Clock className="w-6 h-6" />
           </div>
         </div>
@@ -485,40 +485,40 @@ export const PendingDispatchView: React.FC = () => {
           }}
           className={`p-6 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
             activeCategoryFilter === 'upcoming'
-              ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-500/20 shadow-xs'
-              : 'bg-white border-slate-200 shadow-sm hover:border-blue-200'
+              ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-600 ring-2 ring-blue-500/20 shadow-xs'
+              : 'bg-gradient-to-br from-blue-50/40 via-white/80 to-purple-50/30 dark:from-[#131d28]/70 dark:via-[#1a0c1d]/70 dark:to-[#120815]/70 border-blue-200/70 dark:border-blue-500/20 shadow-sm hover:border-blue-300 dark:hover:border-blue-400'
           }`}
         >
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
               {t.dueIn3Days || 'DUE IN 1-3 DAYS'}
             </p>
-            <p className="text-2xl font-bold text-blue-600">{upcomingDueItems.length}</p>
-            <div className="mt-2 flex items-center text-xs text-blue-600 font-medium">
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{upcomingDueItems.length}</p>
+            <div className="mt-2 flex items-center text-xs text-blue-600 dark:text-blue-400 font-medium">
               <span className="mr-1">•</span>
               {t.upcomingCutoff || 'Upcoming cutoff'}
             </div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-2xs">
             <CalendarCheck className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Main Data Table Container */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-sm overflow-hidden">
         {/* Table Top Header */}
-        <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-6 border-b border-slate-100 dark:border-fuchsia-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2">
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 {t.pendingDispatchTitle || 'Pending Dispatch Records'}
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-800/40">
                 {sortedItems.length}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {t.pendingDispatchSubtitle || 'Items exceeding or approaching storage retention threshold for finder staff claiming'}
             </p>
           </div>
@@ -526,21 +526,21 @@ export const PendingDispatchView: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Batch Dispatch Trigger Button */}
             {selectedItemIds.length > 0 && hasPermission('dispatch') && (
-              <div className="flex items-center space-x-2 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-200 animate-slide-down">
-                <span className="text-xs font-bold text-indigo-900">
+              <div className="flex items-center space-x-2 bg-fuchsia-50 dark:bg-fuchsia-950/40 px-3 py-1.5 rounded-xl border border-fuchsia-200 dark:border-fuchsia-800/40 animate-slide-down">
+                <span className="text-xs font-bold text-fuchsia-900 dark:text-fuchsia-200">
                   {selectedItemIds.length} Selected
                 </span>
                 <button
                   id="btn-batch-dispatch-trigger"
                   onClick={handleOpenBatchDispatch}
-                  className="flex items-center space-x-1.5 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all cursor-pointer"
+                  className="flex items-center space-x-1.5 px-3 py-1 btn-primary-gradient text-white text-xs font-bold rounded-lg shadow-xs transition-all cursor-pointer"
                 >
                   <Truck className="w-3.5 h-3.5" />
                   <span>Batch Dispatch</span>
                 </button>
                 <button
                   onClick={() => setSelectedItemIds([])}
-                  className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                  className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded"
                   title="Clear selection"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -552,17 +552,17 @@ export const PendingDispatchView: React.FC = () => {
             <button
               onClick={handleExportCsv}
               disabled={sortedItems.length === 0}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors disabled:opacity-40 cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 btn-primary-gradient text-white text-xs font-semibold rounded-xl transition-all shadow-xs disabled:opacity-40 cursor-pointer"
               title="Export filtered records to CSV"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5 text-white" />
               <span>Export CSV</span>
             </button>
           </div>
         </div>
 
         {/* Data Table Search & Filter Toolbar */}
-        <div className="p-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="p-4 bg-slate-50/80 dark:bg-[#150a17] border-b border-slate-200/80 dark:border-fuchsia-900/30 flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Search Box */}
           <div className="relative flex-1 max-w-md">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -571,13 +571,13 @@ export const PendingDispatchView: React.FC = () => {
               value={searchQuery}
               onChange={e => handleSearchChange(e.target.value)}
               placeholder="Search code, item name, staff, category..."
-              className="w-full pl-9 pr-8 py-2 text-xs bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 placeholder-slate-400 shadow-2xs"
+              className="w-full pl-9 pr-8 py-2 text-xs bg-white dark:bg-[#120815] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 shadow-2xs"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => handleSearchChange('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
                 title="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -588,12 +588,12 @@ export const PendingDispatchView: React.FC = () => {
           {/* Filters & Rows Per Page */}
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Category Filter */}
-            <div className="flex items-center space-x-1.5 text-xs text-slate-600">
+            <div className="flex items-center space-x-1.5 text-xs text-slate-600 dark:text-slate-300">
               <Filter className="w-3.5 h-3.5 text-slate-400" />
               <select
                 value={selectedCategory}
                 onChange={e => handleCategoryChange(e.target.value)}
-                className="px-2.5 py-1.5 text-xs bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium cursor-pointer shadow-2xs"
+                className="px-2.5 py-1.5 text-xs bg-white dark:bg-[#120815] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 text-slate-800 dark:text-white font-medium cursor-pointer shadow-2xs"
               >
                 <option value="all">All Categories</option>
                 {uniqueCategories.map(cat => (
@@ -605,12 +605,12 @@ export const PendingDispatchView: React.FC = () => {
             </div>
 
             {/* Rows Per Page */}
-            <div className="flex items-center space-x-1 text-xs text-slate-500">
+            <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
               <span>Show:</span>
               <select
                 value={pageSize}
                 onChange={e => handlePageSizeChange(Number(e.target.value))}
-                className="px-2 py-1.5 text-xs bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium cursor-pointer shadow-2xs"
+                className="px-2 py-1.5 text-xs bg-white dark:bg-[#120815] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 text-slate-800 dark:text-white font-medium cursor-pointer shadow-2xs"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -624,7 +624,7 @@ export const PendingDispatchView: React.FC = () => {
               <button
                 type="button"
                 onClick={resetFilters}
-                className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#251329] rounded-lg transition-colors cursor-pointer"
                 title="Reset active search and filters"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -636,14 +636,14 @@ export const PendingDispatchView: React.FC = () => {
         {/* Responsive Table Container */}
         <div className="overflow-x-auto">
           {sortedItems.length === 0 ? (
-            <div className="p-16 text-center text-slate-500 text-xs">
+            <div className="p-16 text-center text-slate-500 dark:text-slate-400 text-xs">
               <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-              <p className="font-bold text-slate-800 text-sm">
+              <p className="font-bold text-slate-800 dark:text-white text-sm">
                 {searchQuery || selectedCategory !== 'all'
                   ? 'No records match your search or filter'
                   : t.noPendingDispatch || 'No items in this dispatch category'}
               </p>
-              <p className="text-slate-400 mt-1 max-w-sm mx-auto">
+              <p className="text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">
                 {searchQuery || selectedCategory !== 'all'
                   ? 'Try clearing the search query or category filter to view all pending dispatches.'
                   : t.allRetentionInCompliance || 'All retention and storage schedules are currently in compliance.'}
@@ -652,7 +652,7 @@ export const PendingDispatchView: React.FC = () => {
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="mt-4 inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg transition"
+                  className="mt-4 inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-fuchsia-950/40 hover:bg-indigo-100 dark:hover:bg-fuchsia-900/40 text-indigo-700 dark:text-fuchsia-300 border border-transparent dark:border-fuchsia-800/30 text-xs font-semibold rounded-lg transition"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Clear Filters</span>
@@ -660,8 +660,8 @@ export const PendingDispatchView: React.FC = () => {
               )}
             </div>
           ) : (
-            <table className="w-full text-left rtl:text-right text-xs border-collapse">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-[11px] uppercase tracking-wider select-none">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-slate-50 dark:bg-[#200f24] border-b border-slate-200 dark:border-fuchsia-900/40 text-slate-600 dark:text-fuchsia-300 font-semibold text-[11px] uppercase tracking-wider select-none">
                 <tr>
                   {/* Select All Checkbox */}
                   <th className="py-3 px-3 w-10 text-center">
@@ -716,12 +716,12 @@ export const PendingDispatchView: React.FC = () => {
                   </th>
 
                   {/* Action */}
-                  <th className="py-3 px-4 text-right rtl:text-left whitespace-nowrap">
+                  <th className="py-3 px-4 text-right whitespace-nowrap">
                     {t.actions || 'Action'}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200 bg-white dark:bg-[#180F1A]">
                 {paginatedItems.map((item, index) => {
                   const serialNumber = startIndex + index + 1;
                   const diffDays = item.diffDays ?? 0;
@@ -733,7 +733,7 @@ export const PendingDispatchView: React.FC = () => {
                     <tr
                       key={item.id}
                       className={`transition-colors ${
-                        isSelected ? 'bg-indigo-50/50' : 'hover:bg-slate-50/80'
+                        isSelected ? 'bg-fuchsia-50/70 dark:bg-fuchsia-950/40' : 'hover:bg-slate-50/80 dark:hover:bg-fuchsia-950/20'
                       }`}
                     >
                       {/* Checkbox */}
@@ -742,7 +742,7 @@ export const PendingDispatchView: React.FC = () => {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelect(item.id)}
-                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          className="rounded border-slate-300 dark:border-slate-700 text-fuchsia-600 focus:ring-fuchsia-500 cursor-pointer accent-fuchsia-600"
                         />
                       </td>
 
@@ -752,11 +752,11 @@ export const PendingDispatchView: React.FC = () => {
                       </td>
 
                       {/* Code */}
-                      <td className="py-3 px-3 font-mono font-bold text-indigo-600 whitespace-nowrap">
+                      <td className="py-3 px-3 font-mono font-bold text-fuchsia-600 dark:text-fuchsia-400 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => openItemDetails(item)}
-                          className="hover:underline text-left rtl:text-right cursor-pointer"
+                          className="hover:underline text-left cursor-pointer"
                           title="View Item Details"
                         >
                           {item.code}
@@ -764,9 +764,9 @@ export const PendingDispatchView: React.FC = () => {
                       </td>
 
                       {/* Date Found */}
-                      <td className="py-3 px-3 whitespace-nowrap text-slate-600 font-medium">
+                      <td className="py-3 px-3 whitespace-nowrap text-slate-600 dark:text-slate-300 font-medium">
                         {item.dateFound ? (
-                          <div className="flex items-center space-x-1.5 text-slate-700">
+                          <div className="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200">
                             <Calendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                             <span>{formatDate(item.dateFound)}</span>
                           </div>
@@ -777,7 +777,7 @@ export const PendingDispatchView: React.FC = () => {
 
                       {/* Item Name */}
                       <td
-                        className="py-3 px-3 font-semibold text-slate-900 max-w-xs truncate capitalize"
+                        className="py-3 px-3 font-semibold text-slate-900 dark:text-white max-w-xs truncate capitalize"
                         style={{ textTransform: 'capitalize' }}
                       >
                         {item.itemName}
@@ -785,47 +785,47 @@ export const PendingDispatchView: React.FC = () => {
 
                       {/* Category */}
                       <td className="py-3 px-3 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-medium bg-slate-100 text-slate-700">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                           {translateCategory(item.category)}
                         </span>
                       </td>
 
                       {/* Found By */}
-                      <td className="py-3 px-3 whitespace-nowrap text-slate-600 font-medium">
+                      <td className="py-3 px-3 whitespace-nowrap text-slate-600 dark:text-slate-300 font-medium">
                         {item.employeeName || 'Staff'}
                       </td>
 
                       {/* Deadline */}
-                      <td className="py-3 px-3 whitespace-nowrap text-slate-600">
+                      <td className="py-3 px-3 whitespace-nowrap text-slate-600 dark:text-slate-300">
                         {item.dispatchDeadline ? formatDate(item.dispatchDeadline) : t.immediate || 'Immediate'}
                       </td>
 
                       {/* Urgency */}
                       <td className="py-3 px-3 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center space-x-1 rtl:space-x-reverse px-2 py-0.5 rounded-lg text-[11px] font-semibold border ${
+                          className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold border ${
                             isOverdue
-                              ? 'bg-rose-50 text-rose-800 border-rose-200'
+                              ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                               : isDueToday
-                              ? 'bg-amber-50 text-amber-800 border-amber-200'
-                              : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                              : 'bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-800 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800'
                           }`}
                         >
                           {isOverdue ? (
                             <>
-                              <AlertTriangle className="w-3 h-3 text-rose-600" />
+                              <AlertTriangle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
                               <span>
                                 {t.overdue || 'Overdue'} ({Math.abs(diffDays)}d)
                               </span>
                             </>
                           ) : isDueToday ? (
                             <>
-                              <Clock className="w-3 h-3 text-amber-600" />
+                              <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                               <span>{t.dueToday || 'Due Today'}</span>
                             </>
                           ) : (
                             <>
-                              <Clock className="w-3 h-3 text-indigo-600" />
+                              <Clock className="w-3 h-3 text-fuchsia-600 dark:text-fuchsia-400" />
                               <span>
                                 {diffDays} {t.daysRemaining || 'days left'}
                               </span>
@@ -834,14 +834,14 @@ export const PendingDispatchView: React.FC = () => {
                         </span>
                       </td>
 
-                      {/* Actions (QR Code has been removed as requested) */}
-                      <td className="py-3 px-4 text-right rtl:text-left whitespace-nowrap">
-                        <div className="flex items-center justify-end rtl:justify-start space-x-1.5 rtl:space-x-reverse">
+                      {/* Actions */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end space-x-1.5">
                           <button
                             type="button"
                             onClick={() => openItemDetails(item)}
                             title={t.viewDetails || 'View Details'}
-                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -850,7 +850,7 @@ export const PendingDispatchView: React.FC = () => {
                               id={`btn-dispatch-action-${item.id}`}
                               type="button"
                               onClick={() => openDispatch(item)}
-                              className="inline-flex items-center space-x-1.5 rtl:space-x-reverse px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-xs cursor-pointer"
+                              className="inline-flex items-center space-x-1.5 px-2.5 py-1 btn-primary-gradient text-white text-xs font-semibold rounded-xl transition-all shadow-xs cursor-pointer"
                             >
                               <Truck className="w-3.5 h-3.5" />
                               <span>{t.dispatch || 'Dispatch'}</span>
@@ -868,14 +868,14 @@ export const PendingDispatchView: React.FC = () => {
 
         {/* Data Table Pagination Controls Footer */}
         {sortedItems.length > 0 && (
-          <div className="px-5 py-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-600 bg-slate-50/70">
+          <div className="px-5 py-4 border-t border-slate-200 dark:border-fuchsia-900/30 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-600 dark:text-slate-300 bg-slate-50/70 dark:bg-[#180F1A]">
             {/* Showing entries info */}
             <div className="font-medium">
-              Showing <span className="font-bold text-slate-900">{startIndex + 1}</span> to{' '}
-              <span className="font-bold text-slate-900">{endIndex}</span> of{' '}
-              <span className="font-bold text-slate-900">{sortedItems.length}</span> entries
+              Showing <span className="font-bold text-slate-900 dark:text-white">{startIndex + 1}</span> to{' '}
+              <span className="font-bold text-slate-900 dark:text-white">{endIndex}</span> of{' '}
+              <span className="font-bold text-slate-900 dark:text-white">{sortedItems.length}</span> entries
               {filteredItems.length !== baseCategoryItems.length && (
-                <span className="text-slate-400 ml-1">(filtered from {baseCategoryItems.length} total)</span>
+                <span className="text-slate-400 dark:text-slate-500 ml-1">(filtered from {baseCategoryItems.length} total)</span>
               )}
             </div>
 
@@ -885,7 +885,7 @@ export const PendingDispatchView: React.FC = () => {
                 type="button"
                 onClick={() => setCurrentPage(1)}
                 disabled={safePage === 1}
-                className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
+                className="p-1.5 border border-slate-200 dark:border-fuchsia-900/40 rounded-lg bg-white dark:bg-[#120815] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#251329] disabled:opacity-30 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
                 title="First Page"
               >
                 <ChevronsLeft className="w-3.5 h-3.5" />
@@ -894,7 +894,7 @@ export const PendingDispatchView: React.FC = () => {
                 type="button"
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={safePage === 1}
-                className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
+                className="p-1.5 border border-slate-200 dark:border-fuchsia-900/40 rounded-lg bg-white dark:bg-[#120815] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#251329] disabled:opacity-30 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
                 title="Previous Page"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -916,8 +916,8 @@ export const PendingDispatchView: React.FC = () => {
                           onClick={() => setCurrentPage(p)}
                           className={`w-7 h-7 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
                             safePage === p
-                              ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                              ? 'btn-primary-gradient text-white font-bold shadow-xs'
+                              : 'bg-white dark:bg-[#120815] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329]'
                           }`}
                         >
                           {p}
@@ -931,7 +931,7 @@ export const PendingDispatchView: React.FC = () => {
                 type="button"
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={safePage === totalPages}
-                className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
+                className="p-1.5 border border-slate-200 dark:border-fuchsia-900/40 rounded-lg bg-white dark:bg-[#120815] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#251329] disabled:opacity-30 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
                 title="Next Page"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -940,7 +940,7 @@ export const PendingDispatchView: React.FC = () => {
                 type="button"
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={safePage === totalPages}
-                className="p-1.5 border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
+                className="p-1.5 border border-slate-200 dark:border-fuchsia-900/40 rounded-lg bg-white dark:bg-[#120815] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#251329] disabled:opacity-30 disabled:cursor-not-allowed transition shadow-2xs cursor-pointer"
                 title="Last Page"
               >
                 <ChevronsRight className="w-3.5 h-3.5" />
@@ -962,18 +962,18 @@ export const PendingDispatchView: React.FC = () => {
         >
           <div
             ref={batchModalRef}
-            className="bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-xl w-full overflow-hidden animate-scale-up"
+            className="bg-white dark:bg-[#180F1A] rounded-3xl border border-slate-100 dark:border-fuchsia-900/30 shadow-2xl max-w-xl w-full overflow-hidden animate-scale-up"
           >
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-50/50">
+            <div className="p-6 border-b border-slate-100 dark:border-fuchsia-900/30 flex items-center justify-between bg-fuchsia-50/50 dark:bg-fuchsia-950/30">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                  <Truck className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-2xl btn-primary-gradient text-white flex items-center justify-center shadow-xs">
+                  <Truck className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
                     Batch Dispatch ({selectedItemIds.length} Items)
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Process and dispatch selected items in a single workflow
                   </p>
                 </div>
@@ -981,7 +981,7 @@ export const PendingDispatchView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsBatchModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-[#251329] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -990,18 +990,18 @@ export const PendingDispatchView: React.FC = () => {
             <form onSubmit={handleConfirmBatchDispatch} noValidate className="p-6 space-y-4">
               {/* Selected Items preview chips */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Selected Items ({selectedItemsList.length})
                 </label>
-                <div className="max-h-28 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap gap-1.5">
+                <div className="max-h-28 overflow-y-auto p-2 bg-slate-50 dark:bg-[#120815] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 flex flex-wrap gap-1.5">
                   {selectedItemsList.map(item => (
                     <span
                       key={item.id}
-                      className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 shadow-2xs"
+                      className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white dark:bg-[#1c0f20] border border-slate-200 dark:border-fuchsia-900/40 rounded-lg text-[11px] font-medium text-slate-700 dark:text-slate-200 shadow-2xs"
                     >
-                      <span className="font-mono text-indigo-600 font-bold">{item.code}:</span>
+                      <span className="font-mono text-fuchsia-600 dark:text-fuchsia-400 font-bold">{item.code}:</span>
                       <span className="max-w-[120px] truncate">{item.itemName}</span>
-                      <span className="text-[10px] text-slate-400">({item.employeeName || 'Staff'})</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">({item.employeeName || 'Staff'})</span>
                     </span>
                   ))}
                 </div>
@@ -1009,7 +1009,7 @@ export const PendingDispatchView: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Dispatch Method / Authorization *
                   </label>
                   <input
@@ -1018,12 +1018,12 @@ export const PendingDispatchView: React.FC = () => {
                     placeholder="e.g. Internal Staff Release, Hotel Staff Handover"
                     value={courierName}
                     onChange={e => setCourierName(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-fuchsia-900/30 bg-white dark:bg-[#120815] focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 text-slate-800 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Batch Reference / Auth # *
                   </label>
                   <input
@@ -1032,14 +1032,14 @@ export const PendingDispatchView: React.FC = () => {
                     placeholder="e.g. DSP-20260829-001"
                     value={trackingNumber}
                     onChange={e => setTrackingNumber(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 font-mono"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-fuchsia-900/30 bg-white dark:bg-[#120815] focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 text-slate-800 dark:text-white font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Destination / Department
                   </label>
                   <input
@@ -1047,12 +1047,12 @@ export const PendingDispatchView: React.FC = () => {
                     placeholder="e.g. Housekeeping Staff Room, Main Reception"
                     value={destination}
                     onChange={e => setDestination(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-fuchsia-900/30 bg-white dark:bg-[#120815] focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 text-slate-800 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Dispatched To (Receiver / Staff)
                   </label>
                   <input
@@ -1060,13 +1060,13 @@ export const PendingDispatchView: React.FC = () => {
                     placeholder="Defaults to respective finder employees"
                     value={dispatchedTo}
                     onChange={e => setDispatchedTo(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-fuchsia-900/30 bg-white dark:bg-[#120815] focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 text-slate-800 dark:text-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Dispatch Notes & Authorization Remarks
                 </label>
                 <textarea
@@ -1074,23 +1074,23 @@ export const PendingDispatchView: React.FC = () => {
                   placeholder="Additional dispatch remarks or handover notes..."
                   value={batchNotes}
                   onChange={e => setBatchNotes(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 resize-none"
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-fuchsia-900/30 bg-white dark:bg-[#120815] focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 text-slate-800 dark:text-white resize-none"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end space-x-3 border-t border-slate-100">
+              <div className="pt-2 flex items-center justify-end space-x-3 border-t border-slate-100 dark:border-fuchsia-900/30">
                 <button
                   type="button"
                   disabled={isSubmittingBatch}
                   onClick={() => setIsBatchModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#251329] rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingBatch}
-                  className="flex items-center space-x-1.5 px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+                  className="flex items-center space-x-1.5 px-5 py-2 text-xs font-bold text-white btn-primary-gradient rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
                 >
                   <Truck className="w-4 h-4" />
                   <span>

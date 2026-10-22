@@ -493,7 +493,7 @@ export const ItemQrCodeModal: React.FC = () => {
               type="button"
               id="btn-print-sticky-tag"
               onClick={handlePrintLabel}
-              className="flex items-center justify-center space-x-1.5 py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-all"
+              className="flex items-center justify-center space-x-1.5 py-2.5 px-3 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Print Sticky Tag (A6)</span>

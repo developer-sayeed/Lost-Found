@@ -191,7 +191,7 @@ export const GuestPublicWebsite: React.FC = () => {
       {/* Top Staff Return Bar (Only shown if logged in) */}
       {user && (
         <div className="bg-slate-900 text-white px-4 py-2 text-xs flex items-center justify-between shadow-md">
-          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+          <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Hotel Staff Portal Active ({user.name} - {user.role})</span>
           </div>
@@ -200,7 +200,7 @@ export const GuestPublicWebsite: React.FC = () => {
               setIsPublicWebsiteMode(false);
               setActiveTab('dashboard');
             }}
-            className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-colors text-[11px] flex items-center gap-1"
+            className="px-3 py-1 btn-primary-gradient rounded-lg text-white font-bold transition-all text-[11px] flex items-center gap-1 cursor-pointer"
           >
             <span>Return to Staff Dashboard</span>
             <ArrowRight className="w-3 h-3" />
@@ -211,7 +211,7 @@ export const GuestPublicWebsite: React.FC = () => {
       {/* Website Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+          <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
               <Building className="w-6 h-6" />
             </div>
@@ -226,7 +226,7 @@ export const GuestPublicWebsite: React.FC = () => {
           </div>
 
           {/* Navigation Bar */}
-          <div className="flex items-center space-x-1 sm:space-x-2 rtl:space-x-reverse">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <button
               onClick={() => setActiveSection('catalog')}
               className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -291,15 +291,15 @@ export const GuestPublicWebsite: React.FC = () => {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-xs text-slate-400">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="flex items-center space-x-2">
               <Phone className="w-4 h-4 text-indigo-400" />
               <span>Concierge Hotline: <strong>{publicWebsiteSettings.contactPhone || '+966 12 345 6789'}</strong></span>
             </div>
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="flex items-center space-x-2">
               <Mail className="w-4 h-4 text-indigo-400" />
               <span>Email: <strong>{publicWebsiteSettings.contactEmail || 'lostfound@warwickhotel.com'}</strong></span>
             </div>
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="flex items-center space-x-2">
               <Clock className="w-4 h-4 text-indigo-400" />
               <span>Retention Period: <strong>{publicWebsiteSettings.lostRetentionDays || 90} Days</strong></span>
             </div>
@@ -325,7 +325,7 @@ export const GuestPublicWebsite: React.FC = () => {
               </div>
 
               {/* Category Pills */}
-              <div className="flex items-center space-x-2 rtl:space-x-reverse overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+              <div className="flex items-center space-x-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
                 {categories.map(cat => (
                   <button
                     key={cat}
@@ -415,7 +415,7 @@ export const GuestPublicWebsite: React.FC = () => {
                   </p>
                   <button
                     onClick={() => setActiveSection('report')}
-                    className="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 shadow-xs"
+                    className="mt-4 px-4 py-2 rounded-xl text-xs font-bold btn-primary-gradient text-white shadow-xs transition-all cursor-pointer"
                   >
                     Submit Lost Property Report
                   </button>
@@ -467,7 +467,7 @@ export const GuestPublicWebsite: React.FC = () => {
                       setTrackingInput(submittedClaim.trackingCode);
                       setActiveSection('track');
                     }}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs"
+                    className="px-5 py-2.5 rounded-xl text-xs font-bold btn-primary-gradient text-white shadow-xs transition-all cursor-pointer"
                   >
                     Track Status Now
                   </button>
@@ -641,7 +641,7 @@ export const GuestPublicWebsite: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3 rtl:space-x-reverse">
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
                     <button
                       type="button"
                       onClick={() => setActiveSection('catalog')}
@@ -652,7 +652,7 @@ export const GuestPublicWebsite: React.FC = () => {
                     <button
                       type="submit"
                       disabled={isSubmittingClaim}
-                      className="px-6 py-2.5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition-all flex items-center gap-2"
+                      className="px-6 py-2.5 rounded-xl font-bold btn-primary-gradient text-white shadow-md transition-all flex items-center gap-2 cursor-pointer"
                     >
                       <Send className="w-4 h-4" />
                       <span>{isSubmittingClaim ? 'Submitting...' : 'Submit Claim Report'}</span>
@@ -685,7 +685,7 @@ export const GuestPublicWebsite: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSearchingTracking}
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-all flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold btn-primary-gradient text-white shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Search className="w-4 h-4" />
                   <span>{isSearchingTracking ? 'Searching...' : 'Track'}</span>

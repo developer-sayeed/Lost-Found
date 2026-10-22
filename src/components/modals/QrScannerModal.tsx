@@ -462,7 +462,7 @@ export const QrScannerModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={startCamera}
-                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg flex items-center space-x-1"
+                        className="px-3 py-1.5 btn-primary-gradient text-white text-xs font-semibold rounded-lg flex items-center space-x-1 cursor-pointer"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                         <span>Retry Camera</span>

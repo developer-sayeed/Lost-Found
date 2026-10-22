@@ -554,21 +554,27 @@ export const CertificatesView: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* 5-Star Template Gallery Callout Banner - Available only to users with Add / Create permission */}
       {canAddCertificates && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-50 via-amber-100/40 to-slate-50 dark:from-slate-900 dark:via-[#0b1b2d] dark:to-slate-900 text-slate-900 dark:text-white p-5 border border-amber-200 dark:border-amber-500/30 shadow-xs">
-          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-400/10 via-transparent to-transparent pointer-events-none" />
+        <div 
+          className="relative overflow-hidden rounded-2xl text-white p-5 border border-fuchsia-400/30 shadow-lg relative"
+          style={{ background: 'linear-gradient(135deg, #3d1246 0%, #260a2d 55%, #18071c 100%)' }}
+        >
+          <div 
+            aria-hidden="true" 
+            className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none" 
+          />
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
             <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-bold shrink-0 shadow-md">
-                <Crown className="w-6 h-6 text-slate-950" />
+              <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white font-bold shrink-0 shadow-md">
+                <Crown className="w-6 h-6 text-fuchsia-200" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">5-Star Standard Template Gallery</h3>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200/60 text-amber-900 dark:bg-amber-400/20 dark:text-amber-300 border border-amber-300/60 dark:border-amber-400/30">
+                  <h3 className="font-bold text-sm text-white">5-Star Standard Template Gallery</h3>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/15 text-white border border-white/20">
                     5 Presets
                   </span>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-fuchsia-100/90 mt-0.5">
                   Explore pre-configured 5-star hotel layouts: Employee of the Month, Roman Appreciation, Sovereign Leadership, Hospitality Hero & Long Service Milestone.
                 </p>
               </div>
@@ -579,26 +585,26 @@ export const CertificatesView: React.FC = () => {
                 id="btn-open-template-gallery"
                 type="button"
                 onClick={() => setIsGalleryOpen(true)}
-                className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5"
+                className="px-3.5 py-2 btn-primary-gradient text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer border border-white/20"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-3.5 h-3.5 text-white" />
                 <span>Browse Gallery</span>
               </button>
               <button
                 id="btn-open-certificate-settings"
                 type="button"
                 onClick={() => setIsSettingsOpen(true)}
-                className="px-3 py-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs transition-all flex items-center gap-1.5"
+                className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/20 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <Building2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <Building2 className="w-3.5 h-3.5 text-fuchsia-200" />
                 <span>Brand & Logo</span>
               </button>
               <button
                 type="button"
                 onClick={() => setIsAddTemplateOpen(true)}
-                className="px-3 py-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs transition-all flex items-center gap-1.5"
+                className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/20 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <ImageIcon className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <ImageIcon className="w-3.5 h-3.5 text-fuchsia-200" />
                 <span>Upload Template</span>
               </button>
             </div>
@@ -619,7 +625,7 @@ export const CertificatesView: React.FC = () => {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search recipient, cert #, department..."
-              className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 pl-9 pr-4 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-amber-500 outline-none transition"
+              className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 pl-9 pr-4 py-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-fuchsia-500 outline-none transition"
             />
           </form>
 
@@ -630,7 +636,7 @@ export const CertificatesView: React.FC = () => {
               onClick={() => setSelectedTemplateFilter('all')}
               className={`px-3 py-1 rounded-lg font-semibold transition whitespace-nowrap ${
                 selectedTemplateFilter === 'all'
-                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
+                  ? 'btn-primary-gradient text-white shadow-2xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
@@ -642,11 +648,11 @@ export const CertificatesView: React.FC = () => {
                 onClick={() => setSelectedTemplateFilter('my_certs')}
                 className={`px-2.5 py-1 rounded-lg font-semibold transition whitespace-nowrap flex items-center gap-1 ${
                   selectedTemplateFilter === 'my_certs'
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-2xs'
-                    : 'text-amber-800 dark:text-amber-300 hover:text-amber-950 dark:hover:text-amber-100 font-semibold'
+                    ? 'btn-primary-gradient text-white font-bold shadow-2xs'
+                    : 'text-fuchsia-800 dark:text-fuchsia-300 hover:text-fuchsia-950 dark:hover:text-fuchsia-100 font-semibold'
                 }`}
               >
-                <Award className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                <Award className="w-3 h-3 text-fuchsia-400" />
                 <span>My Certificates ({myCertificates.length})</span>
               </button>
             )}
@@ -758,10 +764,10 @@ export const CertificatesView: React.FC = () => {
               id="btn-open-certificate-builder"
               type="button"
               onClick={() => handleOpenElementor(null)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white text-xs font-bold transition-all shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl btn-primary-gradient text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
               title="Open Certificate Visual Page Builder"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+              <Sparkles className="w-3.5 h-3.5 text-white" />
               <span>Builder</span>
             </button>
           )}
@@ -775,9 +781,9 @@ export const CertificatesView: React.FC = () => {
                 setEditingCert(null);
                 setIsGeneratorOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-xs shrink-0"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl btn-primary-gradient text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 text-white" />
               <span>Generate Certificate</span>
             </button>
           )}
@@ -789,12 +795,12 @@ export const CertificatesView: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <Loader2 className="w-8 h-8 text-amber-600 animate-spin mb-3" />
+          <Loader2 className="w-8 h-8 text-fuchsia-600 animate-spin mb-3" />
           <p className="text-xs font-semibold text-slate-500">Loading certificate history...</p>
         </div>
       ) : filteredCertificates.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center px-4">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-3">
+          <div className="w-14 h-14 rounded-2xl bg-fuchsia-500/10 text-fuchsia-600 flex items-center justify-center mb-3">
             <Award className="w-7 h-7" />
           </div>
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
@@ -807,7 +813,7 @@ export const CertificatesView: React.FC = () => {
               ? 'No certificates have been awarded to your account yet. When certificates are awarded, they will appear here.'
               : canAddCertificates
               ? 'No certificates have been issued yet. Click "Generate Certificate" to create one.'
-              : 'No certificates have been issued yet. When certificates are awarded, you can view and print them here.'}
+              : 'No certificates have been awarded to you yet. When certificates are awarded, you can view and print them here.'}
           </p>
           {canAddCertificates && (
             <button
@@ -816,9 +822,9 @@ export const CertificatesView: React.FC = () => {
                 setEditingCert(null);
                 setIsGeneratorOpen(true);
               }}
-              className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+              className="px-4 py-2 rounded-xl btn-primary-gradient text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 text-white" />
               Generate Certificate
             </button>
           )}
@@ -955,11 +961,11 @@ export const CertificatesView: React.FC = () => {
                         type="button"
                         onClick={(e) => handleDirectDownloadPng(cert, e)}
                         disabled={isCertActive}
-                        className="p-1 rounded-lg text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition hidden 2xl:inline-flex"
+                        className="p-1 rounded-lg text-fuchsia-700 dark:text-fuchsia-400 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/30 transition hidden 2xl:inline-flex cursor-pointer"
                         title="Download PNG image"
                       >
                         {isCertActive && actionType === 'png' ? (
-                          <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin text-amber-700" />
+                          <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin text-fuchsia-700 dark:text-fuchsia-400" />
                         ) : (
                           <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         )}

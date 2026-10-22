@@ -607,7 +607,7 @@ export const PREBUILT_TEMPLATES: SavedCertificateTemplate[] = [
         y: 13,
         zIndex: 10,
         isVisible: true,
-        content: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+        content: 'HONORIS CAUSA • CERTIFICATE OF DISTINCTION',
         fontSize: 20
       },
       {
@@ -619,7 +619,7 @@ export const PREBUILT_TEMPLATES: SavedCertificateTemplate[] = [
         y: 25,
         zIndex: 11,
         isVisible: true,
-        content: 'شَهَادَةُ شُكْرٍ وَتَقْدِيرٍ • CERTIFICATE OF HONOR',
+        content: 'CERTIFICATE OF HONOR & COMMENDATION',
         fontSize: 24,
         textColor: '#064e3b'
       },

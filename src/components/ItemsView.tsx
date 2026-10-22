@@ -349,7 +349,7 @@ export const ItemsView: React.FC = () => {
       {/* Top Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#4A1755] via-[#A21CAF] to-[#C026D3] dark:from-[#E879F9] dark:via-[#D946EF] dark:to-[#A78BFA] tracking-tight">
             {t.lostAndFoundItems || 'Lost & Found Data Table'}
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -358,31 +358,23 @@ export const ItemsView: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <button
-            id="btn-items-qr-scan"
-            onClick={openQrScanner}
-            className="flex items-center space-x-1.5 rtl:space-x-reverse px-3.5 py-2 bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl transition-all shadow-2xs group"
-            title={t.scanQr || 'Scan physical QR code tag with camera or upload photo'}
-          >
-            <QrCode className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform" />
-            <span>{t.scanQr || 'Scan QR Tag'}</span>
-          </button>
+          {/* Scan QR button hidden from heading per user request */}
 
           <button
             id="btn-export-excel"
             onClick={() => exportExcel(filteredItems)}
-            className="flex items-center space-x-1.5 rtl:space-x-reverse px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all shadow-2xs"
+            className="flex items-center space-x-1.5 px-3.5 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl transition-all shadow-xs"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-white" />
             <span>{t.exportExcel || 'Export Excel'}</span>
           </button>
 
           <button
             id="btn-export-csv"
             onClick={exportCSV}
-            className="flex items-center space-x-1.5 rtl:space-x-reverse px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all shadow-2xs"
+            className="flex items-center space-x-1.5 px-3.5 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl transition-all shadow-xs"
           >
-            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+            <FileText className="w-3.5 h-3.5 text-white" />
             <span>{t.exportCSV || 'CSV'}</span>
           </button>
 
@@ -393,7 +385,7 @@ export const ItemsView: React.FC = () => {
                 setEditingItem(null);
                 setIsAddModalOpen(true);
               }}
-              className="flex items-center space-x-1.5 rtl:space-x-reverse px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-xs"
+              className="flex items-center space-x-1.5 px-4 py-2 btn-primary-gradient text-white text-xs font-semibold rounded-xl transition-all shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{t.addItem || (isAdminTier ? 'Add New Item' : 'Submit Found Item')}</span>
@@ -405,12 +397,12 @@ export const ItemsView: React.FC = () => {
       {/* Staff Pending Approval Alert Banner for Admin/Manager/Supervisor or authorized edit staff */}
       {(isAdminTier || hasPermission('edit')) && pendingApprovalsCount > 0 && (
         <div className="p-4 bg-amber-50 border border-amber-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs animate-fade-in">
-          <div className="flex items-center space-x-3 rtl:space-x-reverse text-amber-900">
+          <div className="flex items-center space-x-3 text-amber-900">
             <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-xs text-amber-950 flex items-center space-x-2 rtl:space-x-reverse">
+              <div className="font-bold text-xs text-amber-950 flex items-center space-x-2">
                 <span>{pendingApprovalsCount} {t.pendingApproval || 'Staff Submissions Awaiting Approval'}</span>
                 <span className="px-2 py-0.5 bg-amber-200 text-amber-900 text-[10px] font-bold rounded-full">Review Required</span>
               </div>
@@ -425,7 +417,7 @@ export const ItemsView: React.FC = () => {
               setFilters(prev => ({ ...prev, status: 'Pending Approval' }));
               setCurrentPage(1);
             }}
-            className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl shadow-2xs transition-colors shrink-0 self-start sm:self-auto"
+            className="px-3.5 py-1.5 btn-primary-gradient text-white text-xs font-semibold rounded-xl shadow-xs transition-colors shrink-0 self-start sm:self-auto"
           >
             Show Pending ({pendingApprovalsCount})
           </button>
@@ -452,7 +444,7 @@ export const ItemsView: React.FC = () => {
           </div>
 
           {/* Dedicated Status Filter Dropdown (All Status, Store, Pending, Handover, Displaced) */}
-          <div className="flex items-center space-x-1.5 rtl:space-x-reverse min-w-[150px]">
+          <div className="flex items-center space-x-1.5 min-w-[150px]">
             <span className="text-xs font-semibold text-slate-500 shrink-0">{t.status}:</span>
             <select
               id="select-status-filter-dropdown"
@@ -472,7 +464,7 @@ export const ItemsView: React.FC = () => {
           </div>
 
           {/* Date Range Selector Dropdown */}
-          <div className="flex items-center space-x-1.5 rtl:space-x-reverse min-w-[150px]">
+          <div className="flex items-center space-x-1.5 min-w-[150px]">
             <span className="text-xs font-semibold text-slate-500 shrink-0">{t.datePreset || 'Date Range'}:</span>
             <select
               id="select-date-range-preset"
@@ -492,7 +484,7 @@ export const ItemsView: React.FC = () => {
 
           {/* Custom Date Pickers (Shown if Custom is selected or filters expanded) */}
           {(filters.datePreset === 'Custom' || filters.startDate || filters.endDate) && (
-            <div className="flex items-center space-x-2 rtl:space-x-reverse bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+            <div className="flex items-center space-x-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
               <input
                 type="date"
                 title="Start Date"
@@ -520,7 +512,7 @@ export const ItemsView: React.FC = () => {
           {/* Toggle More Filters Button */}
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={`flex items-center space-x-1.5 rtl:space-x-reverse px-3.5 py-2 border rounded-xl text-xs font-medium transition-all ${
+            className={`flex items-center space-x-1.5 px-3.5 py-2 border rounded-xl text-xs font-medium transition-all ${
               showAdvancedFilters
                 ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-semibold'
                 : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
@@ -535,7 +527,7 @@ export const ItemsView: React.FC = () => {
             <button
               onClick={resetFilters}
               title={t.resetFilters || 'Reset all filters'}
-              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs font-medium text-slate-600"
+              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors flex items-center space-x-1 text-xs font-medium text-slate-600"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{t.reset || 'Reset'}</span>
@@ -720,9 +712,9 @@ export const ItemsView: React.FC = () => {
       )}
 
       {/* Main Data Table Container */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         {/* Table Controls Top Header */}
-        <div className="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+        <div className="px-5 py-3.5 bg-slate-50/80 dark:bg-slate-850/80 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">
           <div className="flex items-center space-x-2">
             <span>Show</span>
             <select
@@ -731,7 +723,7 @@ export const ItemsView: React.FC = () => {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="py-1 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="py-1 px-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20"
             >
               <option value={10}>10 rows</option>
               <option value={15}>15 rows</option>
@@ -753,7 +745,7 @@ export const ItemsView: React.FC = () => {
 
         {/* Responsive Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left rtl:text-right text-xs border-collapse">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 text-slate-600 uppercase tracking-wider font-semibold text-[11px] border-b border-slate-200 select-none">
                 {/* Select All Checkbox */}
@@ -829,24 +821,24 @@ export const ItemsView: React.FC = () => {
                 </th>
 
                 {/* Actions */}
-                <th className="py-3.5 px-5 text-right rtl:text-left font-semibold">{t.actions || 'Actions'}</th>
+                <th className="py-3.5 px-5 text-right font-semibold">{t.actions || 'Actions'}</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100 text-slate-700">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200 bg-white dark:bg-[#180F1A]">
               {paginatedItems.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-16 text-slate-400">
                     <div className="space-y-2">
-                      <div className="text-sm font-semibold text-slate-600">{t.noMatchingRecords || 'No records found'}</div>
+                      <div className="text-sm font-semibold text-slate-600 dark:text-slate-300">{t.noMatchingRecords || 'No records found'}</div>
                       <p className="text-xs text-slate-400">
                         Try adjusting your search query or removing active status filters.
                       </p>
                       <button
                         onClick={resetFilters}
-                        className="inline-flex items-center space-x-1.5 rtl:space-x-reverse px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg mt-2"
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 btn-primary-gradient text-white text-xs font-semibold rounded-xl mt-2 shadow-xs cursor-pointer"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
+                        <RotateCcw className="w-3.5 h-3.5 text-white" />
                         <span>{t.resetFilters || 'Clear Filters'}</span>
                       </button>
                     </div>
@@ -863,17 +855,17 @@ export const ItemsView: React.FC = () => {
                     <tr
                       key={item.id}
                       className={`transition-colors ${
-                        isSelected ? 'bg-indigo-50/60' : 'hover:bg-slate-50/80'
+                        isSelected ? 'bg-fuchsia-50/70 dark:bg-fuchsia-950/40' : 'hover:bg-slate-50/80 dark:hover:bg-fuchsia-950/20'
                       }`}
                     >
                       {/* Row Checkbox */}
                       <td className="py-3.5 px-4 text-center">
                         <button
                           onClick={() => toggleSelectItem(item.id)}
-                          className="text-slate-400 hover:text-indigo-600 transition-colors"
+                          className="text-slate-400 hover:text-fuchsia-600 dark:hover:text-fuchsia-400 transition-colors"
                         >
                           {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-indigo-600" />
+                            <CheckSquare className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400" />
                           ) : (
                             <Square className="w-4 h-4" />
                           )}
@@ -881,22 +873,22 @@ export const ItemsView: React.FC = () => {
                       </td>
 
                       {/* Serial */}
-                      <td className="py-3.5 px-3 text-center font-mono text-[11px] text-slate-400">
+                      <td className="py-3.5 px-3 text-center font-mono text-[11px] text-slate-400 font-semibold">
                         {serial}
                       </td>
 
                       {/* Code */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-mono font-bold text-fuchsia-600 dark:text-fuchsia-400 whitespace-nowrap">
                         <button
                           onClick={() => openItemDetails(item)}
-                          className="hover:underline text-left rtl:text-right"
+                          className="hover:underline text-left cursor-pointer"
                         >
                           {item.code}
                         </button>
                       </td>
 
                       {/* Date Found */}
-                      <td className="py-3.5 px-4 whitespace-nowrap text-slate-600">
+                      <td className="py-3.5 px-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
                         {new Date(item.dateFound).toLocaleDateString('en-GB', {
                           day: '2-digit',
                           month: 'short',
@@ -907,7 +899,7 @@ export const ItemsView: React.FC = () => {
                       {/* Item Details */}
                       <td className="py-3.5 px-4 max-w-xs">
                         <div
-                          className="font-semibold text-slate-900 truncate capitalize"
+                          className="font-semibold text-slate-900 dark:text-white truncate capitalize"
                           style={{ textTransform: 'capitalize' }}
                         >
                           {item.itemName}
@@ -915,7 +907,7 @@ export const ItemsView: React.FC = () => {
                       </td>
 
                       {/* Location Found */}
-                      <td className="py-3.5 px-4 text-slate-700 whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                         {item.locationFound}
                       </td>
 
@@ -925,8 +917,8 @@ export const ItemsView: React.FC = () => {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3.5 px-5 text-right rtl:text-left whitespace-nowrap">
-                        <div className="flex items-center justify-end rtl:justify-start space-x-1 rtl:space-x-reverse">
+                      <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end space-x-1">
                           {/* Pending Approval Actions for Admin Tier or authorized staff */}
                           {(item.status === 'Pending Approval' || item.approvalStatus === 'pending') && (isAdminTier || hasPermission('edit')) && (
                             <>
@@ -936,7 +928,7 @@ export const ItemsView: React.FC = () => {
                                   await approveItem(item.id);
                                 }}
                                 title="Approve & Move to Stored Inventory"
-                                className="flex items-center space-x-1 rtl:space-x-reverse px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-2xs mr-1 rtl:mr-0 rtl:ml-1"
+                                className="flex items-center space-x-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-2xs mr-1"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 <span>{t.approve || 'Approve'}</span>
@@ -945,7 +937,7 @@ export const ItemsView: React.FC = () => {
                                 id={`btn-items-reject-${item.id}`}
                                 onClick={() => setRejectModalItem(item)}
                                 title="Reject Submission"
-                                className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors mr-1 rtl:mr-0 rtl:ml-1 cursor-pointer"
+                                className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors mr-1 cursor-pointer"
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -1053,10 +1045,10 @@ export const ItemsView: React.FC = () => {
         </div>
 
         {/* Data Table Pagination Controls */}
-        <div className="px-5 py-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-600 bg-slate-50/50">
+        <div className="px-5 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-600 dark:text-slate-300 bg-slate-50/70 dark:bg-[#180F1A]">
           <div className="font-medium">
-            Page <span className="font-bold text-slate-900">{safePage}</span> of{' '}
-            <span className="font-bold text-slate-900">{totalPages}</span> ({sortedItems.length} records)
+            Page <span className="font-bold text-slate-900 dark:text-white">{safePage}</span> of{' '}
+            <span className="font-bold text-slate-900 dark:text-white">{totalPages}</span> ({sortedItems.length} records)
           </div>
 
           <div className="flex items-center space-x-1.5">
@@ -1064,7 +1056,7 @@ export const ItemsView: React.FC = () => {
               id="btn-prev-page"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={safePage === 1}
-              className="p-2 border border-slate-200 rounded-xl bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors shadow-2xs"
+              className="p-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors shadow-2xs cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -1077,10 +1069,10 @@ export const ItemsView: React.FC = () => {
                 <button
                   key={`page-btn-${pageNum}`}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`w-8 h-8 rounded-xl font-medium text-xs transition-all ${
+                  className={`w-8 h-8 rounded-xl font-medium text-xs transition-all cursor-pointer ${
                     safePage === pageNum
-                      ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'btn-primary-gradient text-white font-bold shadow-xs'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-fuchsia-400 hover:text-fuchsia-600'
                   }`}
                 >
                   {pageNum}
@@ -1092,7 +1084,7 @@ export const ItemsView: React.FC = () => {
               id="btn-next-page"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={safePage === totalPages}
-              className="p-2 border border-slate-200 rounded-xl bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors shadow-2xs"
+              className="p-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors shadow-2xs cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

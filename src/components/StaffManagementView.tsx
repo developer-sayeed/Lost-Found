@@ -786,21 +786,21 @@ export const StaffManagementView: React.FC = () => {
 
       {/* View Switcher Tabs: Staff Directory vs Function Permissions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="w-full sm:w-auto overflow-x-auto no-scrollbar flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div className="w-full sm:w-auto overflow-x-auto no-scrollbar flex items-center gap-1.5 p-1 bg-slate-100/90 dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
           <button
             id="tab-btn-directory"
             type="button"
             onClick={() => setActiveTab('directory')}
-            className={`flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap flex-1 sm:flex-initial justify-center ${
+            className={`flex items-center space-x-2 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap flex-1 sm:flex-initial justify-center ${
               activeTab === 'directory'
-                ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                ? 'btn-primary-gradient text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
             }`}
           >
-            <Users className="w-4 h-4 text-indigo-600 shrink-0" />
+            <Users className={`w-4 h-4 shrink-0 ${activeTab === 'directory' ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
             <span>Staff Directory</span>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              activeTab === 'directory' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200/80 text-slate-600'
+              activeTab === 'directory' ? 'bg-white/20 text-white' : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
             }`}>
               {staff.length}
             </span>
@@ -811,16 +811,16 @@ export const StaffManagementView: React.FC = () => {
               id="tab-btn-permissions"
               type="button"
               onClick={() => setActiveTab('permissions')}
-              className={`flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap flex-1 sm:flex-initial justify-center ${
+              className={`flex items-center space-x-2 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap flex-1 sm:flex-initial justify-center ${
                 activeTab === 'permissions'
-                  ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  ? 'btn-primary-gradient text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
               }`}
             >
-              <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+              <ShieldCheck className={`w-4 h-4 shrink-0 ${activeTab === 'permissions' ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
               <span>Role &amp; Function Matrix</span>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                activeTab === 'permissions' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200/80 text-slate-600'
+                activeTab === 'permissions' ? 'bg-white/20 text-white' : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
               }`}>
                 {ALL_PERMISSIONS.length}
               </span>
@@ -840,7 +840,7 @@ export const StaffManagementView: React.FC = () => {
               setEditingStaff(null);
               setIsStaffModalOpen(true);
             }}
-            className="flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-xs w-full sm:w-auto cursor-pointer"
+            className="flex items-center justify-center space-x-1.5 px-4 py-2.5 btn-primary-gradient text-white text-xs font-semibold rounded-xl transition-all shadow-xs w-full sm:w-auto cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Staff Member</span>
@@ -854,7 +854,7 @@ export const StaffManagementView: React.FC = () => {
               setEditingStaff(null);
               setIsStaffModalOpen(true);
             }}
-            className="flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-xs w-full sm:w-auto cursor-pointer"
+            className="flex items-center justify-center space-x-1.5 px-4 py-2.5 btn-primary-gradient text-white text-xs font-semibold rounded-xl transition-all shadow-xs w-full sm:w-auto cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New Staff with Permissions</span>
@@ -1442,31 +1442,42 @@ export const StaffManagementView: React.FC = () => {
         <div className="space-y-6 animate-fade-in">
           {/* Permission Management Header & Role-Based Security Notice */}
           {!canManageAccess ? (
-            <div className="bg-amber-50/90 border border-amber-200 rounded-2xl p-4 sm:p-5 flex items-start space-x-3.5 shadow-2xs">
-              <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Lock className="w-5 h-5" />
+            <div 
+              className="rounded-2xl p-4 sm:p-5 flex items-start space-x-3.5 shadow-lg border border-amber-500/30 text-white relative overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, #3b1d11 0%, #25120a 55%, #190b06 100%)' }}
+            >
+              <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 text-amber-200 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-inner">
+                <Lock className="w-5 h-5 text-amber-300" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
+              <div className="flex-1 min-w-0 relative z-10">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
                   Role-Based Read-Only Access
                 </h4>
-                <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                <p className="text-xs text-amber-100/90 mt-1 leading-relaxed">
                   You are viewing the hotel system function permissions and organizational role matrices in audit inspection mode. 
                   Super Admin credentials or the <strong>"Manage Security &amp; Permissions"</strong> privilege is required to edit permissions or assign custom role overrides.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 sm:p-5 flex items-start space-x-3.5 shadow-2xs">
-              <div className="w-9 h-9 rounded-xl bg-indigo-100 border border-indigo-200 text-indigo-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <ShieldCheck className="w-5 h-5" />
+            <div 
+              className="rounded-2xl p-4 sm:p-5 flex items-start space-x-3.5 shadow-lg border border-fuchsia-400/30 text-white relative overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, #3d1246 0%, #260a2d 55%, #18071c 100%)' }}
+            >
+              {/* Ambient EcomDrive glow */}
+              <div 
+                aria-hidden="true" 
+                className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-fuchsia-500/15 blur-2xl pointer-events-none" 
+              />
+              <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 text-fuchsia-200 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-inner">
+                <ShieldCheck className="w-5 h-5 text-white" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-indigo-950 uppercase tracking-wider flex items-center space-x-2">
+              <div className="flex-1 min-w-0 relative z-10">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-2">
                   <span>Administrative Security &amp; Privilege Configuration</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white">Full Access</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold btn-primary-gradient text-white border border-white/25 shadow-xs">Full Access</span>
                 </h4>
-                <p className="text-xs text-indigo-800 mt-1 leading-relaxed">
+                <p className="text-xs text-fuchsia-100/90 mt-1 leading-relaxed font-medium">
                   Configure granular function-level access rights across all 4 operational modules. You can inspect baseline role inheritance, grant custom privilege overrides for specific employees, or revert to verified hotel defaults.
                 </p>
               </div>
@@ -1646,7 +1657,7 @@ export const StaffManagementView: React.FC = () => {
                 </div>
 
                 {/* Matrix Filter, Search Bar & Layout Switcher */}
-                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-800">
                   <div className="relative flex-1 max-w-md">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 transform -translate-y-1/2" />
                     <input
@@ -1654,13 +1665,13 @@ export const StaffManagementView: React.FC = () => {
                       placeholder="Search functions, keys, or descriptions..."
                       value={matrixSearch}
                       onChange={e => setMatrixSearch(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-800 placeholder:text-slate-400"
+                      className="w-full pl-9 pr-3.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 text-slate-800 dark:text-white placeholder:text-slate-400"
                     />
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
                     {/* Category Filter Pills */}
-                    <div className="flex items-center space-x-1 bg-white p-1 rounded-lg border border-slate-200 overflow-x-auto no-scrollbar max-w-full">
+                    <div className="flex items-center space-x-1 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto no-scrollbar max-w-full">
                       {(['All', 'Items', 'Operations', 'Certificates', 'Administration'] as const).map(cat => (
                         <button
                           key={cat}
@@ -1668,8 +1679,8 @@ export const StaffManagementView: React.FC = () => {
                           onClick={() => setMatrixCategoryFilter(cat)}
                           className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                             matrixCategoryFilter === cat
-                              ? 'bg-indigo-600 text-white shadow-2xs'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                              ? 'btn-primary-gradient text-white shadow-2xs'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700'
                           }`}
                         >
                           {cat === 'All' ? 'All Modules' : cat}
@@ -1678,14 +1689,14 @@ export const StaffManagementView: React.FC = () => {
                     </div>
 
                     {/* Layout Switcher (Mobile Role Cards vs Table View) */}
-                    <div className="flex items-center space-x-1 bg-white p-1 rounded-lg border border-slate-200 shrink-0">
+                    <div className="flex items-center space-x-1 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
                       <button
                         type="button"
                         onClick={() => setMatrixLayout('cards')}
                         className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
                           matrixLayout === 'cards'
-                            ? 'bg-indigo-600 text-white shadow-2xs'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            ? 'btn-primary-gradient text-white shadow-2xs'
+                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                         title="Touch-friendly role cards view (ideal for mobile)"
                       >
@@ -1696,8 +1707,8 @@ export const StaffManagementView: React.FC = () => {
                         onClick={() => setMatrixLayout('table')}
                         className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
                           matrixLayout === 'table'
-                            ? 'bg-indigo-600 text-white shadow-2xs'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            ? 'btn-primary-gradient text-white shadow-2xs'
+                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                         title="Full multi-column matrix table"
                       >
@@ -1727,14 +1738,14 @@ export const StaffManagementView: React.FC = () => {
                             onClick={() => setActiveMobileRole(role)}
                             className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center space-x-2 shrink-0 border ${
                               isSelected
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                                ? 'btn-primary-gradient text-white border-transparent shadow-sm'
+                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'
                             }`}
                           >
                             <span>{role}</span>
                             <span
                               className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
-                                isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'
+                                isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                               }`}
                             >
                               {rolePerms.length}
@@ -1754,18 +1765,18 @@ export const StaffManagementView: React.FC = () => {
                       const isCustom = isRoleCustomized(activeMobileRole);
 
                       return (
-                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-3">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="flex items-center space-x-2.5">
                               <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${meta.badgeBg} ${meta.badgeText} border ${meta.borderColor}`}>
                                 {activeMobileRole}
                               </span>
                               <div>
-                                <span className="text-xs font-bold text-slate-800">
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                   {rolePerms.length} of {ALL_PERMISSIONS.length} Permissions Active
                                 </span>
                                 {isCustom && (
-                                  <span className="ml-2 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                  <span className="ml-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-700/60 px-1.5 py-0.5 rounded">
                                     Customized
                                   </span>
                                 )}
@@ -1777,14 +1788,14 @@ export const StaffManagementView: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleGrantAllForRole(activeMobileRole)}
-                                  className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold transition cursor-pointer"
+                                  className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-[11px] font-bold transition cursor-pointer"
                                 >
                                   Grant All
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleRevokeAllForRole(activeMobileRole)}
-                                  className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-bold transition cursor-pointer"
+                                  className="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg text-[11px] font-bold transition cursor-pointer"
                                 >
                                   Revoke All
                                 </button>
@@ -1792,7 +1803,7 @@ export const StaffManagementView: React.FC = () => {
                                   <button
                                     type="button"
                                     onClick={() => handleResetRoleToDefault(activeMobileRole)}
-                                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-bold transition cursor-pointer"
+                                    className="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg text-[11px] font-bold transition cursor-pointer"
                                   >
                                     ↺ Defaults
                                   </button>
@@ -1803,7 +1814,7 @@ export const StaffManagementView: React.FC = () => {
                                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
                                     previewRole === activeMobileRole
                                       ? 'bg-amber-400 text-slate-950 shadow-xs ring-1 ring-amber-500'
-                                      : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                      : 'bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
                                   }`}
                                 >
                                   {previewRole === activeMobileRole ? '✓ Simulating Now' : `🎭 Test ${activeMobileRole}`}
@@ -1836,8 +1847,8 @@ export const StaffManagementView: React.FC = () => {
                               }}
                               className={`p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                                 isMarked
-                                  ? 'bg-emerald-50/50 hover:bg-emerald-50 border-emerald-200/90 shadow-2xs'
-                                  : 'bg-white hover:bg-slate-50 border-slate-200/80'
+                                  ? 'bg-fuchsia-50/70 dark:bg-fuchsia-950/30 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/45 border-fuchsia-300/80 dark:border-fuchsia-500/30 shadow-2xs'
+                                  : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-800'
                               }`}
                             >
                               <div className="flex items-start space-x-2.5 min-w-0">
@@ -1849,14 +1860,14 @@ export const StaffManagementView: React.FC = () => {
                                 </span>
                                 <div className="min-w-0">
                                   <div className="flex items-center space-x-1.5 flex-wrap gap-y-0.5">
-                                    <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                                    <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
                                       {perm.label}
                                     </h4>
-                                    <span className="font-mono text-[9px] text-slate-400 bg-slate-100 px-1 py-0.2 rounded">
+                                    <span className="font-mono text-[9px] text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded">
                                       {perm.id}
                                     </span>
                                   </div>
-                                  <p className="text-[11px] text-slate-500 mt-0.5 leading-snug line-clamp-2">
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug line-clamp-2">
                                     {perm.description}
                                   </p>
                                 </div>
@@ -1874,12 +1885,12 @@ export const StaffManagementView: React.FC = () => {
                                   aria-label={`${isMarked ? 'Revoke' : 'Grant'} ${perm.label} for ${activeMobileRole}`}
                                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                                     isMarked
-                                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300/50 scale-105'
-                                      : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'
+                                      ? 'btn-primary-gradient text-white shadow-sm ring-2 ring-fuchsia-400/40 scale-105 border-0'
+                                      : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700'
                                   }`}
                                 >
                                   {isMarked ? (
-                                    <Check className="w-5 h-5 stroke-[3]" />
+                                    <Check className="w-5 h-5 stroke-[3] text-white" />
                                   ) : (
                                     <Minus className="w-4 h-4 stroke-[2.5]" />
                                   )}
@@ -1910,11 +1921,11 @@ export const StaffManagementView: React.FC = () => {
                     </div>
 
                     {/* Matrix Table with Sticky Headers */}
-                    <div className="overflow-auto max-h-[620px] rounded-xl border border-slate-200 shadow-2xs relative">
+                    <div className="overflow-auto max-h-[620px] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs relative bg-white dark:bg-[#180F1A]">
                       <table className="w-full text-left text-xs border-separate border-spacing-0">
                         <thead className="sticky top-0 z-20">
-                          <tr className="bg-slate-50 text-slate-600 uppercase tracking-wider font-semibold text-[11px] select-none">
-                            <th className="py-3 px-4 w-1/3 min-w-[220px] sm:min-w-[260px] sticky top-0 left-0 bg-slate-50 z-30 shadow-[2px_2px_5px_-2px_rgba(0,0,0,0.08)] border-b border-r border-slate-200">
+                          <tr className="bg-slate-50 dark:bg-[#180F1A] text-slate-600 dark:text-fuchsia-200 uppercase tracking-wider font-semibold text-[11px] select-none">
+                            <th className="py-3 px-4 w-1/3 min-w-[220px] sm:min-w-[260px] sticky top-0 left-0 bg-slate-50 dark:bg-[#180F1A] z-30 shadow-[2px_2px_5px_-2px_rgba(0,0,0,0.08)] border-b border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-fuchsia-200">
                               Function / Permission
                             </th>
                             {SYSTEM_ROLES.map(role => {
@@ -1926,7 +1937,7 @@ export const StaffManagementView: React.FC = () => {
                               return (
                                 <th
                                   key={role}
-                                  className={`py-3 px-2 text-center transition-opacity min-w-[100px] sticky top-0 bg-slate-50 z-20 border-b border-slate-200 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.06)] ${
+                                  className={`py-3 px-2 text-center transition-opacity min-w-[100px] sticky top-0 bg-slate-50 dark:bg-[#180F1A] z-20 border-b border-slate-200 dark:border-slate-800 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.06)] ${
                                     isFiltered ? 'opacity-100' : 'opacity-40'
                                   }`}
                                 >
@@ -1976,7 +1987,7 @@ export const StaffManagementView: React.FC = () => {
                             })}
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                           {filteredPermissionsForMatrix.length === 0 ? (
                             <tr>
                               <td colSpan={1 + SYSTEM_ROLES.length} className="py-8 text-center text-slate-400">
@@ -1986,8 +1997,8 @@ export const StaffManagementView: React.FC = () => {
                           ) : (
                             filteredPermissionsForMatrix.map((perm, idx) => {
                               return (
-                                <tr key={perm.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                                  <td className={`py-3 px-4 sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-b border-r border-slate-200/80 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
+                                <tr key={perm.id} className={idx % 2 === 0 ? 'bg-white dark:bg-[#180F1A]' : 'bg-slate-50/40 dark:bg-slate-900/40'}>
+                                  <td className={`py-3 px-4 sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] border-b border-r border-slate-200/80 dark:border-slate-800 ${idx % 2 === 0 ? 'bg-white dark:bg-[#180F1A]' : 'bg-slate-50 dark:bg-[#180F1A]'}`}>
                                     <div className="flex items-start space-x-2.5">
                                       <span className="text-base mt-0.5">
                                         {perm.category === 'Items' && '📦'}
@@ -1997,12 +2008,12 @@ export const StaffManagementView: React.FC = () => {
                                       </span>
                                       <div className="min-w-0">
                                         <div className="flex items-center space-x-2">
-                                          <p className="font-bold text-slate-900 leading-tight">{perm.label}</p>
-                                          <span className="font-mono text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                          <p className="font-bold text-slate-900 dark:text-white leading-tight">{perm.label}</p>
+                                          <span className="font-mono text-[10px] text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                                             {perm.id}
                                           </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                                           {perm.description}
                                         </p>
                                       </div>
@@ -2017,7 +2028,7 @@ export const StaffManagementView: React.FC = () => {
                                     return (
                                       <td
                                         key={role}
-                                        className={`py-2.5 px-2 text-center align-middle transition-opacity border-b border-slate-100 ${
+                                        className={`py-2.5 px-2 text-center align-middle transition-opacity border-b border-slate-100 dark:border-slate-800/80 ${
                                           isFiltered ? 'opacity-100' : 'opacity-40'
                                         }`}
                                       >
@@ -2034,12 +2045,12 @@ export const StaffManagementView: React.FC = () => {
                                             aria-label={`${isMarked ? 'Revoke' : 'Grant'} ${perm.label} for ${role}`}
                                             className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                                               isMarked
-                                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 shadow-2xs hover:scale-105 active:scale-90'
-                                                : 'bg-slate-100 hover:bg-slate-200 text-slate-300 hover:text-slate-600 border border-slate-200 active:scale-90'
+                                                ? 'btn-primary-gradient text-white shadow-2xs hover:scale-105 active:scale-90 border-0 ring-1 ring-fuchsia-400/40'
+                                                : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 border border-slate-200 dark:border-slate-700 active:scale-90'
                                             } ${!canManageAccess ? 'cursor-not-allowed opacity-75' : ''}`}
                                           >
                                             {isMarked ? (
-                                              <Check className="w-4 h-4 stroke-[3]" />
+                                              <Check className="w-4 h-4 stroke-[3] text-white" />
                                             ) : (
                                               <Minus className="w-3.5 h-3.5" />
                                             )}
@@ -2310,27 +2321,27 @@ export const StaffManagementView: React.FC = () => {
                                           onClick={() => handleToggleInlinePerm(perm.id)}
                                           className={`w-full flex items-start space-x-2.5 p-2 rounded-lg border text-left transition-all cursor-pointer ${
                                             isChecked
-                                              ? 'bg-indigo-50/50 border-indigo-500 ring-1 ring-indigo-500/20'
-                                              : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
+                                              ? 'btn-primary-gradient text-white border-fuchsia-500/80 shadow-xs ring-1 ring-fuchsia-400/40'
+                                              : 'bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-fuchsia-400'
                                           }`}
                                         >
                                           <div className="mt-0.5 flex-shrink-0">
                                             {isChecked ? (
-                                              <CheckSquare className="w-4 h-4 text-indigo-600" />
+                                              <CheckSquare className="w-4 h-4 text-white" />
                                             ) : (
-                                              <Square className="w-4 h-4 text-slate-300" />
+                                              <Square className="w-4 h-4 text-slate-300 dark:text-slate-600" />
                                             )}
                                           </div>
                                           <div className="min-w-0 flex-1">
                                             <div className="flex items-center space-x-1.5 flex-wrap">
-                                              <p className={`text-xs font-bold leading-tight ${isChecked ? 'text-indigo-950' : 'text-slate-700'}`}>
+                                              <p className={`text-xs font-bold leading-tight ${isChecked ? 'text-white' : 'text-slate-700 dark:text-slate-200'}`}>
                                                 {perm.label}
                                               </p>
-                                              <span className="font-mono text-[9px] text-slate-400">
+                                              <span className={`font-mono text-[9px] px-1 py-0.2 rounded ${isChecked ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-400'}`}>
                                                 {perm.id}
                                               </span>
                                             </div>
-                                            <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
+                                            <p className={`text-[10px] line-clamp-1 mt-0.5 ${isChecked ? 'text-fuchsia-100' : 'text-slate-400 dark:text-slate-400'}`}>
                                               {perm.description}
                                             </p>
                                           </div>
@@ -2343,7 +2354,7 @@ export const StaffManagementView: React.FC = () => {
                             })}
                           </div>
 
-                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                             <div className="text-[11px] text-slate-500 font-medium">
                               {inlineStaffPerms.length !== (member.permissions || []).length && (
                                 <span className="text-amber-600 font-semibold">
@@ -2356,7 +2367,7 @@ export const StaffManagementView: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => setExpandedStaffPermId(null)}
-                                className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+                                className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                               >
                                 Cancel
                               </button>
@@ -2364,7 +2375,7 @@ export const StaffManagementView: React.FC = () => {
                                 type="button"
                                 onClick={() => handleSaveInlinePerms(member)}
                                 disabled={isSavingInlinePerms}
-                                className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl shadow-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+                                className="px-4 py-1.5 text-xs font-semibold text-white btn-primary-gradient disabled:opacity-50 rounded-xl shadow-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
                               >
                                 {isSavingInlinePerms ? (
                                   <>
@@ -2389,18 +2400,18 @@ export const StaffManagementView: React.FC = () => {
             </div>
 
             {/* Desktop Staff Permissions Table (hidden on mobile, shown on md+) */}
-            <div className="hidden md:block overflow-auto max-h-[640px] rounded-xl border border-slate-200 shadow-2xs relative">
+            <div className="hidden md:block overflow-auto max-h-[640px] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs relative bg-white dark:bg-[#180F1A]">
               <table className="w-full text-left text-xs border-separate border-spacing-0">
                 <thead className="sticky top-0 z-20 shadow-xs">
-                  <tr className="bg-slate-50 text-slate-600 uppercase tracking-wider font-semibold text-[11px] select-none">
-                    <th className="py-3.5 px-5 sticky top-0 bg-slate-50 z-20 border-b border-slate-200 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Staff Identity</th>
-                    <th className="py-3.5 px-4 sticky top-0 bg-slate-50 z-20 border-b border-slate-200 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Role Baseline</th>
-                    <th className="py-3.5 px-4 sticky top-0 bg-slate-50 z-20 border-b border-slate-200 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Permission Status</th>
-                    <th className="py-3.5 px-4 sticky top-0 bg-slate-50 z-20 border-b border-slate-200 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Active Functions</th>
-                    <th className="py-3.5 px-5 text-right sticky top-0 bg-slate-50 z-20 border-b border-slate-200 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Management Controls</th>
+                  <tr className="bg-slate-50 dark:bg-[#180F1A] text-slate-600 dark:text-fuchsia-200 uppercase tracking-wider font-semibold text-[11px] select-none">
+                    <th className="py-3.5 px-5 sticky top-0 bg-slate-50 dark:bg-[#180F1A] z-20 border-b border-slate-200 dark:border-slate-800 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Staff Identity</th>
+                    <th className="py-3.5 px-4 sticky top-0 bg-slate-50 dark:bg-[#180F1A] z-20 border-b border-slate-200 dark:border-slate-800 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Role Baseline</th>
+                    <th className="py-3.5 px-4 sticky top-0 bg-slate-50 dark:bg-[#180F1A] z-20 border-b border-slate-200 dark:border-slate-800 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Permission Status</th>
+                    <th className="py-3.5 px-4 sticky top-0 bg-slate-50 dark:bg-[#180F1A] z-20 border-b border-slate-200 dark:border-slate-800 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Active Functions</th>
+                    <th className="py-3.5 px-5 text-right sticky top-0 bg-slate-50 dark:bg-[#180F1A] z-20 border-b border-slate-200 dark:border-slate-800 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.05)]">Management Controls</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredStaffForPermissions.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="py-12 text-center text-slate-400">
@@ -2615,27 +2626,27 @@ export const StaffManagementView: React.FC = () => {
                                                   onClick={() => handleToggleInlinePerm(perm.id)}
                                                   className={`w-full flex items-start space-x-2.5 p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                                                     isChecked
-                                                      ? 'bg-indigo-50/50 border-indigo-500 ring-1 ring-indigo-500/20'
-                                                      : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
+                                                      ? 'btn-primary-gradient text-white border-fuchsia-500/80 shadow-xs ring-1 ring-fuchsia-400/40'
+                                                      : 'bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-fuchsia-400'
                                                   }`}
                                                 >
                                                   <div className="mt-0.5 flex-shrink-0">
                                                     {isChecked ? (
-                                                      <CheckSquare className="w-4 h-4 text-indigo-600" />
+                                                      <CheckSquare className="w-4 h-4 text-white" />
                                                     ) : (
-                                                      <Square className="w-4 h-4 text-slate-300" />
+                                                      <Square className="w-4 h-4 text-slate-300 dark:text-slate-600" />
                                                     )}
                                                   </div>
                                                   <div className="min-w-0 flex-1">
                                                     <div className="flex items-center space-x-2">
-                                                      <p className={`text-xs font-bold leading-tight ${isChecked ? 'text-indigo-950' : 'text-slate-700'}`}>
+                                                      <p className={`text-xs font-bold leading-tight ${isChecked ? 'text-white' : 'text-slate-700 dark:text-slate-200'}`}>
                                                         {perm.label}
                                                       </p>
-                                                      <span className="font-mono text-[9px] text-slate-400">
+                                                      <span className={`font-mono text-[9px] px-1 py-0.2 rounded ${isChecked ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-400'}`}>
                                                         {perm.id}
                                                       </span>
                                                     </div>
-                                                    <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
+                                                    <p className={`text-[10px] line-clamp-1 mt-0.5 ${isChecked ? 'text-fuchsia-100' : 'text-slate-400 dark:text-slate-400'}`}>
                                                       {perm.description}
                                                     </p>
                                                   </div>
@@ -2649,7 +2660,7 @@ export const StaffManagementView: React.FC = () => {
                                   </div>
 
                                   {/* Drawer Footer Actions */}
-                                  <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+                                  <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
                                     <div className="text-[11px] text-slate-500 font-medium">
                                       {inlineStaffPerms.length !== (member.permissions || []).length && (
                                         <span className="text-amber-600 font-semibold">
@@ -2662,7 +2673,7 @@ export const StaffManagementView: React.FC = () => {
                                       <button
                                         type="button"
                                         onClick={() => setExpandedStaffPermId(null)}
-                                        className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+                                        className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                                       >
                                         Cancel
                                       </button>
@@ -2670,7 +2681,7 @@ export const StaffManagementView: React.FC = () => {
                                         type="button"
                                         onClick={() => handleSaveInlinePerms(member)}
                                         disabled={isSavingInlinePerms}
-                                        className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+                                        className="px-4 py-1.5 text-xs font-semibold text-white btn-primary-gradient disabled:opacity-50 rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
                                       >
                                         {isSavingInlinePerms ? (
                                           <>

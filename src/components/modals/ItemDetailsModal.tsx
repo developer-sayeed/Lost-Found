@@ -334,9 +334,9 @@ export const ItemDetailsModal: React.FC = () => {
           <ItemActivityTimeline item={selectedItem} />
 
           {/* QR Code Tag Card & Instant Verification Block */}
-          <div className="p-4 bg-slate-50/90 border border-slate-200/90 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4">
+          <div className="p-4 bg-slate-50/90 dark:bg-[#1f0e24] border border-slate-200/90 dark:border-fuchsia-900/40 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4 transition-colors">
             <div
-              className="relative p-2 bg-white rounded-xl border border-slate-200 shadow-2xs group cursor-pointer shrink-0"
+              className="relative p-2 bg-white dark:bg-[#140817] rounded-xl border border-slate-200 dark:border-fuchsia-900/40 shadow-2xs group cursor-pointer shrink-0"
               onClick={() => openItemQrModal(selectedItem)}
               title="Click to enlarge QR Code"
             >
@@ -344,11 +344,11 @@ export const ItemDetailsModal: React.FC = () => {
                 <img
                   src={qrCodeUrl}
                   alt={`QR tag for ${selectedItem.code}`}
-                  className="w-24 h-24 object-contain rounded-lg group-hover:opacity-90 transition-opacity"
+                  className="w-24 h-24 object-contain rounded-lg group-hover:opacity-90 transition-opacity bg-white p-1"
                 />
               ) : (
                 <div className="w-24 h-24 flex items-center justify-center text-[10px] text-slate-400">
-                  <QrCode className="w-8 h-8 text-slate-300 animate-pulse" />
+                  <QrCode className="w-8 h-8 text-slate-300 dark:text-slate-600 animate-pulse" />
                 </div>
               )}
               <div className="absolute inset-0 bg-indigo-900/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-2xs">
@@ -359,20 +359,20 @@ export const ItemDetailsModal: React.FC = () => {
             <div className="flex-1 text-center sm:text-left space-y-2">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <div>
-                  <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400 flex items-center justify-center sm:justify-start space-x-1">
-                    <Tag className="w-3 h-3 text-indigo-600" />
+                  <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-400 flex items-center justify-center sm:justify-start space-x-1">
+                    <Tag className="w-3 h-3 text-indigo-600 dark:text-fuchsia-400" />
                     <span>Unique QR Inventory Tag</span>
                   </div>
-                  <h3 className="font-mono text-xs font-bold text-indigo-700">
+                  <h3 className="font-mono text-xs font-bold text-indigo-700 dark:text-fuchsia-400">
                     {selectedItem.code}
                   </h3>
                 </div>
-                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 self-center sm:self-auto">
+                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 dark:bg-fuchsia-950/60 text-indigo-700 dark:text-fuchsia-300 border border-indigo-200 dark:border-fuchsia-800/40 self-center sm:self-auto">
                   Scannable Label
                 </span>
               </div>
 
-              <p className="text-[11px] text-slate-600 leading-relaxed">
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                 Scan this unique QR tag with any device or mobile camera to instantly retrieve this item’s live custody and storage details.
               </p>
 
@@ -380,10 +380,10 @@ export const ItemDetailsModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => openItemQrModal(selectedItem)}
-                  className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold rounded-lg shadow-2xs transition-all"
+                  className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-50 dark:bg-[#180F1A] dark:hover:bg-[#251329] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-lg shadow-2xs transition-all"
                   title="Enlarge QR Tag"
                 >
-                  <Maximize2 className="w-3 h-3 text-indigo-600" />
+                  <Maximize2 className="w-3 h-3 text-indigo-600 dark:text-fuchsia-400" />
                   <span>Enlarge Tag</span>
                 </button>
 
@@ -394,10 +394,10 @@ export const ItemDetailsModal: React.FC = () => {
                       downloadQrCodeImage(qrCodeUrl, selectedItem.code, selectedItem.itemName);
                     }
                   }}
-                  className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold rounded-lg shadow-2xs transition-all"
+                  className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-50 dark:bg-[#180F1A] dark:hover:bg-[#251329] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-lg shadow-2xs transition-all"
                   title="Download PNG QR Tag"
                 >
-                  <Download className="w-3 h-3 text-indigo-600" />
+                  <Download className="w-3 h-3 text-indigo-600 dark:text-fuchsia-400" />
                   <span>Download PNG</span>
                 </button>
 
@@ -414,17 +414,17 @@ export const ItemDetailsModal: React.FC = () => {
                       setTimeout(() => setCopied(false), 2000);
                     }
                   }}
-                  className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold rounded-lg shadow-2xs transition-all"
+                  className="inline-flex items-center space-x-1 px-2.5 py-1 bg-white hover:bg-slate-50 dark:bg-[#180F1A] dark:hover:bg-[#251329] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-lg shadow-2xs transition-all"
                   title="Copy direct verification link"
                 >
                   {copied ? (
                     <>
-                      <Check className="w-3 h-3 text-emerald-600" />
-                      <span className="text-emerald-700 font-bold">Copied!</span>
+                      <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-700 dark:text-emerald-400 font-bold">Copied!</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3 h-3 text-slate-500" />
+                      <Copy className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                       <span>Copy Link</span>
                     </>
                   )}
@@ -472,7 +472,7 @@ export const ItemDetailsModal: React.FC = () => {
                   setIsDetailsModalOpen(false);
                   openDispatch(selectedItem);
                 }}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 btn-primary-gradient text-white rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
               >
                 <Truck className="w-4 h-4" />
                 <span>Dispatch</span>
@@ -488,7 +488,7 @@ export const ItemDetailsModal: React.FC = () => {
                   setIsDetailsModalOpen(false);
                   openReturnToStore(selectedItem);
                 }}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 btn-primary-gradient text-white rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Return to Store</span>
@@ -504,9 +504,9 @@ export const ItemDetailsModal: React.FC = () => {
                   setIsDetailsModalOpen(false);
                   openEditItem(selectedItem);
                 }}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 dark:bg-[#180F1A] dark:hover:bg-[#251329] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-fuchsia-900/40 rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
               >
-                <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                <Edit2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>Edit</span>
               </button>
             )}
@@ -519,9 +519,9 @@ export const ItemDetailsModal: React.FC = () => {
                 onClick={() => {
                   openPrint(selectedItem, isHandedOver ? 'receipt' : 'report');
                 }}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 dark:bg-[#180F1A] dark:hover:bg-[#251329] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-fuchsia-900/40 rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
               >
-                <Printer className="w-3.5 h-3.5 text-slate-500" />
+                <Printer className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>{isHandedOver ? 'Print Receipt' : 'Print Document'}</span>
               </button>
             )}
@@ -535,9 +535,9 @@ export const ItemDetailsModal: React.FC = () => {
                   setIsDetailsModalOpen(false);
                   openDelete(selectedItem);
                 }}
-                className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 rounded-xl font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
               >
-                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                 <span>Delete</span>
               </button>
             )}
@@ -546,7 +546,7 @@ export const ItemDetailsModal: React.FC = () => {
           <button
             id="btn-close-details-footer"
             onClick={() => setIsDetailsModalOpen(false)}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#200f24] dark:hover:bg-[#2c1333] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-fuchsia-900/50 text-xs font-semibold rounded-xl transition-colors cursor-pointer shadow-2xs"
           >
             Close
           </button>

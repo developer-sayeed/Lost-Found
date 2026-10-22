@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   LogIn,
   Upload,
@@ -19,7 +19,10 @@ import {
   Info,
   HelpCircle,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Video,
+  Film,
+  Play
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useApp } from '../context/AppContext';
@@ -28,6 +31,7 @@ import { HotelSettings, ToastConfig } from '../types';
 import { triggerConfetti } from '../utils/confetti';
 
 const HEADER_BG_PRESETS = [
+  { label: 'Plum Purple', color: '#491754' },
   { label: 'Luxury Navy', color: '#020617' },
   { label: 'Deep Slate', color: '#0f172a' },
   { label: 'Midnight Indigo', color: '#1e1b4b' },
@@ -41,8 +45,16 @@ const HEADER_BG_PRESETS = [
 
 const BG_THEMES = [
   {
+    id: 'plum-violet',
+    name: 'Plum, Fuchsia & Violet (Signature)',
+    desc: 'Royal plum (#180F1A / #491754) with radiant fuchsia & violet ambient aura',
+    bgClass: 'bg-gradient-to-br from-[#180F1A] via-[#491754] to-[#0F0911]',
+    accentColor: '#A32EB8',
+    cardBorder: 'border-[#491754]'
+  },
+  {
     id: 'luxury-dark',
-    name: 'Luxury Obsidian (Default)',
+    name: 'Luxury Obsidian Dark',
     desc: 'Deep slate backdrop with gold & indigo glow',
     bgClass: 'bg-slate-950',
     accentColor: '#4F46E5',
@@ -75,17 +87,33 @@ const BG_THEMES = [
   {
     id: 'custom-color',
     name: 'Custom Solid Color',
-    desc: 'Pick your own brand background tone',
+    desc: 'Pick your own brand background tone or hex value',
     bgClass: '',
-    accentColor: '#4F46E5',
+    accentColor: '#A32EB8',
     cardBorder: 'border-slate-800'
   },
   {
-    id: 'custom-image',
-    name: 'Custom Wallpaper Image',
-    desc: 'Provide an external high-res wallpaper URL',
+    id: 'custom-gradient',
+    name: 'Custom Gradient Colors',
+    desc: 'Blend two custom colors with directional flow controls',
     bgClass: '',
-    accentColor: '#4F46E5',
+    accentColor: '#D946EF',
+    cardBorder: 'border-fuchsia-800'
+  },
+  {
+    id: 'custom-image',
+    name: 'Custom Wallpaper Image (Photo / Upload)',
+    desc: 'Use external high-res photo or direct upload from computer',
+    bgClass: '',
+    accentColor: '#A32EB8',
+    cardBorder: 'border-slate-800'
+  },
+  {
+    id: 'custom-video',
+    name: 'Custom Cinematic Video Background (URL / Upload)',
+    desc: 'Looping MP4/WebM video via URL or direct device upload',
+    bgClass: 'bg-slate-950',
+    accentColor: '#A32EB8',
     cardBorder: 'border-slate-800'
   }
 ];
@@ -109,14 +137,32 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
 
   // Atmosphere & Background
   const [loginBackgroundStyle, setLoginBackgroundStyle] = useState<
-    'luxury-dark' | 'royal-indigo' | 'hotel-emerald' | 'minimal-clean' | 'custom-color' | 'custom-image'
+    'luxury-dark' | 'royal-indigo' | 'hotel-emerald' | 'minimal-clean' | 'custom-color' | 'custom-gradient' | 'custom-image' | 'custom-video' | 'plum-violet'
   >(settings.loginBackgroundStyle || 'luxury-dark');
   const [loginBgColor, setLoginBgColor] = useState<string>(settings.loginBgColor || '#020617');
+  const [loginGradientStart, setLoginGradientStart] = useState<string>(settings.loginGradientStart || '#180F1A');
+  const [loginGradientEnd, setLoginGradientEnd] = useState<string>(settings.loginGradientEnd || '#491754');
+  const [loginGradientDirection, setLoginGradientDirection] = useState<'to right' | 'to bottom' | 'to bottom right' | 'to top right' | 'radial'>(
+    settings.loginGradientDirection || 'to bottom right'
+  );
   const [loginHeaderBgColor, setLoginHeaderBgColor] = useState<string>(settings.loginHeaderBgColor || '#020617');
   const [loginBgImageUrl, setLoginBgImageUrl] = useState<string>(
     settings.loginBgImageUrl || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1920&q=80'
   );
+  const [loginBgVideoUrl, setLoginBgVideoUrl] = useState<string>(
+    settings.loginBgVideoUrl || 'https://assets.mixkit.co/videos/preview/mixkit-luxury-hotel-lobby-with-chandelier-42777-large.mp4'
+  );
+  const [loginVideoBlurEnabled, setLoginVideoBlurEnabled] = useState<boolean>(
+    settings.loginVideoBlurEnabled ?? false
+  );
+  const [loginVideoBlurAmount, setLoginVideoBlurAmount] = useState<number>(
+    settings.loginVideoBlurAmount !== undefined ? settings.loginVideoBlurAmount : 40
+  );
   const [loginCardBlur, setLoginCardBlur] = useState<boolean>(settings.loginCardBlur !== false);
+
+  // File input refs for image & video upload
+  const bgImageInputRef = useRef<HTMLInputElement>(null);
+  const bgVideoInputRef = useRef<HTMLInputElement>(null);
 
   // Security Notice & Announcements
   const [loginBannerNotice, setLoginBannerNotice] = useState<string>(
@@ -181,6 +227,60 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
     reader.readAsDataURL(file);
   };
 
+  // Handle Background Wallpaper Image Upload from Computer
+  const handleBgImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload a valid image file (PNG, JPG, WebP)');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setLoginBgImageUrl(result);
+        setLoginBackgroundStyle('custom-image');
+        toast.success('🖼️ Custom wallpaper image uploaded and applied!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle Background Video Upload from Computer
+  const handleBgVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      toast.error('Please upload a valid video file (MP4, WebM, Ogg)');
+      return;
+    }
+
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error('Direct video upload is limited to 25MB. For longer videos, paste an MP4 URL.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setLoginBgVideoUrl(result);
+        setLoginBackgroundStyle('custom-video');
+        toast.success('🎬 Custom background video uploaded and applied!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Sync with main hotel logo
   const handleSyncMainLogo = () => {
     if (settings.logoUrl) {
@@ -224,8 +324,14 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
       setLoginPageSubtitle('');
       setLoginPageTagline('');
       setLoginFooterText('');
-      setLoginBackgroundStyle('luxury-dark');
+      setLoginBackgroundStyle('plum-violet');
       setLoginBgColor('#020617');
+      setLoginGradientStart('#180F1A');
+      setLoginGradientEnd('#491754');
+      setLoginGradientDirection('to bottom right');
+      setLoginBgVideoUrl('https://assets.mixkit.co/videos/preview/mixkit-luxury-hotel-lobby-with-chandelier-42777-large.mp4');
+      setLoginVideoBlurEnabled(false);
+      setLoginVideoBlurAmount(40);
       setLoginCardBlur(true);
       setLoginBannerNotice('');
       setLoginBannerType('none');
@@ -268,8 +374,14 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
         // Atmosphere & Background
         loginBackgroundStyle,
         loginBgColor,
+        loginGradientStart,
+        loginGradientEnd,
+        loginGradientDirection,
         loginHeaderBgColor,
         loginBgImageUrl,
+        loginBgVideoUrl,
+        loginVideoBlurEnabled,
+        loginVideoBlurAmount,
         loginCardBlur,
         // Security Notice
         loginBannerNotice,
@@ -298,23 +410,23 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
   return (
     <div className="space-y-6 max-w-6xl animate-fade-in" id="login-page-customizer-container">
       {/* Top Header Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 sm:p-7">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <div className="bg-white dark:bg-[#180F1A] rounded-2xl border border-slate-200 dark:border-fuchsia-900/30 shadow-xs p-6 sm:p-7 transition-colors">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-fuchsia-900/20">
           <div className="flex items-start space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+            <div className="w-11 h-11 rounded-2xl btn-primary-gradient text-white flex items-center justify-center shadow-xs shrink-0">
               <LogIn className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                   Login Page &amp; Security Portal Customizer
                 </h2>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />
                   Database Synced
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
                 Full administrative control over the staff login gateway. Dynamically configure hotel logo, branding typography, luxury themes, security banners, and login success alerts directly from the database.
               </p>
             </div>
@@ -324,9 +436,9 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
             <button
               type="button"
               onClick={handleResetDefaults}
-              className="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
+              className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-fuchsia-900/40 hover:bg-slate-50 dark:hover:bg-[#251329] text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               <span>Reset Defaults</span>
             </button>
 
@@ -334,7 +446,7 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
               type="button"
               onClick={handleSaveAll}
               disabled={isSaving || isSyncing}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold flex items-center space-x-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-xl btn-primary-gradient text-white text-xs font-bold flex items-center space-x-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
             >
               {isSaving || isSyncing ? (
                 <>
@@ -353,15 +465,15 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
 
         {/* Status Notification Banner */}
         {saveMessage && (
-          <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-medium text-emerald-800 flex items-center justify-between">
+          <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 rounded-xl text-xs font-medium text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
             <span className="flex items-center space-x-1.5">
-              <Check className="w-4 h-4 text-emerald-600" />
+              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>{saveMessage}</span>
             </span>
             <button
               type="button"
               onClick={() => setSaveMessage(null)}
-              className="text-emerald-700 hover:text-emerald-900 font-bold"
+              className="text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 font-bold"
             >
               ✕
             </button>
@@ -375,8 +487,8 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
             onClick={() => setActiveSubTab('branding')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeSubTab === 'branding'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-fuchsia-100 dark:bg-fuchsia-950/70 text-fuchsia-900 dark:text-fuchsia-200 border border-fuchsia-300 dark:border-fuchsia-800/60 shadow-2xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#251329]'
             }`}
           >
             <ImageIcon className="w-3.5 h-3.5" />
@@ -388,8 +500,8 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
             onClick={() => setActiveSubTab('theme')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeSubTab === 'theme'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-fuchsia-100 dark:bg-fuchsia-950/70 text-fuchsia-900 dark:text-fuchsia-200 border border-fuchsia-300 dark:border-fuchsia-800/60 shadow-2xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#251329]'
             }`}
           >
             <Palette className="w-3.5 h-3.5" />
@@ -401,8 +513,8 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
             onClick={() => setActiveSubTab('security')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeSubTab === 'security'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-fuchsia-100 dark:bg-fuchsia-950/70 text-fuchsia-900 dark:text-fuchsia-200 border border-fuchsia-300 dark:border-fuchsia-800/60 shadow-2xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#251329]'
             }`}
           >
             <Shield className="w-3.5 h-3.5" />
@@ -414,8 +526,8 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
             onClick={() => setActiveSubTab('toast')}
             className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeSubTab === 'toast'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'bg-fuchsia-100 dark:bg-fuchsia-950/70 text-fuchsia-900 dark:text-fuchsia-200 border border-fuchsia-300 dark:border-fuchsia-800/60 shadow-2xs font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#251329]'
             }`}
           >
             <PartyPopper className="w-3.5 h-3.5" />
@@ -725,78 +837,436 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
                       onClick={() => setLoginBackgroundStyle(t.id as any)}
                       className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                         loginBackgroundStyle === t.id
-                          ? 'border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-600/20'
-                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                          ? 'border-fuchsia-500 bg-fuchsia-950/40 dark:bg-fuchsia-950/60 ring-2 ring-fuchsia-500/30'
+                          : 'border-slate-200 dark:border-fuchsia-900/30 hover:border-slate-300 dark:hover:border-fuchsia-700/50 hover:bg-slate-50 dark:hover:bg-[#200f24]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-bold text-slate-900">{t.name}</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{t.name}</span>
                         {loginBackgroundStyle === t.id && (
-                          <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                          <span className="w-2 h-2 rounded-full bg-fuchsia-500" />
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-500">{t.desc}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{t.desc}</p>
                     </button>
                   ))}
                 </div>
 
-                {/* Custom Solid Color Picker */}
+                {/* Custom Solid Color Picker & Presets */}
                 {loginBackgroundStyle === 'custom-color' && (
-                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3 animate-fade-in">
-                    <span className="text-xs font-bold text-slate-800 block">Custom Background Solid Color</span>
-                    <div className="flex items-center space-x-3">
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-fuchsia-900/40 bg-slate-50/70 dark:bg-[#1f0e24] space-y-3 animate-fade-in transition-colors">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Custom Background Solid Color</span>
+                    <div className="flex flex-wrap items-center gap-3">
                       <input
                         type="color"
                         value={loginBgColor}
                         onChange={(e) => setLoginBgColor(e.target.value)}
-                        className="w-10 h-10 rounded-xl cursor-pointer border border-slate-300"
+                        className="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 dark:border-slate-700 shadow-2xs bg-transparent"
                       />
                       <input
                         type="text"
                         value={loginBgColor}
                         onChange={(e) => setLoginBgColor(e.target.value)}
-                        className="w-36 text-xs font-mono font-bold bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
+                        className="w-36 text-xs font-mono font-bold bg-white dark:bg-[#140817] border border-slate-300 dark:border-fuchsia-900/40 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100"
                         placeholder="#020617"
                       />
                       <div
-                        className="w-20 h-9 rounded-lg border border-slate-300 shadow-2xs"
+                        className="w-20 h-9 rounded-lg border border-slate-300 dark:border-fuchsia-900/40 shadow-2xs"
                         style={{ backgroundColor: loginBgColor }}
                       />
+                    </div>
+                    {/* Quick Color Swatches */}
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-fuchsia-900/30">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">Brand &amp; Luxury Color Swatches:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { name: 'Plum Royale', hex: '#491754' },
+                          { name: 'Deep Violet', hex: '#2E1065' },
+                          { name: 'Electric Fuchsia', hex: '#A32EB8' },
+                          { name: 'Obsidian Black', hex: '#020617' },
+                          { name: 'Slate Midnight', hex: '#0F172A' },
+                          { name: 'Imperial Emerald', hex: '#064E3B' },
+                          { name: 'Velvet Wine', hex: '#4C0519' },
+                          { name: 'Pure Charcoal', hex: '#18181B' }
+                        ].map(c => (
+                          <button
+                            key={c.hex}
+                            type="button"
+                            onClick={() => setLoginBgColor(c.hex)}
+                            className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-200 rounded-lg hover:border-slate-400 flex items-center space-x-1.5 transition-all shadow-2xs cursor-pointer"
+                          >
+                            <span className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: c.hex }} />
+                            <span>{c.name}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Custom Wallpaper Image URL */}
+                {/* Custom Multi-Color Gradient Background Controls */}
+                {loginBackgroundStyle === 'custom-gradient' && (
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-fuchsia-900/40 bg-slate-50/70 dark:bg-[#1f0e24] space-y-3.5 animate-fade-in transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <Sliders className="w-3.5 h-3.5 text-fuchsia-600 dark:text-fuchsia-400" />
+                        <span>Custom Dual-Tone Gradient Background</span>
+                      </span>
+                      <span className="text-[10px] bg-fuchsia-100 dark:bg-fuchsia-950/60 text-fuchsia-800 dark:text-fuchsia-300 font-bold px-2 py-0.5 rounded-full border border-fuchsia-200/50 dark:border-fuchsia-800/40">
+                        Linear & Radial Flow
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Gradient Start Color */}
+                      <div className="p-3 bg-white dark:bg-[#140817] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 space-y-1.5">
+                        <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
+                          Start Color (From)
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="color"
+                            value={loginGradientStart}
+                            onChange={(e) => setLoginGradientStart(e.target.value)}
+                            className="w-8 h-8 rounded-lg cursor-pointer border border-slate-300 dark:border-slate-700 p-0.5 bg-transparent"
+                          />
+                          <input
+                            type="text"
+                            value={loginGradientStart}
+                            onChange={(e) => setLoginGradientStart(e.target.value)}
+                            className="w-full text-xs font-mono font-bold bg-slate-50 dark:bg-[#180F1A] border border-slate-300 dark:border-fuchsia-900/40 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-100"
+                            placeholder="#180F1A"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Gradient End Color */}
+                      <div className="p-3 bg-white dark:bg-[#140817] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 space-y-1.5">
+                        <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
+                          End Color (To)
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="color"
+                            value={loginGradientEnd}
+                            onChange={(e) => setLoginGradientEnd(e.target.value)}
+                            className="w-8 h-8 rounded-lg cursor-pointer border border-slate-300 dark:border-slate-700 p-0.5 bg-transparent"
+                          />
+                          <input
+                            type="text"
+                            value={loginGradientEnd}
+                            onChange={(e) => setLoginGradientEnd(e.target.value)}
+                            className="w-full text-xs font-mono font-bold bg-slate-50 dark:bg-[#180F1A] border border-slate-300 dark:border-fuchsia-900/40 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-100"
+                            placeholder="#491754"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Gradient Direction */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Gradient Direction:
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {[
+                          { label: '↘ Diagonal', value: 'to bottom right' as const },
+                          { label: '→ Right', value: 'to right' as const },
+                          { label: '↓ Down', value: 'to bottom' as const },
+                          { label: '↗ Top Right', value: 'to top right' as const },
+                          { label: '◎ Radial', value: 'radial' as const }
+                        ].map((dir) => (
+                          <button
+                            key={dir.value}
+                            type="button"
+                            onClick={() => setLoginGradientDirection(dir.value)}
+                            className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all cursor-pointer ${
+                              loginGradientDirection === dir.value
+                                ? 'bg-fuchsia-600 text-white border-fuchsia-600 shadow-2xs font-bold'
+                                : 'bg-white dark:bg-[#140817] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-fuchsia-900/40 hover:bg-slate-100 dark:hover:bg-[#251329]'
+                            }`}
+                          >
+                            {dir.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Live Gradient Preview Swatch */}
+                    <div
+                      className="h-14 w-full rounded-xl border border-slate-300 dark:border-fuchsia-900/40 shadow-inner flex items-center justify-center text-white text-xs font-bold transition-all"
+                      style={{
+                        background:
+                          loginGradientDirection === 'radial'
+                            ? `radial-gradient(circle, ${loginGradientStart}, ${loginGradientEnd})`
+                            : `linear-gradient(${loginGradientDirection}, ${loginGradientStart}, ${loginGradientEnd})`
+                      }}
+                    >
+                      <span className="bg-black/40 backdrop-blur-xs px-3 py-1 rounded-full text-[11px]">
+                        Live Gradient Blend
+                      </span>
+                    </div>
+
+                    {/* Quick Gradient Presets */}
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-fuchsia-900/30">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">Curated Gradient Presets:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { name: 'Plum & Violet', start: '#180F1A', end: '#491754', dir: 'to bottom right' as const },
+                          { name: 'Neon Fuchsia', start: '#4A044E', end: '#C026D3', dir: 'to right' as const },
+                          { name: 'Midnight Indigo', start: '#020617', end: '#1E1B4B', dir: 'to bottom right' as const },
+                          { name: 'Royal Sapphire', start: '#0F172A', end: '#1D4ED8', dir: 'to right' as const },
+                          { name: 'Emerald Velvet', start: '#022C22', end: '#064E3B', dir: 'to bottom' as const },
+                          { name: 'Cyber Magenta', start: '#2E1065', end: '#BE185D', dir: 'to bottom right' as const }
+                        ].map((gp) => (
+                          <button
+                            key={gp.name}
+                            type="button"
+                            onClick={() => {
+                              setLoginGradientStart(gp.start);
+                              setLoginGradientEnd(gp.end);
+                              setLoginGradientDirection(gp.dir);
+                            }}
+                            className="px-2.5 py-1 text-[11px] font-semibold bg-white dark:bg-[#140817] border border-slate-200 dark:border-fuchsia-900/40 rounded-lg hover:border-fuchsia-400 flex items-center space-x-1.5 transition-all shadow-2xs cursor-pointer text-slate-700 dark:text-slate-200"
+                          >
+                            <span
+                              className="w-3 h-3 rounded-full border border-black/10 shrink-0"
+                              style={{ background: `linear-gradient(to right, ${gp.start}, ${gp.end})` }}
+                            />
+                            <span>{gp.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom Wallpaper Image (URL or Direct File Upload) */}
                 {loginBackgroundStyle === 'custom-image' && (
-                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3 animate-fade-in">
-                    <span className="text-xs font-bold text-slate-800 block">Wallpaper Image URL</span>
-                    <input
-                      type="url"
-                      value={loginBgImageUrl}
-                      onChange={(e) => setLoginBgImageUrl(e.target.value)}
-                      className="w-full text-xs font-mono bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
-                      placeholder="https://images.unsplash.com/..."
-                    />
-                    <div className="h-28 w-full rounded-xl overflow-hidden border border-slate-300 relative">
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-fuchsia-900/40 bg-slate-50/70 dark:bg-[#1f0e24] space-y-3 animate-fade-in transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-indigo-600 dark:text-fuchsia-400" />
+                        <span>Wallpaper Image (URL or Custom Upload)</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => bgImageInputRef.current?.click()}
+                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>Upload Photo from Computer</span>
+                      </button>
+                      <input
+                        type="file"
+                        ref={bgImageInputRef}
+                        onChange={handleBgImageUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">Image URL:</span>
+                      <input
+                        type="url"
+                        value={loginBgImageUrl}
+                        onChange={(e) => setLoginBgImageUrl(e.target.value)}
+                        className="w-full text-xs font-mono bg-white dark:bg-[#140817] border border-slate-300 dark:border-fuchsia-900/40 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-indigo-500"
+                        placeholder="https://images.unsplash.com/photo-..."
+                      />
+                    </div>
+
+                    {/* Quick Wallpaper Presets */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mr-1">Presets:</span>
+                      {[
+                        { label: 'Luxury Grand Lobby', url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1920&q=80' },
+                        { label: 'Penthouse Suite', url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80' },
+                        { label: 'Hotel Evening Lights', url: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1920&q=80' },
+                        { label: 'Minimalist Architecture', url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1920&q=80' }
+                      ].map(p => (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() => setLoginBgImageUrl(p.url)}
+                          className="px-2 py-1 bg-white dark:bg-[#140817] hover:bg-slate-100 dark:hover:bg-[#251329] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-slate-200 text-[10px] font-medium rounded-md transition-colors cursor-pointer"
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="h-32 w-full rounded-xl overflow-hidden border border-slate-300 dark:border-fuchsia-900/40 relative shadow-inner">
                       <img
                         src={loginBgImageUrl}
                         alt="Wallpaper Preview"
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center text-white text-xs font-semibold">
+                      <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-xs flex items-center justify-center text-white text-xs font-semibold">
                         Preview: Dimmed backdrop with modal overlay
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Glassmorphism Blur Toggle */}
-                <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between">
-                  <div className="flex items-center space-x-2.5">
-                    <Layers className="w-4 h-4 text-indigo-600" />
+                {/* Custom Cinematic Video Background (URL or Direct File Upload) */}
+                {loginBackgroundStyle === 'custom-video' && (
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-fuchsia-900/40 bg-slate-50/70 dark:bg-[#1f0e24] space-y-3.5 animate-fade-in transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <Video className="w-3.5 h-3.5 text-indigo-600 dark:text-fuchsia-400" />
+                        <span>Cinematic Video (URL or Custom Upload)</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => bgVideoInputRef.current?.click()}
+                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>Upload Video File (MP4/WebM)</span>
+                      </button>
+                      <input
+                        type="file"
+                        ref={bgVideoInputRef}
+                        onChange={handleBgVideoUpload}
+                        accept="video/mp4,video/webm,video/ogg"
+                        className="hidden"
+                      />
+                    </div>
+
                     <div>
-                      <span className="text-xs font-bold text-slate-800 block">Glassmorphism Backdrop Blur</span>
-                      <span className="text-[11px] text-slate-500">Applies frosted glass diffusion behind the login card</span>
+                      <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">Video Stream URL (MP4 / WebM):</span>
+                      <input
+                        type="url"
+                        value={loginBgVideoUrl}
+                        onChange={(e) => setLoginBgVideoUrl(e.target.value)}
+                        className="w-full text-xs font-mono bg-white dark:bg-[#140817] border border-slate-300 dark:border-fuchsia-900/40 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-indigo-500"
+                        placeholder="https://assets.mixkit.co/videos/preview/..."
+                      />
+                    </div>
+
+                    {/* Quick Video Presets */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mr-1">Presets:</span>
+                      {[
+                        { label: 'Hotel Chandelier Lobby', url: 'https://assets.mixkit.co/videos/preview/mixkit-luxury-hotel-lobby-with-chandelier-42777-large.mp4' },
+                        { label: 'Evening City Lights', url: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-city-traffic-at-night-41551-large.mp4' },
+                        { label: 'Serene Luxury Resort', url: 'https://assets.mixkit.co/videos/preview/mixkit-curved-swimming-pool-in-a-luxury-hotel-42784-large.mp4' }
+                      ].map(p => (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() => setLoginBgVideoUrl(p.url)}
+                          className="px-2 py-1 bg-white dark:bg-[#140817] hover:bg-slate-100 dark:hover:bg-[#251329] border border-slate-200 dark:border-fuchsia-900/40 text-slate-700 dark:text-slate-200 text-[10px] font-medium rounded-md transition-colors cursor-pointer"
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Media Player Background Blur Controls (Toggle + 0-100% Intensity Slider) */}
+                    <div className="p-3.5 bg-white dark:bg-[#140817] rounded-xl border border-slate-200 dark:border-fuchsia-900/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Sliders className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400" />
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                              Enable Video Background Blur
+                            </span>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {loginVideoBlurEnabled
+                                ? 'Blur active: Video playback is softened with customizable diffusion'
+                                : 'Disabled: Video plays sharp, clear & unaffected without any blur'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Enable Blur Toggle */}
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={loginVideoBlurEnabled}
+                            onChange={(e) => setLoginVideoBlurEnabled(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-fuchsia-600"></div>
+                        </label>
+                      </div>
+
+                      {/* Intensity Slider - Only Active when Toggle is ON */}
+                      <div className={`space-y-1.5 transition-all duration-200 ${loginVideoBlurEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span>Blur Intensity:</span>
+                            <span className="text-fuchsia-600 dark:text-fuchsia-400 font-bold font-mono">
+                              {loginVideoBlurEnabled ? `${loginVideoBlurAmount}%` : '0% (Disabled)'}
+                            </span>
+                          </span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                            {loginVideoBlurEnabled ? `${Math.round((loginVideoBlurAmount * 0.2) * 10) / 10}px filter` : 'Clear Video'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <span className="text-[10px] text-slate-400 font-semibold">0% (Clear)</span>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="1"
+                            disabled={!loginVideoBlurEnabled}
+                            value={loginVideoBlurAmount}
+                            onChange={(e) => setLoginVideoBlurAmount(Number(e.target.value))}
+                            className="w-full accent-fuchsia-600 cursor-pointer h-2 bg-slate-200 dark:bg-slate-800 rounded-lg"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold">100% (Dense)</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                          {loginVideoBlurEnabled
+                            ? 'Adjust the slider to increase or reduce video playback diffusion in real time.'
+                            : 'Switch the toggle above to enable this intensity slider.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Video Player Preview Window */}
+                    <div className="h-32 w-full rounded-xl overflow-hidden border border-slate-300 dark:border-fuchsia-900/40 relative shadow-inner bg-black">
+                      {loginBgVideoUrl ? (
+                        <video
+                          src={loginBgVideoUrl}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover transition-all duration-300"
+                          style={{
+                            filter: loginVideoBlurEnabled ? `blur(${(loginVideoBlurAmount || 40) * 0.2}px)` : 'none'
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">
+                          No video URL provided
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-slate-950/50 flex items-center justify-center text-white text-xs font-semibold">
+                        <span>
+                          {loginVideoBlurEnabled
+                            ? `Video Preview: Filtered with ${loginVideoBlurAmount}% blur`
+                            : 'Video Preview: Playing sharp & normal without blur'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Glassmorphism Blur Toggle */}
+                <div className="p-3.5 rounded-xl border border-slate-200 dark:border-fuchsia-900/40 bg-slate-50/60 dark:bg-[#1f0e24] flex items-center justify-between transition-colors">
+                  <div className="flex items-center space-x-2.5">
+                    <Layers className="w-4 h-4 text-indigo-600 dark:text-fuchsia-400" />
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Glassmorphism Backdrop Blur</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Applies frosted glass diffusion behind the login card</span>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -806,7 +1276,7 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
                       onChange={(e) => setLoginCardBlur(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-9 h-5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
               </div>
@@ -1097,7 +1567,9 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
             {/* Scaled Visual Representation of AuthModal */}
             <div
               className={`rounded-2xl p-4 sm:p-5 transition-all shadow-xl relative overflow-hidden border ${
-                loginBackgroundStyle === 'luxury-dark'
+                loginBackgroundStyle === 'plum-violet'
+                  ? 'bg-gradient-to-br from-[#180F1A] via-[#491754] to-[#0F0911] border-[#491754]'
+                  : loginBackgroundStyle === 'luxury-dark'
                   ? 'bg-slate-950 border-slate-800'
                   : loginBackgroundStyle === 'royal-indigo'
                   ? 'bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 border-indigo-900'
@@ -1105,21 +1577,58 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
                   ? 'bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900 border-emerald-900'
                   : loginBackgroundStyle === 'minimal-clean'
                   ? 'bg-slate-100 border-slate-300'
+                  : loginBackgroundStyle === 'custom-gradient'
+                  ? 'border-fuchsia-800'
+                  : loginBackgroundStyle === 'custom-video'
+                  ? 'bg-slate-950 border-slate-800'
                   : loginBackgroundStyle === 'custom-image'
                   ? 'border-slate-800'
                   : 'border-slate-800'
               }`}
               style={{
                 backgroundColor: loginBackgroundStyle === 'custom-color' ? loginBgColor : undefined,
+                background:
+                  loginBackgroundStyle === 'custom-gradient'
+                    ? (loginGradientDirection === 'radial'
+                        ? `radial-gradient(circle, ${loginGradientStart}, ${loginGradientEnd})`
+                        : `linear-gradient(${loginGradientDirection}, ${loginGradientStart}, ${loginGradientEnd})`)
+                    : undefined,
                 backgroundImage:
                   loginBackgroundStyle === 'custom-image' ? `url("${loginBgImageUrl}")` : undefined,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
               }}
             >
-              {/* Optional Dimming Overlay for custom image */}
+              {/* Optional Video Background in Preview */}
+              {loginBackgroundStyle === 'custom-video' && loginBgVideoUrl && (
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-all duration-300"
+                  style={{
+                    filter: loginVideoBlurEnabled
+                      ? `blur(${((loginVideoBlurAmount ?? 40) / 100) * 16}px)`
+                      : 'none'
+                  }}
+                  src={loginBgVideoUrl}
+                />
+              )}
+
+              {/* Optional Dimming Overlay for custom image or video (No forced blur unless enabled) */}
               {loginBackgroundStyle === 'custom-image' && (
-                <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs" />
+                <div className="absolute inset-0 bg-slate-950/70 pointer-events-none" />
+              )}
+              {loginBackgroundStyle === 'custom-video' && (
+                <div
+                  className="absolute inset-0 bg-slate-950/50 pointer-events-none transition-all duration-300"
+                  style={{
+                    backdropFilter: loginVideoBlurEnabled
+                      ? `blur(${((loginVideoBlurAmount ?? 40) / 100) * 12}px)`
+                      : 'none'
+                  }}
+                />
               )}
 
               {/* Login Modal Box in Preview */}
@@ -1210,7 +1719,7 @@ export const LoginPageCustomizer: React.FC<{ onNavigateToAlerts?: () => void }> 
                   </div>
 
                   {/* Dummy Button */}
-                  <div className="h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center space-x-1 text-[11px] font-bold shadow-xs">
+                  <div className="h-8 rounded-lg btn-primary-gradient text-white flex items-center justify-center space-x-1 text-[11px] font-bold shadow-xs">
                     <LogIn className="w-3.5 h-3.5" />
                     <span>Validate &amp; Enter Dashboard</span>
                   </div>

@@ -277,7 +277,7 @@ export const MultiDatabaseManager: React.FC = () => {
                 id="btn-active-db-ping"
                 onClick={() => handlePing(primaryEngine)}
                 disabled={pingingEngine === primaryEngine}
-                className="inline-flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all cursor-pointer disabled:opacity-50"
                 title="Test real roundtrip latency to the connected database"
               >
                 <Activity className={`w-4 h-4 ${pingingEngine === primaryEngine ? 'animate-spin text-emerald-400' : 'text-emerald-400'}`} />
@@ -289,7 +289,7 @@ export const MultiDatabaseManager: React.FC = () => {
                 id="btn-active-db-refresh"
                 onClick={handleRefreshActive}
                 disabled={isRefreshing}
-                className="inline-flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
                 title="Reload live records from the connected database"
               >
                 <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -381,7 +381,7 @@ export const MultiDatabaseManager: React.FC = () => {
                 <div>
                   {/* Top Row: Icon + Name + Status */}
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <div className="flex items-center space-x-3">
                       <div className={`p-2.5 rounded-xl border ${
                         isPrimary
                           ? 'bg-white shadow-2xs border-slate-200'
@@ -547,7 +547,7 @@ export const MultiDatabaseManager: React.FC = () => {
           {multiDbState?.syncLogs && multiDbState.syncLogs.length > 0 ? (
             multiDbState.syncLogs.map(log => (
               <div key={log.id} className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50 transition-colors">
-                <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="flex items-center space-x-3">
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 text-slate-700">
                     {log.engine}
                   </span>
@@ -557,7 +557,7 @@ export const MultiDatabaseManager: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 rtl:space-x-reverse text-xs self-end sm:self-center">
+                <div className="flex items-center space-x-3 text-xs self-end sm:self-center">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                     log.status === 'success'
                       ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -586,7 +586,7 @@ export const MultiDatabaseManager: React.FC = () => {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              <div className="flex items-center space-x-2">
                 {getEngineIcon(selectedEngineForConfig.type)}
                 <div>
                   <h3 className="font-bold text-slate-900 text-base">
@@ -682,7 +682,7 @@ export const MultiDatabaseManager: React.FC = () => {
                     />
                   </div>
 
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse pt-1">
+                  <div className="flex items-center space-x-2 pt-1">
                     <input
                       type="checkbox"
                       id="chk-firebase-realtime"
@@ -794,7 +794,7 @@ export const MultiDatabaseManager: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse pt-1">
+                  <div className="flex items-center space-x-2 pt-1">
                     <input
                       type="checkbox"
                       id="chk-postgres-realtime"
@@ -918,7 +918,7 @@ export const MultiDatabaseManager: React.FC = () => {
                 </>
               )}
 
-              <div className="flex items-center space-x-2 rtl:space-x-reverse pt-2">
+              <div className="flex items-center space-x-2 pt-2">
                 <input
                   type="checkbox"
                   id="chk-ssl-modal"
@@ -958,7 +958,7 @@ export const MultiDatabaseManager: React.FC = () => {
                 <span>{modalTestStatus.testing ? 'Testing...' : 'Test Connection'}</span>
               </button>
 
-              <div className="flex items-center space-x-2 rtl:space-x-reverse w-full sm:w-auto justify-end">
+              <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
                 <button
                   type="button"
                   id="btn-modal-cancel"
