@@ -27,6 +27,7 @@ import { LostItem } from '../types';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { toast } from 'react-toastify';
 import { useLanguage } from '../context/LanguageContext';
+import { TableSkeleton } from './common/Skeleton';
 
 type SortField =
   | 'serial'
@@ -39,7 +40,7 @@ type SortField =
   | 'urgency';
 
 export const PendingDispatchView: React.FC = () => {
-  const { activeItems, batchDispatchItems, openDispatch, openItemDetails, getValidationMessage } = useApp();
+  const { activeItems, batchDispatchItems, openDispatch, openItemDetails, getValidationMessage, isLoading } = useApp();
   const { user, hasPermission } = useAuth();
   const { t, isRTL, translateCategory } = useLanguage();
 
@@ -391,6 +392,18 @@ export const PendingDispatchView: React.FC = () => {
 
   const isAllCurrentPageSelected =
     paginatedItems.length > 0 && paginatedItems.every(i => selectedItemIds.includes(i.id));
+
+  if (isLoading) {
+    return (
+      <TableSkeleton
+        rows={8}
+        columns={7}
+        hasFilterBar={true}
+        hasMetricCards={true}
+        metricCardsCount={4}
+      />
+    );
+  }
 
   return (
     <div className="p-4 sm:p-8 space-y-8 max-w-7xl mx-auto pb-24 md:pb-8">

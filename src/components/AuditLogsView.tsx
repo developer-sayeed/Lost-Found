@@ -47,6 +47,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { AuditLog, UserRole } from '../types';
 import { api } from '../lib/api';
+import { Skeleton } from './common/Skeleton';
 
 // Helper to generate a sliding window of page numbers with ellipsis
 function getPageNumbers(current: number, total: number): (number | string)[] {
@@ -858,7 +859,7 @@ export const AuditLogsView: React.FC = () => {
 
       {/* Metrics Summary Cards (2x2 on Mobile, 4 columns on Desktop) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/90 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900/90 p-3 sm:p-4 rounded-xl border border-[#5E1E6C]/40 dark:border-fuchsia-500/45 hover:border-[#5E1E6C]/70 dark:hover:border-fuchsia-400 transition-all shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-medium text-slate-500">Total Recorded</span>
             <div className="p-1.5 bg-slate-100 text-slate-600 rounded-lg">
@@ -871,7 +872,7 @@ export const AuditLogsView: React.FC = () => {
           <span className="text-[10px] sm:text-[11px] text-slate-400">Total audit events</span>
         </div>
 
-        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/90 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900/90 p-3 sm:p-4 rounded-xl border border-[#5E1E6C]/40 dark:border-fuchsia-500/45 hover:border-[#5E1E6C]/70 dark:hover:border-fuchsia-400 transition-all shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-medium text-slate-500">Status Changes</span>
             <div className="p-1.5 bg-amber-50 text-amber-600 rounded-lg border border-amber-100">
@@ -884,7 +885,7 @@ export const AuditLogsView: React.FC = () => {
           <span className="text-[10px] sm:text-[11px] text-slate-400">Lifecycle shifts</span>
         </div>
 
-        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/90 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900/90 p-3 sm:p-4 rounded-xl border border-[#5E1E6C]/40 dark:border-fuchsia-500/45 hover:border-[#5E1E6C]/70 dark:hover:border-fuchsia-400 transition-all shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-medium text-slate-500">Handovers / Dispatches</span>
             <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">
@@ -898,7 +899,7 @@ export const AuditLogsView: React.FC = () => {
           <span className="text-[10px] sm:text-[11px] text-slate-400">Verified releases</span>
         </div>
 
-        <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/90 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900/90 p-3 sm:p-4 rounded-xl border border-[#5E1E6C]/40 dark:border-fuchsia-500/45 hover:border-[#5E1E6C]/70 dark:hover:border-fuchsia-400 transition-all shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] sm:text-xs font-medium text-slate-500">Past 24 Hours</span>
             <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100">
@@ -914,7 +915,7 @@ export const AuditLogsView: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-3">
+      <div className="bg-white dark:bg-slate-900/90 p-3 sm:p-4 rounded-xl border border-[#5E1E6C]/40 dark:border-fuchsia-500/45 shadow-2xs space-y-3">
         {/* Search Row + Filter Toggle on Mobile */}
         <div className="flex gap-2 items-center">
           {/* Search Box */}
@@ -1120,19 +1121,39 @@ export const AuditLogsView: React.FC = () => {
 
       {/* Main Content Area */}
       {isLoading ? (
-        <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs py-16 text-center space-y-3">
-          <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
-          <p className="text-sm text-slate-500">Loading audit ledger...</p>
+        <div className="bg-white dark:bg-slate-900/90 rounded-xl border border-[#5E1E6C]/40 dark:border-fuchsia-500/45 shadow-2xs overflow-hidden">
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+            <Skeleton className="h-4 w-6 rounded" />
+            <Skeleton className="h-4 w-28 rounded" />
+            <Skeleton className="h-4 w-28 rounded" />
+            <Skeleton className="h-4 w-28 rounded" />
+            <Skeleton className="h-4 w-24 rounded" />
+            <Skeleton className="h-4 w-32 rounded" />
+            <Skeleton className="h-4 w-16 rounded" />
+          </div>
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/60 p-2">
+            {[1, 2, 3, 4, 5, 6, 7].map(idx => (
+              <div key={idx} className="p-3.5 flex items-center justify-between gap-4">
+                <Skeleton className="h-4 w-4 rounded shrink-0" />
+                <Skeleton className="h-4 w-24 rounded" />
+                <Skeleton className="h-6 w-28 rounded-full" />
+                <Skeleton className="h-4 w-24 rounded" />
+                <Skeleton className="h-4 w-20 rounded" />
+                <Skeleton className="h-4 w-36 rounded" />
+                <Skeleton className="h-7 w-12 rounded-lg" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : filteredLogs.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs py-16 px-4 text-center space-y-3">
-          <div className="p-3 bg-slate-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto text-slate-400">
+        <div className="bg-white dark:bg-slate-900/90 rounded-xl border border-[#5E1E6C]/40 dark:border-fuchsia-500/45 shadow-2xs py-16 px-4 text-center space-y-3">
+          <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-full w-12 h-12 flex items-center justify-center mx-auto text-slate-400">
             <History className="w-6 h-6" />
           </div>
-          <h3 className="text-sm font-bold text-slate-800">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
             {logs.length === 0 ? 'Live Audit Ledger Is Ready' : 'No Matching Audit Logs Found'}
           </h3>
-          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
             {logs.length === 0
               ? 'No audit events recorded yet. The system is actively tracking real-time operations: item registrations, status shifts, handovers, staff updates, and permissions.'
               : 'No audit logs matched your current search or filter criteria. Try adjusting your query or reset filters.'}
@@ -1147,7 +1168,7 @@ export const AuditLogsView: React.FC = () => {
                 setSelectedRole('all');
                 setSelectedDateRange('all');
               }}
-              className="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 font-semibold rounded-lg text-xs hover:bg-indigo-100 transition-colors"
+              className="inline-flex items-center px-3 py-1.5 bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-800 font-semibold rounded-lg text-xs hover:bg-fuchsia-100 transition-colors"
             >
               Clear all filters
             </button>
@@ -1177,8 +1198,10 @@ export const AuditLogsView: React.FC = () => {
                 <div
                   key={log.id}
                   onClick={() => setSelectedLogDetail(log)}
-                  className={`bg-white rounded-xl border p-3.5 sm:p-4 shadow-2xs hover:border-indigo-300 hover:shadow-xs transition-all active:bg-slate-50/80 cursor-pointer space-y-2.5 relative ${
-                    isSelected ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-200/90'
+                  className={`bg-white dark:bg-slate-900/90 rounded-xl border p-3.5 sm:p-4 shadow-2xs hover:border-[#5E1E6C]/70 dark:hover:border-fuchsia-400 hover:shadow-xs transition-all active:bg-slate-50/80 cursor-pointer space-y-2.5 relative ${
+                    isSelected
+                      ? 'border-[#5E1E6C] dark:border-fuchsia-400 bg-fuchsia-50/20 dark:bg-fuchsia-950/20'
+                      : 'border-[#5E1E6C]/35 dark:border-fuchsia-500/40'
                   }`}
                 >
                   {/* Card Header: Checkbox + Action Badge + Timestamp + Delete Icon */}
@@ -1325,7 +1348,7 @@ export const AuditLogsView: React.FC = () => {
           </div>
 
           {/* 2. Desktop Table View */}
-          <div className={`${viewMode === 'table' ? 'block' : 'hidden'} bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden`}>
+          <div className={`${viewMode === 'table' ? 'block' : 'hidden'} bg-white dark:bg-slate-900/90 rounded-xl border border-[#5E1E6C]/40 dark:border-fuchsia-500/45 shadow-2xs overflow-hidden`}>
             <div className="overflow-auto max-h-[640px] relative">
               <table className="w-full text-left border-separate border-spacing-0 text-xs">
                 <thead className="sticky top-0 z-20 shadow-xs">

@@ -51,6 +51,7 @@ import { LostItem, StaffMember } from '../types';
 import { Badge } from './Badge';
 import { StaffPerformancePrintModal } from './modals/StaffPerformancePrintModal';
 import { UserAvatar } from '../lib/avatarHelper';
+import { StaffPerformanceSkeleton } from './common/Skeleton';
 
 type DateRangeFilter = 'last7' | 'last14' | 'last30' | 'last60' | 'last90' | 'all';
 type MetricViewMode = 'stacked' | 'total' | 'logged' | 'handover';
@@ -99,7 +100,7 @@ const CHART_COLORS = [
 ];
 
 export const StaffPerformanceView: React.FC = () => {
-  const { items, staff, openItemDetails, openStaffProfile, settings } = useApp();
+  const { items, staff, openItemDetails, openStaffProfile, settings, isLoading } = useApp();
   const { user } = useAuth();
   const { t, isRTL, translateRole } = useLanguage();
 
@@ -739,6 +740,10 @@ export const StaffPerformanceView: React.FC = () => {
   }, [inspectingStaff, drilldownSearch, drilldownStatusFilter]);
 
   const departmentsList = ['All', 'Housekeeping', 'Receptionist', 'Front Desk', 'Security', 'Food & Beverage', 'Maintenance', 'Manager'];
+
+  if (isLoading) {
+    return <StaffPerformanceSkeleton />;
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto animate-fade-in" id="supervisor-performance-view">

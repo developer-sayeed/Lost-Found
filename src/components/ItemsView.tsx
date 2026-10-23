@@ -33,6 +33,7 @@ import * as XLSX from 'xlsx';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { LostItem, ItemStatus, ItemCategory } from '../types';
+import { TableSkeleton } from './common/Skeleton';
 import { isWithinHandover24Hours } from '../lib/handoverUtils';
 import { Badge } from './Badge';
 import { useClickOutside } from '../hooks/useClickOutside';
@@ -71,7 +72,8 @@ export const ItemsView: React.FC = () => {
     approveItem,
     rejectItem,
     openReturnToStore,
-    batchDeleteItems
+    batchDeleteItems,
+    isLoading
   } = useApp();
   const { user, isAdmin, hasPermission, effectiveRole, isSuperAdmin, previewRole } = useAuth();
   const { t, isRTL, translateCategory, translateStatus } = useLanguage();
@@ -343,6 +345,17 @@ export const ItemsView: React.FC = () => {
   const pendingApprovalsCount = useMemo(() => {
     return activeItems.filter(i => i.status === 'Pending Approval' || (i.isApproved === false && i.approvalStatus === 'pending')).length;
   }, [activeItems]);
+
+  if (isLoading) {
+    return (
+      <TableSkeleton
+        rows={8}
+        columns={8}
+        hasFilterBar={true}
+        hasMetricCards={false}
+      />
+    );
+  }
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto">

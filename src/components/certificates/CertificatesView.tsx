@@ -45,6 +45,7 @@ import {
   downloadCertificatePng,
   printCertificate
 } from './CertificateActions';
+import { Skeleton } from '../common/Skeleton';
 
 export const CertificatesView: React.FC = () => {
   const { user, hasPermission, isSuperAdmin, previewRole, effectiveRole } = useAuth();
@@ -794,9 +795,26 @@ export const CertificatesView: React.FC = () => {
       {/* Content List / Grid */}
       {/* ------------------------------------------------------------- */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <Loader2 className="w-8 h-8 text-fuchsia-600 animate-spin mb-3" />
-          <p className="text-xs font-semibold text-slate-500">Loading certificate history...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map(idx => (
+            <div
+              key={idx}
+              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-[#5E1E6C]/25 dark:border-fuchsia-500/30 shadow-xs space-y-4"
+            >
+              <Skeleton className="h-40 w-full rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-3/4 rounded-md" />
+                <Skeleton className="h-4 w-1/2 rounded-md" />
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                <Skeleton className="h-4 w-24 rounded" />
+                <div className="flex space-x-1.5">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredCertificates.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center px-4">

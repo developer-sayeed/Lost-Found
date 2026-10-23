@@ -47,6 +47,7 @@ import { useNavigate } from 'react-router-dom';
 import { isWithinHandover24Hours } from '../lib/handoverUtils';
 import { Badge } from './Badge';
 import { NotificationEfficiencyWidget } from './NotificationEfficiencyWidget';
+import { DashboardSkeleton } from './common/Skeleton';
 
 const VIBRANT_CATEGORY_PALETTE = [
   '#6366f1', // Indigo
@@ -120,7 +121,8 @@ export const DashboardView: React.FC = () => {
     openEditItem,
     openQrScanner,
     openItemQrModal,
-    openReturnToStore
+    openReturnToStore,
+    isLoading
   } = useApp();
   const { user, isAdmin, hasPermission, isSuperAdmin, previewRole } = useAuth();
   const isMasterAdmin = isSuperAdmin && !previewRole;
@@ -218,6 +220,10 @@ export const DashboardView: React.FC = () => {
 
   const maxCategoryCount = Math.max(...categoryData.map(c => c.count), 5);
   const recentItems = activeItems.slice(0, 6);
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto pb-24 md:pb-8">

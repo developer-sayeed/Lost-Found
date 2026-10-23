@@ -74,6 +74,7 @@ import { LoginPageCustomizer } from './LoginPageCustomizer';
 import { KeyboardShortcutsSettings } from './KeyboardShortcutsSettings';
 import { CertificateSettingsTab } from './certificates/CertificateSettingsTab';
 import { SecurityActivityTab } from './SecurityActivityTab';
+import { SettingsSkeleton } from './common/Skeleton';
 import {
   DEFAULT_THEME_PRESETS,
   FONT_OPTIONS,
@@ -131,7 +132,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     unblockDevice,
     staff,
     isSyncPaused,
-    simulateOfflineToggle
+    simulateOfflineToggle,
+    isLoading
   } = useApp();
   const { user, changePassword, autoLogoutMinutes, setAutoLogoutMinutes, hasPermission, previewRole, effectiveRole } = useAuth();
 
@@ -991,6 +993,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
   };
+
+  if (isLoading) {
+    return <SettingsSkeleton />;
+  }
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto pb-24 md:pb-8">

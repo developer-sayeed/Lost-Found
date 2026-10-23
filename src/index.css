@@ -461,6 +461,11 @@ font[style] {
   background-color: #221425 !important;
 }
 
+.dark .bg-slate-200 {
+  background-color: #2e1d31 !important;
+  color: var(--theme-text-primary) !important;
+}
+
 .dark .text-slate-900,
 .dark .text-slate-800,
 .dark .dark\:text-white,
@@ -1004,5 +1009,56 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 .animate-backdrop-fade-in {
   animation: backdropFadeIn 0.22s ease-out forwards;
 }
+
+/* Skeleton Loading Shimmer Animation */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.7) 0%,
+    rgba(248, 250, 252, 0.95) 50%,
+    rgba(226, 232, 240, 0.7) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.7s ease-in-out infinite;
+}
+
+.dark .animate-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(46, 29, 49, 0.6) 0%,
+    rgba(78, 43, 84, 0.85) 50%,
+    rgba(46, 29, 49, 0.6) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.7s ease-in-out infinite;
+}
+
+/* Global Button & Interactive Control Cursor Rules */
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer !important;
+}
+
+button:disabled,
+button[disabled],
+[role="button"][aria-disabled="true"],
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled {
+  cursor: not-allowed !important;
+}
+
 
 

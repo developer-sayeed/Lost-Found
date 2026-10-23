@@ -50,6 +50,7 @@ import { useClickOutside } from '../hooks/useClickOutside';
 import { toast } from 'react-toastify';
 import { StaffPasswordModal } from './modals/StaffPasswordModal';
 import { UserAvatar } from '../lib/avatarHelper';
+import { StaffManagementSkeleton } from './common/Skeleton';
 
 type SortField = 'name' | 'department' | 'role' | 'itemsCount' | 'status';
 type SortOrder = 'asc' | 'desc';
@@ -176,7 +177,7 @@ const ROLE_META: Record<UserRole, {
 };
 
 export const StaffManagementView: React.FC = () => {
-  const { staff, items, setIsStaffModalOpen, setEditingStaff, updateStaff, deleteStaff, openStaffProfile, settings, updateSettings } = useApp();
+  const { staff, items, setIsStaffModalOpen, setEditingStaff, updateStaff, deleteStaff, openStaffProfile, settings, updateSettings, isLoading } = useApp();
   const { user, hasPermission, previewRole, setPreviewRole, effectiveRole } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -693,6 +694,10 @@ export const StaffManagementView: React.FC = () => {
   const activeCount = staff.filter(s => s.status === 'Active').length;
   const managerCount = staff.filter(s => s.role === 'Manager' || s.department === 'Manager').length;
   const employeeCount = staff.filter(s => s.role === 'Employee' || s.role === 'Supervisor').length;
+
+  if (isLoading) {
+    return <StaffManagementSkeleton />;
+  }
 
   return (
     <div className="p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 lg:space-y-8 max-w-7xl mx-auto">

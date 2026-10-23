@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { LostItem } from '../types';
 import { Badge } from './Badge';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { TableSkeleton } from './common/Skeleton';
 
 export const RemovedItemsView: React.FC = () => {
   const {
@@ -35,7 +36,8 @@ export const RemovedItemsView: React.FC = () => {
     batchPermanentDeleteItems,
     emptyTrash,
     openItemDetails,
-    setActiveTab
+    setActiveTab,
+    isLoading
   } = useApp();
   const { user, hasPermission, isSuperAdmin, previewRole, effectiveRole } = useAuth();
 
@@ -279,6 +281,17 @@ export const RemovedItemsView: React.FC = () => {
     });
     return Array.from(cats);
   }, [removedItems]);
+
+  if (isLoading) {
+    return (
+      <TableSkeleton
+        rows={8}
+        columns={7}
+        hasFilterBar={true}
+        hasMetricCards={false}
+      />
+    );
+  }
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto pb-24 md:pb-8">

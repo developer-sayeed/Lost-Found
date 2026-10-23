@@ -51,10 +51,11 @@ import { LostItem, StaffMember, User } from '../types';
 import { toast } from 'react-toastify';
 import { UserAvatar } from '../lib/avatarHelper';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { UserProfileSkeleton } from './common/Skeleton';
 
 export const UserProfileView: React.FC = () => {
   const { user, updateProfile, hasPermission } = useAuth();
-  const { items, staff, updateStaff, selectedStaffProfile, setSelectedStaffProfile, openItemDetails, openPrint } = useApp();
+  const { items, staff, updateStaff, selectedStaffProfile, setSelectedStaffProfile, openItemDetails, openPrint, isLoading } = useApp();
   const { staffId: urlStaffId } = useParams<{ staffId?: string }>();
   const navigate = useNavigate();
 
@@ -510,6 +511,10 @@ export const UserProfileView: React.FC = () => {
       setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return <UserProfileSkeleton />;
+  }
 
   return (
     <div className="p-3.5 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-32 md:pb-8 w-full max-w-full overflow-x-hidden">

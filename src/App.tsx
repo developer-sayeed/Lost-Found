@@ -37,6 +37,7 @@ import { applyDynamicTheme } from './lib/themeEngine';
 import { OfflineIndicator } from './components/pwa/OfflineIndicator';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { MouseEffect } from './components/MouseEffect';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -298,6 +299,7 @@ const MainLayout: React.FC = () => {
       <CommandPaletteModal />
       <KeyboardShortcutsModal />
       <OfflineIndicator />
+      <MouseEffect />
     </div>
   );
 };
