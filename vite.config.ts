@@ -2,13 +2,27 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
-import {VitePWA} from 'vite-plugin-pwa';
 
-export default defineConfig(() => {
-  return {
-    plugins: [
-      react(),
-      tailwindcss(),
+export default defineConfig(async ({ command }) => {
+  const plugins: any[] = [
+    react(),
+    tailwindcss(),
+    {
+      name: 'virtual-pwa-register-stub',
+      resolveId(id: string) {
+        if (id === 'virtual:pwa-register') return id;
+      },
+      load(id: string) {
+        if (id === 'virtual:pwa-register') {
+          return 'export function registerSW() { return () => {}; }';
+        }
+      }
+    }
+  ];
+
+  if (command === 'build') {
+    const { VitePWA } = await import('vite-plugin-pwa');
+    plugins.push(
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
@@ -112,8 +126,12 @@ export default defineConfig(() => {
         devOptions: {
           enabled: false,
         },
-      }),
-    ],
+      })
+    );
+  }
+
+  return {
+    plugins,
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -135,7 +153,7 @@ export default defineConfig(() => {
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},

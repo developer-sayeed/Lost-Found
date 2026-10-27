@@ -329,11 +329,27 @@ export const Header: React.FC = () => {
         <button
           type="button"
           onClick={toggleMobileSidebar}
-          className="md:hidden p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
+          className="md:hidden p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
           title={t.expandSidebar}
           aria-label="Open navigation menu"
         >
           <Menu className="w-5 h-5" />
+        </button>
+
+        {/* Desktop Sidebar Collapse / Expand Toggle Button */}
+        <button
+          type="button"
+          id="btn-desktop-sidebar-toggle"
+          onClick={toggleSidebarCollapse}
+          className="hidden md:inline-flex items-center justify-center p-2 text-slate-600 dark:text-slate-300 hover:text-fuchsia-600 dark:hover:text-fuchsia-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700/60"
+          title={isSidebarCollapsed ? (t.expandSidebar || 'Expand Sidebar') : (t.collapseSidebar || 'Collapse Sidebar')}
+          aria-label={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+        >
+          {isSidebarCollapsed ? (
+            <PanelLeftOpen className="w-5 h-5 text-slate-600 dark:text-slate-300 transition-transform hover:scale-105" />
+          ) : (
+            <PanelLeftClose className="w-5 h-5 text-slate-600 dark:text-slate-300 transition-transform hover:scale-105" />
+          )}
         </button>
 
         {/* Dynamic Breadcrumb Navigation tracking current page route */}

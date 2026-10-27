@@ -62,7 +62,6 @@ const MainLayout: React.FC = () => {
     else if (p.startsWith('/performance')) setActiveTab('performance');
     else if (p.startsWith('/certificates')) setActiveTab('certificates');
     else if (p.startsWith('/audit-logs') || p.startsWith('/audit_logs')) setActiveTab('audit_logs');
-    else if (p.startsWith('/databases')) setActiveTab('databases');
     else if (p.startsWith('/settings')) setActiveTab('settings');
     else if (p.startsWith('/profile')) setActiveTab('profile');
     else if (p.startsWith('/removed')) setActiveTab('removed');
@@ -242,11 +241,7 @@ const MainLayout: React.FC = () => {
             />
             <Route
               path="/databases"
-              element={
-                !isMasterAdmin && !hasPermission('settings')
-                  ? renderAccessRestricted('Database Settings')
-                  : <SettingsView initialTab="database" />
-              }
+              element={<Navigate to="/settings" replace />}
             />
             <Route
               path="/settings"

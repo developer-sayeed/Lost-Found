@@ -166,24 +166,39 @@ export const Sidebar: React.FC = () => {
           {/* Mobile Close Button */}
           <button
             onClick={() => setIsMobileSidebarOpen(false)}
-            className="md:hidden absolute top-3.5 right-3.5 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+            className="md:hidden absolute top-3.5 right-3.5 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
             title={t.close}
           >
             <X className="w-5 h-5" />
           </button>
 
+          {/* Desktop Collapse Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleSidebarCollapse}
+            className={`hidden md:flex absolute top-3.5 right-2.5 p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer ${
+              isSidebarCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'
+            }`}
+            title={t.collapseSidebar || 'Collapse Sidebar'}
+            aria-label="Collapse Sidebar"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
           {/* Dynamic Hotel Brand Logo / Collapsed Sidebar Favicon */}
           <div className="flex items-center justify-center w-full px-1">
             {isSidebarCollapsed ? (
-              /* Collapsed Sidebar (w-20): Render the configured Favicon or Theme Icon */
-              <div
-                className="w-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden hover:border-fuchsia-500 hover:shadow-xs transition-all group"
-                title={`${settings?.hotelName || 'Warwick'} - (${isDark ? 'Dark Theme' : 'Light Theme'})`}
+              /* Collapsed Sidebar (w-20): Render clickable Favicon to expand */
+              <button
+                type="button"
+                onClick={toggleSidebarCollapse}
+                className="w-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden hover:border-fuchsia-500 hover:shadow-xs transition-all group cursor-pointer"
+                title={`${settings?.hotelName || 'Warwick'} - Click to expand sidebar`}
               >
                 <img
                   src={settings?.faviconUrl || activeLogo.url || '/icon.svg'}
                   alt="Favicon"
-                  className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-105"
+                  className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                   onError={(e) => {
                     const target = e.currentTarget;
                     if (target.src !== window.location.origin + '/icon.svg') {
@@ -192,7 +207,7 @@ export const Sidebar: React.FC = () => {
                   }}
                   referrerPolicy="no-referrer"
                 />
-              </div>
+              </button>
             ) : activeLogo.url ? (
               /* Expanded Sidebar: Render Dynamic Hotel Brand Logo (Dark / Light Responsive) */
               <div
@@ -263,7 +278,6 @@ export const Sidebar: React.FC = () => {
               (targetPath !== '/' && targetPath !== '/dashboard' && (location.pathname === targetPath || location.pathname.startsWith(`${targetPath}/`))) ||
               (item.id === 'settings' && (
                 location.pathname.startsWith('/settings') ||
-                location.pathname.startsWith('/databases') ||
                 activeTab === 'settings'
               )) ||
               (activeTab === item.id);
@@ -277,7 +291,7 @@ export const Sidebar: React.FC = () => {
                   if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
                 }}
                 title={isSidebarCollapsed ? item.label : undefined}
-                className={`w-full flex items-center rounded-xl text-sm font-semibold transition-all duration-150 ${
+                className={`w-full flex items-center rounded-xl text-sm font-semibold transition-all duration-150 relative ${
                   isSidebarCollapsed
                     ? 'justify-center px-2 py-3'
                     : 'space-x-3 px-3.5 py-2.5 text-left'
@@ -302,9 +316,29 @@ export const Sidebar: React.FC = () => {
                     )}
                   </div>
                 )}
+                {isSidebarCollapsed && item.badge !== undefined && (
+                  <span className="absolute top-1.5 right-2 min-w-[14px] h-3.5 px-1 rounded-full text-[9px] font-extrabold bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                    {item.badge}
+                  </span>
+                )}
               </NavLink>
             );
           })}
+
+          {/* Bottom Expand Toggle in Collapsed Mode */}
+          {isSidebarCollapsed && (
+            <div className="pt-2 flex justify-center">
+              <button
+                type="button"
+                onClick={toggleSidebarCollapse}
+                className="p-2 text-slate-400 hover:text-fuchsia-600 dark:hover:text-fuchsia-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                title={t.expandSidebar || 'Expand Sidebar'}
+                aria-label="Expand Sidebar"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* User Footer Profile */}

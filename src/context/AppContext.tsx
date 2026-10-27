@@ -1037,15 +1037,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refreshData = async () => {
     try {
-      const [itemsRes, staffRes, settingsRes, mStatus, sessionsRes, multiDbRes, inquiriesRes, publicSetRes, blockedRes] = await Promise.all([
+      const [itemsRes, staffRes, settingsRes, mStatus, sessionsRes, blockedRes] = await Promise.all([
         api.getItems({ includeDeleted: true }),
         api.getStaff(),
         api.getSettings(),
         api.getMongoStatus(),
         api.getSessions(user),
-        api.getMultiDbStatus().catch(() => null),
-        api.getInquiries(user).catch(() => null),
-        api.getPublicWebsiteSettings().catch(() => null),
         api.getBlockedDevices(user).catch(() => null)
       ]);
       if (itemsRes?.items) {
@@ -1057,15 +1054,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         offlineStorage.saveStaff(staffRes);
       }
       setMongoStatus(mStatus);
-      if (multiDbRes) {
-        setMultiDbState(multiDbRes);
-      }
-      if (inquiriesRes?.inquiries) {
-        setInquiries(inquiriesRes.inquiries);
-      }
-      if (publicSetRes) {
-        setPublicWebsiteSettings(publicSetRes);
-      }
       if (settingsRes?.settings) {
         const nextSettings: HotelSettings = {
           ...settingsRes.settings,

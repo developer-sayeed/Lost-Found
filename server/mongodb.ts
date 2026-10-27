@@ -48,8 +48,12 @@ class MongoService {
   private lastError: string | undefined = undefined;
   private lastPingMs: number | undefined = undefined;
 
+  private connectPromise: Promise<MongoStatusInfo> | null = null;
+  private reconnectTimer: NodeJS.Timeout | null = null;
+
   constructor() {
     this.loadSavedConfig();
+    this.startAutoReconnectTimer();
   }
 
   private loadSavedConfig() {
@@ -93,94 +97,132 @@ class MongoService {
     }
   }
 
-  public async init() {
+  public get hasConfig(): boolean {
+    return Boolean(this.currentUri && this.currentUri.trim().length > 0);
+  }
+
+  private startAutoReconnectTimer() {
+    if (this.reconnectTimer) return;
+    this.reconnectTimer = setInterval(async () => {
+      if (!this.isConnected && !this.isConnecting && this.hasConfig) {
+        console.log('[MongoDB] Auto-reconnect heartbeat: attempting to connect to MongoDB Atlas...');
+        try {
+          await this.connect(this.currentUri, this.currentDbName);
+        } catch (e: any) {
+          // silent heartbeat failure
+        }
+      }
+    }, 20000);
+    if (this.reconnectTimer.unref) {
+      this.reconnectTimer.unref();
+    }
+  }
+
+  public async init(): Promise<MongoStatusInfo | null> {
+    this.loadSavedConfig();
+    if (this.isConnected && this.db && this.client) {
+      return await this.getStatus();
+    }
     if (this.currentUri) {
       console.log(`[MongoDB] Initializing connection to MongoDB database "${this.currentDbName}"...`);
-      await this.connect(this.currentUri, this.currentDbName).catch(err => {
-        console.warn(`[MongoDB] Auto-connect on startup failed: ${err.message}. Running on local persistence fallback.`);
-      });
+      try {
+        return await this.connect(this.currentUri, this.currentDbName);
+      } catch (err: any) {
+        console.warn(`[MongoDB] Auto-connect failed: ${err.message}. Running on local persistence fallback.`);
+        return null;
+      }
     } else {
       console.log('[MongoDB] No MONGODB_URI configured. Running in Local Storage Mode (can connect via Settings anytime).');
+      return null;
     }
   }
 
   public async connect(uri: string, dbName = 'hotel'): Promise<MongoStatusInfo> {
-    if (this.isConnecting) {
-      throw new Error('Connection attempt already in progress');
+    if (this.isConnected && this.db && this.client && this.currentUri === uri && this.currentDbName === dbName) {
+      return await this.getStatus();
+    }
+
+    if (this.isConnecting && this.connectPromise) {
+      return await this.connectPromise;
     }
 
     this.isConnecting = true;
     this.lastError = undefined;
 
-    try {
-      if (this.client) {
-        try {
-          await this.client.close();
-        } catch {
-          // ignore
+    this.connectPromise = (async () => {
+      try {
+        if (this.client) {
+          try {
+            await this.client.close();
+          } catch {
+            // ignore
+          }
         }
+
+        console.log(`[MongoDB] Connecting to ${this.getMaskedUri(uri)} [Database: ${dbName}]...`);
+        const startTime = Date.now();
+
+        const client = new MongoClient(uri, {
+          connectTimeoutMS: 10000,
+          serverSelectionTimeoutMS: 10000,
+          maxPoolSize: 10
+        });
+
+        // Defensive connection event listeners
+        client.on('close', () => {
+          if (this.isConnected) {
+            console.warn('[MongoDB] MongoClient closed. Seamlessly reverting to local database.');
+          }
+          this.isConnected = false;
+          this.db = null;
+        });
+        client.on('serverClosed', () => {
+          this.isConnected = false;
+          this.db = null;
+        });
+        client.on('topologyClosed', () => {
+          this.isConnected = false;
+          this.db = null;
+        });
+        client.on('error', (err: any) => {
+          this.handleConnectionError(err);
+        });
+
+        await client.connect();
+        const database = client.db(dbName);
+        
+        // Ping database to verify connection
+        await database.command({ ping: 1 });
+        this.lastPingMs = Date.now() - startTime;
+
+        this.client = client;
+        this.db = database;
+        this.isConnected = true;
+        this.currentUri = uri;
+        this.currentDbName = dbName;
+        this.lastConnectedAt = new Date().toISOString();
+
+        this.saveConfig(uri, dbName);
+
+        // Create indexes in background
+        this.ensureIndexes().catch(err => {
+          console.warn('[MongoDB] Index creation notice:', err.message);
+        });
+
+        console.log(`[MongoDB] Successfully connected to MongoDB "${dbName}" (${this.lastPingMs}ms ping)!`);
+        return await this.getStatus();
+      } catch (err: any) {
+        this.isConnected = false;
+        this.lastError = err.message || 'Failed to connect to MongoDB';
+        console.error('[MongoDB] Connection error:', err.message);
+        throw err;
+      } finally {
+        this.isConnecting = false;
+        this.connectPromise = null;
       }
+    })();
 
-      console.log(`[MongoDB] Connecting to ${this.getMaskedUri(uri)} [Database: ${dbName}]...`);
-      const startTime = Date.now();
-
-      const client = new MongoClient(uri, {
-        connectTimeoutMS: 10000,
-        serverSelectionTimeoutMS: 10000,
-        maxPoolSize: 10
-      });
-
-      // Defensive connection event listeners
-      client.on('close', () => {
-        if (this.isConnected) {
-          console.warn('[MongoDB] MongoClient closed. Seamlessly reverting to local database.');
-        }
-        this.isConnected = false;
-        this.db = null;
-      });
-      client.on('serverClosed', () => {
-        this.isConnected = false;
-        this.db = null;
-      });
-      client.on('topologyClosed', () => {
-        this.isConnected = false;
-        this.db = null;
-      });
-      client.on('error', (err: any) => {
-        this.handleConnectionError(err);
-      });
-
-      await client.connect();
-      const database = client.db(dbName);
-      
-      // Ping database to verify connection
-      await database.command({ ping: 1 });
-      this.lastPingMs = Date.now() - startTime;
-
-      this.client = client;
-      this.db = database;
-      this.isConnected = true;
-      this.currentUri = uri;
-      this.currentDbName = dbName;
-      this.lastConnectedAt = new Date().toISOString();
-      this.isConnecting = false;
-
-      this.saveConfig(uri, dbName);
-
-      // Create indexes in background
-      this.ensureIndexes().catch(err => {
-        console.warn('[MongoDB] Index creation notice:', err.message);
-      });
-
-      console.log(`[MongoDB] Successfully connected to MongoDB "${dbName}" (${this.lastPingMs}ms ping)!`);
-      return await this.getStatus();
-    } catch (err: any) {
-      this.isConnected = false;
-      this.isConnecting = false;
-      this.lastError = err.message || 'Failed to connect to MongoDB';
-      console.error('[MongoDB] Connection error:', err.message);
-      throw err;
-    }
+    return await this.connectPromise;
   }
 
   public async disconnect(): Promise<void> {
@@ -614,6 +656,9 @@ class MongoService {
   // CRUD: ITEMS (Collection 'items')
   // ==========================================
   public async getItems(query: any = {}): Promise<LostItem[]> {
+    if (!this.isLive && this.hasConfig) {
+      await this.init().catch(() => {});
+    }
     if (!this.isLive) throw new Error('MongoDB not connected');
     try {
       const col = this.db!.collection('items');
@@ -700,6 +745,9 @@ class MongoService {
   // CRUD: HOTEL SETTINGS
   // ==========================================
   public async getSettings(): Promise<HotelSettings | null> {
+    if (!this.isLive && this.hasConfig) {
+      await this.init().catch(() => {});
+    }
     if (!this.isLive) throw new Error('MongoDB not connected');
     const col = this.db!.collection('hotel_settings');
     const settings = await col.findOne({}, { projection: { _id: 0 } });
@@ -707,6 +755,9 @@ class MongoService {
   }
 
   public async updateSettings(settings: Partial<HotelSettings>): Promise<HotelSettings> {
+    if (!this.isLive && this.hasConfig) {
+      await this.init().catch(() => {});
+    }
     if (!this.isLive) throw new Error('MongoDB not connected');
     const col = this.db!.collection('hotel_settings');
     const { ...safe } = settings as any;
@@ -721,6 +772,9 @@ class MongoService {
   // CRUD: STAFF MEMBERS
   // ==========================================
   public async getStaff(): Promise<StaffMember[]> {
+    if (!this.isLive && this.hasConfig) {
+      await this.init().catch(() => {});
+    }
     if (!this.isLive) throw new Error('MongoDB not connected');
     const col = this.db!.collection<StaffMember>('staff_members');
     const staff = await col.find({}).sort({ serial: 1 }).toArray();
@@ -827,6 +881,9 @@ class MongoService {
   // CRUD: USERS & AUTH
   // ==========================================
   public async getUsers(): Promise<User[]> {
+    if (!this.isLive && this.hasConfig) {
+      await this.init().catch(() => {});
+    }
     if (!this.isLive) throw new Error('MongoDB not connected');
     const col = this.db!.collection<User>('users');
     const users = await col.find({}).toArray();
@@ -1055,6 +1112,9 @@ class MongoService {
   }
 
   public async getCertificates(): Promise<Certificate[]> {
+    if (!this.isLive && this.hasConfig) {
+      await this.init().catch(() => {});
+    }
     if (!this.isLive) return [];
     try {
       const col = this.db!.collection('certificates');
@@ -1158,6 +1218,9 @@ class MongoService {
   }
 
   public async getInquiries(): Promise<GuestInquiry[]> {
+    if (!this.isLive && this.hasConfig) {
+      await this.init().catch(() => {});
+    }
     if (!this.isLive) return [];
     try {
       const col = this.db!.collection('inquiries');

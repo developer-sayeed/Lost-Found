@@ -68,14 +68,6 @@ export const BreadcrumbNavigation: React.FC = () => {
     if (currentPath.startsWith('/settings')) {
       return { title: t.settings || 'System Settings', icon: Settings };
     }
-    if (currentPath.startsWith('/databases')) {
-      return {
-        title: 'Database & Sync Settings',
-        icon: Database,
-        parentPath: '/settings',
-        parentTitle: t.settings || 'Settings'
-      };
-    }
     if (currentPath.startsWith('/profile/')) {
       const staffParam = decodeURIComponent(currentPath.replace('/profile/', ''));
       return {
@@ -93,9 +85,6 @@ export const BreadcrumbNavigation: React.FC = () => {
     }
     if (currentPath.startsWith('/removed')) {
       return { title: t.removedItems || 'Removed Records', icon: Trash2 };
-    }
-    if (currentPath.startsWith('/guest-portal')) {
-      return { title: 'Public Guest Portal', icon: Globe };
     }
 
     // Default fallback

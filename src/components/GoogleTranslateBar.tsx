@@ -45,7 +45,6 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
 }) => {
   const [currentLang, setCurrentLang] = useState<string>('en');
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -122,7 +121,6 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
     setCurrentLang(langCode);
     localStorage.setItem('warwick_preferred_language', langCode);
     setIsOpen(false);
-    setSearchQuery('');
     setIsTranslating(true);
 
     // 1. Direct googtrans cookie manipulation (Standard Google Translate Client Engine Protocol)
@@ -158,13 +156,6 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
 
   const currentObj = POPULAR_LANGUAGES.find(l => l.code === currentLang) || POPULAR_LANGUAGES[0];
 
-  const filteredLanguages = POPULAR_LANGUAGES.filter(
-    l =>
-      l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.nativeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className={`relative inline-block text-left ${className}`} ref={dropdownRef}>
       {/* Hidden target container where Google Translate Widget mounts */}
@@ -178,7 +169,7 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
           e.stopPropagation();
           setIsOpen(prev => !prev);
         }}
-        className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold shadow-2xs hover:border-indigo-300 transition-all cursor-pointer group"
+        className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-fuchsia-950/60 bg-white dark:bg-[#180F1A] hover:bg-slate-50 dark:hover:bg-[#241328] active:bg-slate-100 dark:active:bg-[#2c1731] text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-2xs hover:border-fuchsia-400 dark:hover:border-fuchsia-500 transition-all cursor-pointer group"
         title="Translate Website (Google Translate Engine)"
         aria-expanded={isOpen}
       >
@@ -186,18 +177,18 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
           {currentObj.flag}
         </span>
         <span className="flex items-center space-x-1">
-          <Globe className="w-3.5 h-3.5 text-indigo-600 group-hover:rotate-45 transition-transform" />
-          <span className="hidden sm:inline font-bold text-slate-800">
+          <Globe className="w-3.5 h-3.5 text-fuchsia-600 dark:text-fuchsia-400 group-hover:rotate-45 transition-transform" />
+          <span className="hidden sm:inline font-bold text-slate-800 dark:text-slate-100">
             {currentObj.nativeName}
           </span>
         </span>
         <ChevronDown
-          className={`w-3 h-3 text-slate-400 group-hover:text-slate-600 transition-transform ${
+          className={`w-3 h-3 text-slate-400 group-hover:text-slate-600 dark:text-slate-400 dark:group-hover:text-slate-200 transition-transform ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
         {isTranslating && (
-          <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
+          <span className="w-2 h-2 rounded-full bg-fuchsia-600 animate-ping" />
         )}
       </button>
 
@@ -206,7 +197,7 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
         <>
           {/* Backdrop on mobile and small tablet */}
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-2xs z-[60] md:hidden animate-in fade-in duration-200"
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-2xs z-[60] md:hidden animate-in fade-in duration-200"
             onClick={(e) => {
               e.stopPropagation();
               setIsOpen(false);
@@ -215,27 +206,37 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
 
           <div
             onClick={(e) => e.stopPropagation()}
-            className="fixed md:absolute inset-x-3 bottom-3 top-auto md:top-full md:bottom-auto md:inset-x-auto md:right-0 md:mt-2 w-auto md:w-80 max-h-[80vh] md:max-h-[30rem] bg-white rounded-2xl shadow-2xl md:shadow-xl border border-slate-200 z-[70] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-top-2 md:zoom-in-95 duration-200"
+            className="fixed md:absolute inset-x-3 bottom-3 top-auto md:top-full md:bottom-auto md:inset-x-auto md:right-0 md:mt-2 w-auto md:w-80 max-h-[82vh] md:max-h-[30rem] bg-white dark:bg-[#180F1A] rounded-2xl shadow-2xl md:shadow-xl border border-slate-200/90 dark:border-fuchsia-950/60 z-[70] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-top-2 md:zoom-in-95 duration-200"
           >
-            {/* Header */}
-            <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                  <Globe className="w-4 h-4" />
+            {/* Header: Styled with Primary Brand Color / Gradient */}
+            <div
+              className="px-4 py-3.5 flex items-center justify-between shrink-0 relative overflow-hidden border-b border-white/15"
+              style={{ background: 'var(--gradient-primary-cta, linear-gradient(135deg, #4A1755 0%, #A21CAF 55%, #C026D3 100%))' }}
+            >
+              {/* Subtle top shimmer bar */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-white/30 via-white/80 to-white/30 opacity-70" />
+
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs text-white flex items-center justify-center shadow-xs shrink-0 border border-white/25">
+                  <Globe className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Website Translation</p>
-                  <p className="text-[10px] text-slate-500">Google Translate Client Engine</p>
+                  <p className="text-xs sm:text-sm font-bold text-white leading-tight drop-shadow-2xs">
+                    Language Switcher
+                  </p>
+                  <p className="text-[10px] text-fuchsia-100/90 font-medium">
+                    Google Translate Client Engine
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-1.5">
-                <span className="hidden xs:inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">
+                <span className="hidden xs:inline-flex items-center px-2 py-0.5 bg-white/20 backdrop-blur-xs text-white rounded-full text-[10px] font-bold border border-white/25 shadow-2xs">
                   Free
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+                  className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors cursor-pointer"
                   aria-label="Close"
                 >
                   <X className="w-4 h-4" />
@@ -243,63 +244,45 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
               </div>
             </div>
 
-            {/* Search Box */}
-            <div className="p-2.5 border-b border-slate-100 bg-slate-50/60 shrink-0">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search language (e.g. বাংলা, Arabic)..."
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500 text-slate-800 placeholder-slate-400"
-                autoFocus
-              />
-            </div>
-
-            {/* Languages List */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-50 overscroll-contain">
-              {filteredLanguages.map(lang => {
+            {/* Languages List (No search input to prevent unwanted click/focus/virtual keyboard) */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1 overscroll-contain">
+              {POPULAR_LANGUAGES.map(lang => {
                 const isSelected = currentLang === lang.code;
                 return (
                   <button
                     key={lang.code}
                     type="button"
                     onClick={() => handleSelectLanguage(lang.code)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-colors cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-indigo-50 text-indigo-900 font-bold'
-                        : 'hover:bg-slate-100 text-slate-700 active:bg-slate-200'
+                        ? 'bg-fuchsia-50/90 dark:bg-fuchsia-950/50 text-fuchsia-950 dark:text-fuchsia-200 font-bold border-fuchsia-300/80 dark:border-fuchsia-800/60 shadow-2xs'
+                        : 'border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-[#251429] hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <span className="text-lg select-none">{lang.flag}</span>
+                      <span className="text-xl select-none leading-none drop-shadow-2xs">{lang.flag}</span>
                       <div className="text-left">
-                        <span className="block font-semibold text-slate-900 text-xs sm:text-sm leading-tight">
+                        <span className="block font-semibold text-slate-900 dark:text-slate-100 text-xs sm:text-sm leading-tight">
                           {lang.nativeName}
                         </span>
-                        <span className="block text-[11px] text-slate-500 font-normal">
+                        <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-normal">
                           {lang.name}
                         </span>
                       </div>
                     </div>
-                    {isSelected && <Check className="w-4 h-4 text-indigo-600 shrink-0" />}
+                    {isSelected && <Check className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400 shrink-0 stroke-[2.5]" />}
                   </button>
                 );
               })}
-
-              {filteredLanguages.length === 0 && (
-                <div className="py-8 text-center text-xs text-slate-500">
-                  No matching language found.
-                </div>
-              )}
             </div>
 
             {/* Footer Restore Original Button */}
             {currentLang !== 'en' && (
-              <div className="p-2.5 bg-slate-50 border-t border-slate-100 text-center shrink-0">
+              <div className="p-2.5 bg-slate-50 dark:bg-[#140b17] border-t border-slate-200/70 dark:border-fuchsia-950/50 text-center shrink-0">
                 <button
                   type="button"
                   onClick={() => handleSelectLanguage('en')}
-                  className="w-full py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-bold text-xs transition-colors shadow-2xs"
+                  className="w-full py-2 px-3 bg-white dark:bg-[#221226] hover:bg-slate-100 dark:hover:bg-[#2c1731] border border-slate-200 dark:border-fuchsia-900/40 rounded-xl text-slate-700 dark:text-slate-200 font-bold text-xs transition-all shadow-2xs cursor-pointer"
                 >
                   Reset to Original (English)
                 </button>
