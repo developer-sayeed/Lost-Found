@@ -9,6 +9,7 @@ import { createNotificationHelper } from '../../utils/notification.helper.ts';
 import { capitalizeWords, generateUniqueItemCode } from '../../utils/string.utils.ts';
 import { actorHasPermission } from '../../middleware/permission.middleware.ts';
 import { LostItem, User } from '../../../src/types.ts';
+import { cloudinaryService } from '../media/cloudinary.service.ts';
 
 const router = Router();
 
@@ -526,6 +527,20 @@ router.post('/', async (req, res) => {
   const employeeName = isAdminTier ? (body.employeeName || actor) : actor;
   const recordedBy = isApproved ? actor : 'Pending Approval';
 
+  let itemImageUrl = body.imageUrl || '';
+  if (cloudinaryService.isConfigured() && typeof itemImageUrl === 'string' && itemImageUrl.startsWith('data:')) {
+    try {
+      const cloudRes = await cloudinaryService.upload(itemImageUrl, {
+        folder: 'warwick_items',
+        resourceType: 'image',
+        publicId: `item_${body.code || autoCode}_${Date.now()}`
+      });
+      itemImageUrl = cloudRes.secureUrl;
+    } catch (e: any) {
+      console.warn('[Cloudinary] Item image upload fallback:', e.message);
+    }
+  }
+
   const newItem: LostItem = {
     id: `item-${Date.now()}`,
     code: body.code || autoCode,
@@ -545,7 +560,7 @@ router.post('/', async (req, res) => {
     dispatchDeadline: body.dispatchDeadline || computedDeadline,
     status,
     recordedBy,
-    imageUrl: body.imageUrl || '',
+    imageUrl: itemImageUrl,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     isApproved,

@@ -13,6 +13,7 @@ import { PendingDispatchView } from './components/PendingDispatchView';
 import { StaffManagementView } from './components/StaffManagementView';
 import { StaffPerformanceView } from './components/StaffPerformanceView';
 import { CertificatesView } from './components/certificates/CertificatesView';
+import { MediaView } from './features/media/MediaView';
 import { AuditLogsView } from './components/AuditLogsView';
 import { SettingsView } from './components/SettingsView';
 import { UserProfileView } from './components/UserProfileView';
@@ -61,6 +62,7 @@ const MainLayout: React.FC = () => {
     else if (p.startsWith('/staff')) setActiveTab('staff');
     else if (p.startsWith('/performance')) setActiveTab('performance');
     else if (p.startsWith('/certificates')) setActiveTab('certificates');
+    else if (p.startsWith('/media')) setActiveTab('media');
     else if (p.startsWith('/audit-logs') || p.startsWith('/audit_logs')) setActiveTab('audit_logs');
     else if (p.startsWith('/settings')) setActiveTab('settings');
     else if (p.startsWith('/profile')) setActiveTab('profile');
@@ -206,7 +208,7 @@ const MainLayout: React.FC = () => {
             <Route
               path="/staff"
               element={
-                !isMasterAdmin && !hasPermission('staff_management')
+                !isMasterAdmin && !hasPermission('staff_management') && !hasPermission('manage_staff_access') && !hasPermission('edit_staff') && !hasPermission('view_staff_profile')
                   ? renderAccessRestricted('Staff Management')
                   : <StaffManagementView />
               }
@@ -228,6 +230,14 @@ const MainLayout: React.FC = () => {
               }
             />
             <Route
+              path="/media"
+              element={
+                !isMasterAdmin && !isSuperAdmin && !hasPermission('media_view') && !hasPermission('media' as any)
+                  ? renderAccessRestricted('Media Library')
+                  : <MediaView />
+              }
+            />
+            <Route
               path="/audit-logs"
               element={
                 !isMasterAdmin && !hasPermission('audit_logs')
@@ -246,7 +256,7 @@ const MainLayout: React.FC = () => {
             <Route
               path="/settings"
               element={
-                !isMasterAdmin && !hasPermission('settings') && !hasPermission('manage_staff_access')
+                !isMasterAdmin && !hasPermission('settings') && !hasPermission('manage_staff_access') && !hasPermission('settings_hotel_info' as any) && !hasPermission('settings_categories' as any) && !hasPermission('settings_security' as any)
                   ? renderAccessRestricted('System Settings')
                   : <SettingsView />
               }
@@ -254,7 +264,7 @@ const MainLayout: React.FC = () => {
             <Route
               path="/settings/:subTab"
               element={
-                !isMasterAdmin && !hasPermission('settings') && !hasPermission('manage_staff_access')
+                !isMasterAdmin && !hasPermission('settings') && !hasPermission('manage_staff_access') && !hasPermission('settings_hotel_info' as any) && !hasPermission('settings_categories' as any) && !hasPermission('settings_security' as any)
                   ? renderAccessRestricted('System Settings')
                   : <SettingsView />
               }

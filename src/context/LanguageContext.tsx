@@ -10,6 +10,8 @@ export interface Translations {
   staffManagement: string;
   performance: string;
   certificates: string;
+  media: string;
+  mediaLibrary: string;
   auditLogs: string;
   removedItems: string;
   settings: string;
@@ -356,6 +358,8 @@ const translations: Record<Language, Translations> = {
     staffManagement: 'Staff Management',
     performance: 'Performance',
     certificates: 'Certificates & Awards',
+    media: 'Media',
+    mediaLibrary: 'Media Library',
     auditLogs: 'Audit Logs',
     removedItems: 'Removed Items (Trash)',
     settings: 'Settings',

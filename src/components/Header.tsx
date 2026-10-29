@@ -55,13 +55,28 @@ export const Header: React.FC = () => {
     isNotificationDeleted,
     items,
     openItemDetails,
-    updateSettings
+    updateSettings,
+    staff
   } = useApp();
   const { user, isAdmin } = useAuth();
   const { language, setLanguage, t, isRTL, translateRole } = useLanguage();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
+
+  // User Department and Position (replacing System Role under User Name per specification)
+  const userDeptAndPosition = useMemo(() => {
+    const matchingStaff = staff?.find(s =>
+      (s.id && s.id === user?.id) ||
+      (s.userId && (s.userId === user?.userId || s.userId === user?.id)) ||
+      (s.staffId && (s.staffId === user?.staffId || s.staffId === user?.id)) ||
+      (s.email && user?.email && s.email.toLowerCase().trim() === user.email.toLowerCase().trim())
+    );
+    const dept = user?.department || matchingStaff?.department || 'Housekeeping';
+    const pos = user?.position || matchingStaff?.position || '';
+    if (dept && pos) return `${dept} • ${pos}`;
+    return pos || dept || 'Staff';
+  }, [user, staff]);
 
   // Notifications can strictly ONLY be deleted or cleared by Admin or Supervisor
   const canDeleteNotifications = useMemo(() => {
@@ -588,15 +603,16 @@ export const Header: React.FC = () => {
           title={t.myProfile}
         >
           <div className="text-right hidden sm:block">
-            <p className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
+            <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-fuchsia-400 transition-colors leading-tight truncate max-w-[170px]">
               {user?.name || 'MD ABU SAYEED RIDAY'}
             </p>
-            <p className="text-[10px] text-slate-500 font-medium">
-              {translateRole(user?.role)}
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[170px]" title={userDeptAndPosition}>
+              {userDeptAndPosition}
             </p>
           </div>
           <UserAvatar
             name={user?.name || 'MD ABU SAYEED RIDAY'}
+            avatarUrl={user?.avatar}
             sizeClassName="w-8 h-8 sm:w-9 sm:h-9"
             className="group-hover:ring-2 group-hover:ring-indigo-400 transition-all border border-indigo-100"
           />

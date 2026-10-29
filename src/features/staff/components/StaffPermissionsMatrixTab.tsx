@@ -377,7 +377,7 @@ export const StaffPermissionsMatrixTab: React.FC<StaffPermissionsMatrixTabProps>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
                 {/* Category Filter Pills */}
                 <div className="flex items-center space-x-1 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto no-scrollbar max-w-full">
-                  {(['All', 'Items', 'Operations', 'Certificates', 'Administration'] as const).map(cat => (
+                  {(['All', 'Items', 'Operations', 'Certificates', 'Media', 'Administration', 'Settings'] as const).map(cat => (
                     <button
                       key={cat}
                       type="button"
@@ -555,7 +555,9 @@ export const StaffPermissionsMatrixTab: React.FC<StaffPermissionsMatrixTabProps>
                               {perm.category === 'Items' && '📦'}
                               {perm.category === 'Operations' && '🔄'}
                               {perm.category === 'Certificates' && '📜'}
-                              {perm.category === 'Administration' && '⚙️'}
+                              {perm.category === 'Media' && '🖼️'}
+                              {perm.category === 'Administration' && '👥'}
+                              {perm.category === 'Settings' && '⚙️'}
                             </span>
                             <div className="min-w-0">
                               <div className="flex items-center space-x-1.5 flex-wrap gap-y-0.5">
@@ -698,7 +700,9 @@ export const StaffPermissionsMatrixTab: React.FC<StaffPermissionsMatrixTabProps>
                                     {perm.category === 'Items' && '📦'}
                                     {perm.category === 'Operations' && '🔄'}
                                     {perm.category === 'Certificates' && '📜'}
-                                    {perm.category === 'Administration' && '⚙️'}
+                                    {perm.category === 'Media' && '🖼️'}
+                                    {perm.category === 'Administration' && '👥'}
+                                    {perm.category === 'Settings' && '⚙️'}
                                   </span>
                                   <div className="min-w-0">
                                     <div className="flex items-center space-x-2">
@@ -1289,8 +1293,8 @@ export const StaffPermissionsMatrixTab: React.FC<StaffPermissionsMatrixTabProps>
                                 </div>
                               </div>
 
-                              {/* Matrix Cards for 4 groups */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                              {/* Matrix Cards for all 6 groups */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                                 {PERMISSION_GROUPS.map(group => {
                                   const permsInGroup = ALL_PERMISSIONS.filter(p => p.category === group.category);
 

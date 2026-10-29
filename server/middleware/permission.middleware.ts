@@ -6,9 +6,9 @@ import { db } from '../database/json-db.ts';
 // Evaluates role baseline (with settings rolePermissions matrix override) + individual user-specific upgraded permissions
 export const resolveActorPermissions = (
   req: express.Request
-): { role: UserRole; permissions: PermissionKey[]; isSuperAdmin: boolean } => {
+): { role: UserRole; permissions: PermissionKey[]; isSuperAdmin: boolean; name: string; email: string } => {
   const rawRole = (req.headers['x-user-role'] as string) || '';
-  const actorName = ((req.headers['x-user-name'] as string) || '').trim().toLowerCase();
+  const actorName = ((req.headers['x-user-name'] as string) || '').trim();
   const actorEmail = ((req.headers['x-user-email'] as string) || '').trim().toLowerCase();
   const actorId = ((req.headers['x-user-id'] as string) || '').trim().toLowerCase();
 
@@ -22,7 +22,9 @@ export const resolveActorPermissions = (
     return {
       role: 'Super Admin',
       permissions: ALL_PERMISSIONS.map(p => p.id),
-      isSuperAdmin: true
+      isSuperAdmin: true,
+      name: actorName || 'MD ABU SAYEED RIDAY',
+      email: actorEmail || 'mdriday256@gmail.com'
     };
   }
 
@@ -44,11 +46,16 @@ export const resolveActorPermissions = (
     role = targetAccount.role;
   }
 
+  const resolvedName = targetAccount?.name || actorName || 'Authorized Staff';
+  const resolvedEmail = targetAccount?.email || actorEmail || '';
+
   if (role === 'Super Admin') {
     return {
       role: 'Super Admin',
       permissions: ALL_PERMISSIONS.map(p => p.id),
-      isSuperAdmin: true
+      isSuperAdmin: true,
+      name: resolvedName,
+      email: resolvedEmail
     };
   }
 
@@ -58,21 +65,24 @@ export const resolveActorPermissions = (
     baselinePerms = db.settings.rolePermissions[role] as PermissionKey[];
   }
 
-  // 4. Custom/upgraded permissions specifically assigned to this staff member (only if explicit custom override)
+  // 4. Custom/upgraded permissions specifically assigned to this staff member
   let customPerms: PermissionKey[] = [];
-  if (targetAccount?.isCustomPermissions && Array.isArray(targetAccount.permissions)) {
+  if (Array.isArray(targetAccount?.permissions) && targetAccount.permissions.length > 0) {
     customPerms = targetAccount.permissions as PermissionKey[];
   }
 
-  // Active permissions: custom staff override if flagged, otherwise strictly baseline role permissions
-  const activePerms = (targetAccount?.isCustomPermissions && customPerms.length > 0)
+  // Active permissions: If member has explicit permissions array assigned or isCustomPermissions flagged, honor it!
+  const hasCustom = Boolean(targetAccount?.isCustomPermissions) || (Array.isArray(targetAccount?.permissions) && targetAccount.permissions.length > 0);
+  const activePerms = (hasCustom && customPerms.length > 0)
     ? customPerms
     : baselinePerms;
 
   return {
     role,
     permissions: activePerms,
-    isSuperAdmin: false
+    isSuperAdmin: false,
+    name: resolvedName,
+    email: resolvedEmail
   };
 };
 
@@ -92,6 +102,31 @@ export const actorHasPermission = (req: express.Request, perm: PermissionKey): b
   if (perm === 'certificates_edit' && permissions.includes('certificates')) return true;
   if (perm === 'certificates_print' && permissions.includes('certificates')) return true;
   if (perm === 'certificates_save' && permissions.includes('certificates')) return true;
+
+  // Media permissions hierarchy
+  if (perm === 'media_view' && (permissions.includes('media') || permissions.includes('media_view'))) return true;
+  if (perm === 'media_upload' && (permissions.includes('media') || permissions.includes('media_upload'))) return true;
+  if (perm === 'media_edit' && (permissions.includes('media') || permissions.includes('media_edit'))) return true;
+  if (perm === 'media_delete' && permissions.includes('media_delete')) return true;
+  if (perm === 'media' && (permissions.includes('media') || permissions.includes('media_view'))) return true;
+
+  // Staff management permissions hierarchy
+  if (perm === 'staff_management' && (permissions.includes('staff_management') || permissions.includes('manage_staff_access') || permissions.includes('edit_staff'))) return true;
+  if (perm === 'manage_staff_access' && (permissions.includes('manage_staff_access') || permissions.includes('staff_management'))) return true;
+  if (perm === 'edit_staff' && (permissions.includes('edit_staff') || permissions.includes('manage_staff_access'))) return true;
+  if (perm === 'view_staff_profile' && (permissions.includes('view_staff_profile') || permissions.includes('staff_management'))) return true;
+
+  // Settings permissions hierarchy
+  if (perm === 'settings' && (
+    permissions.includes('settings') ||
+    permissions.includes('manage_staff_access') ||
+    permissions.some(p => typeof p === 'string' && p.startsWith('settings_'))
+  )) return true;
+
+  if (typeof perm === 'string' && perm.startsWith('settings_')) {
+    if (permissions.includes('settings')) return true;
+    if (perm === 'settings_security' && permissions.includes('manage_staff_access')) return true;
+  }
 
   return false;
 };

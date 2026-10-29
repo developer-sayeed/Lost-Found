@@ -163,8 +163,8 @@ class MongoService {
         const startTime = Date.now();
 
         const client = new MongoClient(uri, {
-          connectTimeoutMS: 10000,
-          serverSelectionTimeoutMS: 10000,
+          connectTimeoutMS: 4000,
+          serverSelectionTimeoutMS: 4000,
           maxPoolSize: 10
         });
 

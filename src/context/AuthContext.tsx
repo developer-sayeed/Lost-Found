@@ -88,8 +88,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               localStorage.setItem('warwick_auth_user', JSON.stringify(parsed));
             }
 
-            // Sync user state immediately so the app never flickers to login screen
-            setUser(prev => prev || parsed);
+            // Sync user state safely without triggering synchronous setState during child render
+            setTimeout(() => {
+              setUser(prev => {
+                if (prev && prev.id === parsed.id && prev.token === parsed.token && prev.role === parsed.role) {
+                  return prev;
+                }
+                return prev || parsed;
+              });
+            }, 0);
 
             // Silently refresh profile/permissions from server in the background
             try {
@@ -131,12 +138,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Real-time synchronization of permissions across matrix updates & tabs
   useEffect(() => {
+    let timer: any = null;
     const handlePermissionsChanged = () => {
-      setPermissionsVersion(v => v + 1);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        setPermissionsVersion(v => v + 1);
+      }, 0);
     };
     window.addEventListener('warwick_permissions_updated', handlePermissionsChanged);
     window.addEventListener('storage', handlePermissionsChanged);
     return () => {
+      if (timer) clearTimeout(timer);
       window.removeEventListener('warwick_permissions_updated', handlePermissionsChanged);
       window.removeEventListener('storage', handlePermissionsChanged);
     };
@@ -184,6 +196,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!previewRole) {
       const u = targetUser || user;
       if (u) {
+        // Direct check on user object first
+        if (Array.isArray(u.permissions) && u.permissions.length > 0) {
+          const defaultForRole = DEFAULT_ROLE_PERMISSIONS[effectiveTargetRole] || [];
+          if (u.isCustomPermissions || u.permissions.length !== defaultForRole.length || u.permissions.some(p => !defaultForRole.includes(p))) {
+            return u.permissions;
+          }
+        }
+
+        // Check cached staff list
         try {
           const rawStaff = localStorage.getItem('warwick_offline_cached_staff');
           if (rawStaff) {
@@ -196,8 +217,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   (s.staffId && (s.staffId === u.staffId || s.staffId === u.id)) ||
                   (s.email && u.email && s.email.toLowerCase() === u.email.toLowerCase())
               );
-              if (matched && matched.isCustomPermissions && Array.isArray(matched.permissions)) {
-                return matched.permissions;
+              if (matched && Array.isArray(matched.permissions) && matched.permissions.length > 0) {
+                const defaultForMatchedRole = DEFAULT_ROLE_PERMISSIONS[matched.role] || [];
+                if (matched.isCustomPermissions || matched.permissions.length !== defaultForMatchedRole.length || matched.permissions.some((p: any) => !defaultForMatchedRole.includes(p))) {
+                  return matched.permissions;
+                }
               }
             }
           }
@@ -226,13 +250,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Direct check: is the permission explicitly marked in active permissions?
     if (activePerms.includes(permission)) return true;
 
+    // Items action mappings
+    if (permission === 'view' && (activePerms.includes('view') || activePerms.includes('items_view' as any))) return true;
+    if (permission === 'create' && (activePerms.includes('create') || activePerms.includes('items_create' as any))) return true;
+    if (permission === 'edit' && (activePerms.includes('edit') || activePerms.includes('items_edit' as any))) return true;
+    if (permission === 'delete' && (activePerms.includes('delete') || activePerms.includes('items_delete' as any))) return true;
+
+    // Staff management permissions hierarchy
+    if (permission === 'staff_management' && (
+      activePerms.includes('staff_management') ||
+      activePerms.includes('manage_staff_access') ||
+      activePerms.includes('edit_staff') ||
+      activePerms.includes('view_staff_profile')
+    )) return true;
+
+    if (permission === 'manage_staff_access' && (activePerms.includes('manage_staff_access') || activePerms.includes('staff_management'))) return true;
+    if (permission === 'edit_staff' && (activePerms.includes('edit_staff') || activePerms.includes('manage_staff_access'))) return true;
+    if (permission === 'view_staff_profile' && (activePerms.includes('view_staff_profile') || activePerms.includes('staff_management'))) return true;
+
     // Certificates master permission grants view, create, edit, print, save (NEVER delete)
-    // NOTE: 'certificates_delete' STRICTLY requires explicit 'certificates_delete' permission!
-    if (permission === 'certificates_view' && activePerms.includes('certificates')) return true;
-    if (permission === 'certificates_print' && activePerms.includes('certificates')) return true;
-    if (permission === 'certificates_create' && activePerms.includes('certificates')) return true;
-    if (permission === 'certificates_edit' && activePerms.includes('certificates')) return true;
-    if (permission === 'certificates_save' && activePerms.includes('certificates')) return true;
+    if (permission.startsWith('certificates_') && permission !== 'certificates_delete') {
+      if (activePerms.includes('certificates')) return true;
+    }
+
+    // Media permissions hierarchy
+    if (permission === 'media_view' && (activePerms.includes('media') || activePerms.includes('media_view'))) return true;
+    if (permission === 'media_upload' && (activePerms.includes('media') || activePerms.includes('media_upload'))) return true;
+    if (permission === 'media_edit' && (activePerms.includes('media') || activePerms.includes('media_edit'))) return true;
+    if (permission === 'media_delete' && activePerms.includes('media_delete')) return true;
+    if (permission === 'media' && (activePerms.includes('media') || activePerms.includes('media_view'))) return true;
+
+    // Settings permissions hierarchy
+    if (permission === 'settings' && (
+      activePerms.includes('settings') ||
+      activePerms.includes('manage_staff_access') ||
+      activePerms.some((p: string) => typeof p === 'string' && p.startsWith('settings_'))
+    )) return true;
+
+    if (typeof permission === 'string' && permission.startsWith('settings_')) {
+      if (activePerms.includes('settings')) return true;
+      if (permission === 'settings_security' && activePerms.includes('manage_staff_access')) return true;
+    }
 
     // Removed items / Trash alias
     if (permission === 'removed_items' && (activePerms.includes('removed_items') || activePerms.includes('delete'))) return true;
@@ -305,7 +363,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     const newPerms = DEFAULT_ROLE_PERMISSIONS[newRole];
     const updated = { ...user, role: newRole, permissions: newPerms };
-    setUser(updated);
+    setTimeout(() => {
+      setUser(updated);
+    }, 0);
     try {
       localStorage.setItem('warwick_auth_user', JSON.stringify(updated));
     } catch {}
@@ -314,7 +374,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUserPermissions = (permissions: PermissionKey[]) => {
     if (!user) return;
     const updated = { ...user, permissions };
-    setUser(updated);
+    setTimeout(() => {
+      setUser(updated);
+    }, 0);
     try {
       localStorage.setItem('warwick_auth_user', JSON.stringify(updated));
     } catch {}

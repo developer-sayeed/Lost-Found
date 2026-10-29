@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { ChevronRight, Home, LayoutDashboard, Package, Clock, Users, TrendingUp, Award, History, Settings, Trash2, User, Database, Globe } from 'lucide-react';
+import { ChevronRight, Home, LayoutDashboard, Package, Clock, Users, TrendingUp, Award, History, Settings, Trash2, User, Database, Globe, Images } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -37,6 +37,9 @@ export const BreadcrumbNavigation: React.FC = () => {
     }
     if (currentPath.startsWith('/certificates')) {
       return { title: t.certificates || 'Certificates & Awards', icon: Award };
+    }
+    if (currentPath.startsWith('/media')) {
+      return { title: t.media || 'Media', icon: Images };
     }
     if (currentPath.startsWith('/audit-logs') || currentPath.startsWith('/audit_logs')) {
       return { title: t.auditLogs || 'Audit & Activity Logs', icon: History };

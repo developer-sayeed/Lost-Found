@@ -1,5 +1,5 @@
 import React from 'react';
-import { BadgeCheck, Edit3 } from 'lucide-react';
+import { BadgeCheck, Edit3, Camera } from 'lucide-react';
 import { UserAvatar } from '../../../../lib/avatarHelper';
 
 interface UserProfileHeaderProps {
@@ -17,6 +17,7 @@ interface UserProfileHeaderProps {
   canEditCurrentProfile: boolean;
   isEditing: boolean;
   onStartEdit: () => void;
+  onChangeAvatar?: () => void;
 }
 
 export const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
@@ -33,7 +34,8 @@ export const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
   itemsPending,
   canEditCurrentProfile,
   isEditing,
-  onStartEdit
+  onStartEdit,
+  onChangeAvatar
 }) => {
   return (
     <div
@@ -46,16 +48,40 @@ export const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
       <div 
         aria-hidden="true" 
         className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-fuchsia-500/15 blur-3xl pointer-events-none" 
-      />
+        />
 
       <div className="relative z-10 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 sm:gap-7">
         <div className="flex items-start sm:items-center space-x-3.5 sm:space-x-5 w-full xl:w-auto">
-          <UserAvatar
-            name={displayName || 'User'}
-            avatarUrl={avatarUrl}
-            sizeClassName="w-16 h-16 sm:w-20 sm:h-20"
-            className="rounded-2xl border-2 border-fuchsia-400/40 shadow-xl shadow-fuchsia-950/40 flex-shrink-0"
-          />
+          {/* Avatar with Interactive Change Overlay */}
+          <div className="relative group shrink-0">
+            <UserAvatar
+              name={displayName || 'User'}
+              avatarUrl={avatarUrl}
+              sizeClassName="w-16 h-16 sm:w-20 sm:h-20"
+              className="rounded-2xl border-2 border-fuchsia-400/40 shadow-xl shadow-fuchsia-950/40 flex-shrink-0"
+            />
+            {canEditCurrentProfile && onChangeAvatar && (
+              <>
+                <button
+                  type="button"
+                  onClick={onChangeAvatar}
+                  className="absolute inset-0 rounded-2xl bg-black/55 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-bold transition-all backdrop-blur-[2px] cursor-pointer"
+                  title="Change Profile Photo (মিডিয়া / লোকাল আপলোড)"
+                >
+                  <Camera className="w-5 h-5 mb-0.5 text-fuchsia-300" />
+                  <span>Change</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={onChangeAvatar}
+                  className="absolute -bottom-1 -right-1 p-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 active:scale-95 text-white rounded-xl shadow-lg border-2 border-[#260a2d] transition-all cursor-pointer"
+                  title="Upload Photo / ছবি পরিবর্তন করুন"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+          </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1
@@ -87,14 +113,25 @@ export const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
               )}
             </div>
 
-            <p className="text-xs sm:text-sm text-fuchsia-200/90 flex flex-wrap items-center gap-1.5 mt-1 break-words font-medium">
-              <span>{displayPosition || displayDept}</span>
-              <span className="text-fuchsia-400">•</span>
-              <span>{displayWorkplace}</span>
+            {/* Department + Position prominently under User Name (System Role hidden per specification) */}
+            <p className="text-xs sm:text-sm text-fuchsia-200/90 flex flex-wrap items-center gap-1.5 mt-1 break-words font-semibold">
+              <span className="text-white">{displayDept || 'Housekeeping'}</span>
+              {displayPosition && (
+                <>
+                  <span className="text-fuchsia-400">•</span>
+                  <span>{displayPosition}</span>
+                </>
+              )}
+              {displayWorkplace && (
+                <>
+                  <span className="text-fuchsia-400">•</span>
+                  <span className="text-fuchsia-200/75 font-normal">{displayWorkplace}</span>
+                </>
+              )}
             </p>
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3">
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-500/30 backdrop-blur-sm whitespace-nowrap">
-                {displayRole}
+                {displayDept} {displayPosition ? `• ${displayPosition}` : ''}
               </span>
               <span className="px-2.5 py-1 bg-white/10 rounded-lg text-[10px] sm:text-[11px] font-mono text-fuchsia-100 border border-white/10">
                 Staff ID: {displayStaffId}

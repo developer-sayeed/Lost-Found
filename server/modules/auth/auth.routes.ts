@@ -215,9 +215,10 @@ authRouter.post('/api/auth/login', async (req, res) => {
           ? db.settings.rolePermissions[matchedStaff.role]
           : (DEFAULT_ROLE_PERMISSIONS[matchedStaff.role] || DEFAULT_ROLE_PERMISSIONS['Employee']);
 
+        const hasCustom = Boolean(matchedStaff.isCustomPermissions) || (Array.isArray(matchedStaff.permissions) && matchedStaff.permissions.length > 0);
         const effectivePerms = matchedStaff.role === 'Super Admin'
           ? (roleBaseline.length > 0 ? roleBaseline : ALL_PERMISSIONS.map(p => p.id))
-          : (matchedStaff.isCustomPermissions && Array.isArray(matchedStaff.permissions)
+          : (hasCustom && Array.isArray(matchedStaff.permissions) && matchedStaff.permissions.length > 0
               ? matchedStaff.permissions
               : roleBaseline);
 
@@ -279,9 +280,10 @@ authRouter.post('/api/auth/login', async (req, res) => {
           ? db.settings.rolePermissions[matchedStaff.role]
           : (DEFAULT_ROLE_PERMISSIONS[matchedStaff.role] || DEFAULT_ROLE_PERMISSIONS['Employee']);
 
+        const hasCustom = Boolean(matchedStaff.isCustomPermissions) || (Array.isArray(matchedStaff.permissions) && matchedStaff.permissions.length > 0);
         const effectivePerms = matchedStaff.role === 'Super Admin'
           ? (roleBaseline.length > 0 ? roleBaseline : ALL_PERMISSIONS.map(p => p.id))
-          : (matchedStaff.isCustomPermissions && Array.isArray(matchedStaff.permissions)
+          : (hasCustom && Array.isArray(matchedStaff.permissions) && matchedStaff.permissions.length > 0
               ? matchedStaff.permissions
               : roleBaseline);
 
@@ -574,6 +576,7 @@ authRouter.post('/api/auth/login', async (req, res) => {
     department: (targetAccount.department as StaffDepartment) || 'Housekeeping',
     phone: targetAccount.phone || '',
     permissions: targetAccount.permissions,
+    isCustomPermissions: Boolean((targetAccount.record as any)?.isCustomPermissions) || (Array.isArray(targetAccount.permissions) && targetAccount.permissions.length > 0),
     password: targetAccount.password || '',
     authProvider: 'email',
     lastActive: targetAccount.record.lastActive,

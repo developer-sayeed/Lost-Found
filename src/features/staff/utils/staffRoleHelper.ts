@@ -17,22 +17,32 @@ export const PERMISSION_GROUPS: {
 }[] = [
   {
     category: 'Items',
-    title: 'ITEM OPERATIONS',
+    title: 'ITEM OPERATIONS & INVENTORY',
     icon: '📦'
   },
   {
     category: 'Operations',
-    title: 'GUEST & WORKFLOW ACTIONS',
+    title: 'WORKFLOW & PERFORMANCE ANALYTICS',
     icon: '🔄'
   },
   {
     category: 'Certificates',
-    title: 'CERTIFICATES & AWARDS (PERMISSION-CONTROLLED)',
+    title: 'CERTIFICATES & AWARDS',
     icon: '📜'
   },
   {
+    category: 'Media',
+    title: 'MEDIA LIBRARY & ASSETS',
+    icon: '🖼️'
+  },
+  {
     category: 'Administration',
-    title: 'ADMINISTRATION (STAFF & SYSTEM)',
+    title: 'STAFF & ACCESS CONTROL',
+    icon: '👥'
+  },
+  {
+    category: 'Settings',
+    title: 'SYSTEM CONFIGURATION & INTEGRATIONS',
     icon: '⚙️'
   }
 ];

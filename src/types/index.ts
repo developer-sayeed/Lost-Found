@@ -9,3 +9,4 @@ export * from './notifications.types';
 export * from './public.types';
 export * from './certificates.types';
 export * from './backup.types';
+export * from './media.types';

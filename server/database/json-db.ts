@@ -12,7 +12,8 @@ import {
   AppNotification,
   Certificate,
   CustomCertificateTemplate,
-  RecentUserSignature
+  RecentUserSignature,
+  MediaItem
 } from '../../src/types.ts';
 import { capitalizeWords } from '../utils/string.utils.ts';
 import { multiDbService } from '../multiDatabase.ts';
@@ -29,6 +30,7 @@ export interface DatabaseSchema {
   certificateTemplates?: CustomCertificateTemplate[];
   blockedDevices?: BlockedDevice[];
   recentSignatures?: RecentUserSignature[];
+  media: MediaItem[];
 }
 
 // Ensure data directory exists
@@ -82,7 +84,8 @@ export function getInitialFreshDatabase(): DatabaseSchema {
     notifications: [],
     blockedDevices: [],
     activeSessions: [],
-    certificates: []
+    certificates: [],
+    media: []
   };
 }
 
@@ -94,6 +97,9 @@ export function loadDatabase(): DatabaseSchema {
       const data = fs.readFileSync(DB_FILE, 'utf-8');
       const parsed = JSON.parse(data);
 
+      if (!Array.isArray(parsed.media)) {
+        parsed.media = [];
+      }
       if (!Array.isArray(parsed.notifications)) {
         parsed.notifications = [];
       }

@@ -4,6 +4,7 @@ import { mongoService } from '../../mongodb.ts';
 import { addAudit } from '../../utils/audit.helper.ts';
 import { createNotificationHelper } from '../../utils/notification.helper.ts';
 import { User, DEFAULT_ROLE_PERMISSIONS } from '../../../src/types.ts';
+import { cloudinaryService } from '../media/cloudinary.service.ts';
 
 export const settingsRouter = express.Router();
 
@@ -40,6 +41,30 @@ settingsRouter.put('/api/settings', async (req, res) => {
   const updated = req.body;
   const actor = (req.headers['x-user-name'] as string) || 'MD ABU SAYEED RIDAY';
   const role = ((req.headers['x-user-role'] as User['role']) || 'Super Admin');
+
+  // Automatic Cloudinary upload for Hotel Logos & Favicon to CDN
+  if (cloudinaryService.isConfigured()) {
+    const brandFields: ('logoUrl' | 'logoLightUrl' | 'logoDarkUrl' | 'faviconUrl')[] = [
+      'logoUrl',
+      'logoLightUrl',
+      'logoDarkUrl',
+      'faviconUrl'
+    ];
+    for (const field of brandFields) {
+      if (typeof updated[field] === 'string' && updated[field].startsWith('data:')) {
+        try {
+          const res = await cloudinaryService.upload(updated[field], {
+            folder: 'warwick_branding',
+            resourceType: 'image',
+            publicId: `brand_${field}_${Date.now()}`
+          });
+          updated[field] = res.secureUrl;
+        } catch (e: any) {
+          console.warn(`[Cloudinary] Failed to upload ${field} to Cloudinary:`, e.message);
+        }
+      }
+    }
+  }
 
   db.settings = {
     ...db.settings,

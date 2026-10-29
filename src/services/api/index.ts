@@ -10,6 +10,7 @@ import { securityApi } from './security.api';
 import { publicApi } from './public.api';
 import { certificatesApi } from './certificates.api';
 import { backupApi } from './backup.api';
+import { mediaApi } from './media.api';
 
 export {
   getAuthHeaders,
@@ -24,7 +25,8 @@ export {
   securityApi,
   publicApi,
   certificatesApi,
-  backupApi
+  backupApi,
+  mediaApi
 };
 
 export const api = {
@@ -40,7 +42,8 @@ export const api = {
   ...securityApi,
   ...publicApi,
   ...certificatesApi,
-  ...backupApi
+  ...backupApi,
+  ...mediaApi
 };
 
 export default api;

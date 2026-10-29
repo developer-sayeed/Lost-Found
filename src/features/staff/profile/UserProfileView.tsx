@@ -20,6 +20,7 @@ import { UserProfileEditForm } from './components/UserProfileEditForm';
 import { UserProfileInfoGrid } from './components/UserProfileInfoGrid';
 import { UserProfileMetrics } from './components/UserProfileMetrics';
 import { UserItemsHistoryTable } from './components/UserItemsHistoryTable';
+import { MediaPickerModal } from '../../../components/common/MediaPickerModal';
 
 export const UserProfileView: React.FC = () => {
   const { user, updateProfile, hasPermission } = useAuth();
@@ -96,6 +97,25 @@ export const UserProfileView: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [serverDuplicates, setServerDuplicates] = useState<Record<string, { message: string; existingName?: string; value?: string }>>({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+
+  // Avatar Picker Modal State
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+
+  const handleAvatarSelect = async (url: string) => {
+    setIsAvatarPickerOpen(false);
+    try {
+      const targetId = activeStaff?.id || currentStaffMatch?.id || user?.id || (user as any)?.staffId;
+      if (targetId) {
+        await updateStaff(targetId, { avatar: url });
+      }
+      if (updateProfile) {
+        await updateProfile({ avatar: url } as any);
+      }
+      toast.success('Profile photo updated successfully!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update profile photo');
+    }
+  };
 
   // Identity of currently edited staff profile (to exclude from duplicate checks)
   const currentEditingId = useMemo(() => {
@@ -487,7 +507,7 @@ export const UserProfileView: React.FC = () => {
       <div className="bg-white dark:bg-[#180F1A] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-fuchsia-500/25 shadow-xl shadow-fuchsia-950/15 overflow-hidden transition-all">
         <UserProfileHeader
           displayName={displayName}
-          avatarUrl={currentStaffMatch?.avatar || (user as any)?.avatar}
+          avatarUrl={activeStaff?.avatar || currentStaffMatch?.avatar || (user as any)?.avatar}
           displayPosition={displayPosition}
           displayDept={displayDept}
           displayWorkplace={displayWorkplace}
@@ -500,6 +520,7 @@ export const UserProfileView: React.FC = () => {
           canEditCurrentProfile={canEditCurrentProfile}
           isEditing={isEditing}
           onStartEdit={handleStartEdit}
+          onChangeAvatar={() => setIsAvatarPickerOpen(true)}
         />
 
         {isEditing ? (
@@ -571,6 +592,17 @@ export const UserProfileView: React.FC = () => {
         renderSortIcon={renderSortIcon}
         openItemDetails={openItemDetails}
         openPrint={openPrint}
+      />
+
+      {/* Avatar Picker Modal with HD 512x512 Cropper */}
+      <MediaPickerModal
+        isOpen={isAvatarPickerOpen}
+        onClose={() => setIsAvatarPickerOpen(false)}
+        onSelect={handleAvatarSelect}
+        title="Change Profile Photo (প্রোফাইল ছবি পরিবর্তন ও ক্রপ)"
+        description="মিডিয়া লাইব্রেরি থেকে পূর্বে আপলোডকৃত যেকোনো ছবি বেছে নিন অথবা আপনার ডিভাইস থেকে সরাসরি নতুন ছবি আপলোড করে সেন্টারে পারফেক্ট ক্রপ করুন।"
+        currentValue={activeStaff?.avatar || currentStaffMatch?.avatar || (user as any)?.avatar}
+        enableCrop={true}
       />
     </div>
   );

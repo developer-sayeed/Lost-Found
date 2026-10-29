@@ -20,7 +20,8 @@ import {
   Award,
   Command,
   Keyboard,
-  History
+  History,
+  Images
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -46,12 +47,27 @@ export const Sidebar: React.FC = () => {
     removedItems,
     settings,
     openCommandPalette,
-    openShortcutsModal
+    openShortcutsModal,
+    staff
   } = useApp();
   const { user, logout, hasPermission, isSuperAdmin, previewRole, effectiveRole } = useAuth();
   const { t, isRTL, translateRole } = useLanguage();
   const location = useLocation();
   const isMac = isMacOS();
+
+  // User Department and Position (replacing System Role under User Name per specification)
+  const userDeptAndPosition = React.useMemo(() => {
+    const matchingStaff = staff?.find(s =>
+      (s.id && s.id === user?.id) ||
+      (s.userId && (s.userId === user?.userId || s.userId === user?.id)) ||
+      (s.staffId && (s.staffId === user?.staffId || s.staffId === user?.id)) ||
+      (s.email && user?.email && s.email.toLowerCase().trim() === user.email.toLowerCase().trim())
+    );
+    const dept = user?.department || matchingStaff?.department || 'Housekeeping';
+    const pos = user?.position || matchingStaff?.position || '';
+    if (dept && pos) return `${dept} • ${pos}`;
+    return pos || dept || 'Staff';
+  }, [user, staff]);
 
   // Dynamic Theme state tracker for instant logo adaptation
   const [isDark, setIsDark] = React.useState<boolean>(() => {
@@ -98,6 +114,7 @@ export const Sidebar: React.FC = () => {
     { id: 'staff' as const, label: t.staffManagement, icon: Users, requiredPerm: 'staff_management' as PermissionKey },
     { id: 'performance' as const, label: t.performance, icon: TrendingUp, requiredPerm: 'performance' as PermissionKey },
     { id: 'certificates' as const, label: t.certificates, icon: Award, requiredPerm: 'certificates' as PermissionKey },
+    { id: 'media' as const, label: t.media || 'Media', icon: Images, requiredPerm: 'media_view' as PermissionKey },
     { id: 'audit_logs' as const, label: t.auditLogs || 'Audit Logs', icon: History, requiredPerm: 'audit_logs' as PermissionKey },
     { id: 'removed' as const, label: t.removedItems, icon: Trash2, requiredPerm: 'removed_items' as PermissionKey, badge: removedItems.length > 0 ? removedItems.length : undefined },
     { id: 'settings' as const, label: t.settings, icon: Settings, requiredPerm: 'settings' as PermissionKey },
@@ -110,12 +127,13 @@ export const Sidebar: React.FC = () => {
     if (item.id === 'dashboard') return true;
     if (item.id === 'items') return hasPermission('view');
     if (item.id === 'dispatch') return hasPermission('dispatch');
-    if (item.id === 'staff') return hasPermission('staff_management');
+    if (item.id === 'staff') return hasPermission('staff_management') || hasPermission('manage_staff_access') || hasPermission('edit_staff') || hasPermission('view_staff_profile');
     if (item.id === 'performance') return hasPermission('performance');
     if (item.id === 'certificates') return hasPermission('certificates_view') || hasPermission('certificates');
+    if (item.id === 'media') return isSuperAdmin || hasPermission('media_view') || hasPermission('media' as any);
     if (item.id === 'audit_logs') return hasPermission('audit_logs');
     if (item.id === 'removed') return hasPermission('removed_items');
-    if (item.id === 'settings') return hasPermission('settings') || hasPermission('manage_staff_access');
+    if (item.id === 'settings') return hasPermission('settings') || hasPermission('manage_staff_access') || hasPermission('settings_hotel_info' as any) || hasPermission('settings_categories' as any) || hasPermission('settings_security' as any);
     return false;
   });
 
@@ -362,19 +380,18 @@ export const Sidebar: React.FC = () => {
                   className="shadow-2xs flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 transition-colors">
                     {user?.name || 'Staff Member'}
                   </p>
-                  <p className="text-[10px] text-slate-500 truncate">
-                    {user?.email || (user?.staffId ? `ID: ${user.staffId}` : '')}
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate" title={userDeptAndPosition}>
+                    {userDeptAndPosition}
                   </p>
                 </div>
               </NavLink>
 
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-md bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold">
-                  {user?.role === 'Super Admin' && <ShieldCheck className="w-3 h-3 mr-1 text-indigo-600" />}
-                  {translateRole(user?.role)}
+                <span className="text-[10px] inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-fuchsia-950/40 border border-indigo-100 dark:border-fuchsia-800/40 text-indigo-700 dark:text-fuchsia-300 font-semibold truncate max-w-[140px]" title={userDeptAndPosition}>
+                  {userDeptAndPosition}
                 </span>
 
                 <button

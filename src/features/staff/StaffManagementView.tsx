@@ -302,7 +302,13 @@ export const StaffManagementView: React.FC = () => {
     if (!canManageAccess) return;
     setIsSavingInlinePerms(true);
     try {
-      await updateStaff(member.id, { permissions: inlineStaffPerms });
+      const defaultPerms = getRoleBaselinePermissions(member.role);
+      const isCustom = inlineStaffPerms.length !== defaultPerms.length || inlineStaffPerms.some(p => !defaultPerms.includes(p));
+      await updateStaff(member.id, {
+        permissions: inlineStaffPerms,
+        isCustomPermissions: isCustom
+      });
+      window.dispatchEvent(new CustomEvent('warwick_permissions_updated'));
       setFeedbackNotice(`Permissions successfully updated for ${member.name}.`);
       toast.success(`Permissions updated for ${member.name}.`);
       setExpandedStaffPermId(null);
@@ -318,10 +324,14 @@ export const StaffManagementView: React.FC = () => {
     if (!canManageAccess) return;
     const defaultPerms = DEFAULT_ROLE_PERMISSIONS[member.role] || [];
     try {
-      await updateStaff(member.id, { permissions: defaultPerms });
+      await updateStaff(member.id, {
+        permissions: defaultPerms,
+        isCustomPermissions: false
+      });
       if (expandedStaffPermId === member.id) {
         setInlineStaffPerms(defaultPerms);
       }
+      window.dispatchEvent(new CustomEvent('warwick_permissions_updated'));
       setFeedbackNotice(`Reset permissions for ${member.name} to ${member.role} defaults.`);
       toast.success(`Reset permissions for ${member.name} to ${member.role} defaults.`);
       setTimeout(() => setFeedbackNotice(null), 4000);
@@ -334,10 +344,14 @@ export const StaffManagementView: React.FC = () => {
     if (!canManageAccess) return;
     const allPerms = ALL_PERMISSIONS.map(p => p.id);
     try {
-      await updateStaff(member.id, { permissions: allPerms });
+      await updateStaff(member.id, {
+        permissions: allPerms,
+        isCustomPermissions: true
+      });
       if (expandedStaffPermId === member.id) {
         setInlineStaffPerms(allPerms);
       }
+      window.dispatchEvent(new CustomEvent('warwick_permissions_updated'));
       setFeedbackNotice(`Granted all permissions to ${member.name}.`);
       toast.success(`Granted all permissions to ${member.name}.`);
       setTimeout(() => setFeedbackNotice(null), 4000);
@@ -349,10 +363,14 @@ export const StaffManagementView: React.FC = () => {
   const handleRevokeAllStaffPermissions = async (member: StaffMember) => {
     if (!canManageAccess) return;
     try {
-      await updateStaff(member.id, { permissions: [] });
+      await updateStaff(member.id, {
+        permissions: [],
+        isCustomPermissions: true
+      });
       if (expandedStaffPermId === member.id) {
         setInlineStaffPerms([]);
       }
+      window.dispatchEvent(new CustomEvent('warwick_permissions_updated'));
       setFeedbackNotice(`Revoked all permissions from ${member.name}.`);
       toast.info(`Revoked all permissions from ${member.name}.`);
       setTimeout(() => setFeedbackNotice(null), 4000);

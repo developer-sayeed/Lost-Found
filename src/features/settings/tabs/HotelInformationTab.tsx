@@ -17,11 +17,14 @@ import {
   Globe,
   Clock,
   X,
-  Crown
+  Crown,
+  Images
 } from 'lucide-react';
 import { HotelLink, HotelSettings } from '../../../types';
 import { DEFAULT_LIGHT_LOGO_SVG, DEFAULT_DARK_LOGO_SVG } from '../../../utils/logoHelper';
 import { RecentFavicon, RecentLogo } from '../types/settings.feature.types';
+import { MediaPickerModal } from '../../../components/common/MediaPickerModal';
+import { toast } from 'react-toastify';
 
 interface HotelInformationTabProps {
   settings: HotelSettings;
@@ -76,6 +79,28 @@ export const HotelInformationTab: React.FC<HotelInformationTabProps> = ({
   const [showDepartmentProcessingShare, setShowDepartmentProcessingShare] = useState<boolean>(
     () => Boolean(settings.showDepartmentProcessingShare)
   );
+
+  // Media Picker Modal State for Light Logo, Dark Logo, or Favicon
+  const [pickerTarget, setPickerTarget] = useState<'logoLight' | 'logoDark' | 'favicon' | null>(null);
+
+  const handlePickerSelect = (url: string, name?: string) => {
+    if (pickerTarget === 'logoLight') {
+      setLogoLightPreview(url);
+      saveRecentLogo(url, `[Light] ${name || 'Selected Logo'}`);
+      updateSettings({ logoLightUrl: url });
+      toast.success('Light Mode Logo updated successfully!');
+    } else if (pickerTarget === 'logoDark') {
+      setLogoDarkPreview(url);
+      saveRecentLogo(url, `[Dark] ${name || 'Selected Logo'}`);
+      updateSettings({ logoDarkUrl: url });
+      toast.success('Dark Mode Logo updated successfully!');
+    } else if (pickerTarget === 'favicon') {
+      handleApplyFavicon(url);
+      saveRecentFavicon(url, name || 'Selected Favicon');
+      toast.success('Favicon updated successfully!');
+    }
+    setPickerTarget(null);
+  };
 
   useEffect(() => {
     setHotelName(settings.hotelName);
@@ -399,16 +424,14 @@ export const HotelInformationTab: React.FC<HotelInformationTabProps> = ({
 
               <div className="mt-3.5 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-2xs transition-all">
-                    <Upload className="w-3.5 h-3.5 text-fuchsia-600" />
-                    <span>{logoLightPreview ? 'Change Light Logo' : 'Upload Light Logo'}</span>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                      onChange={handleLightLogoChange}
-                      className="hidden"
-                    />
-                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setPickerTarget('logoLight')}
+                    className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 border border-fuchsia-300 dark:border-fuchsia-700 rounded-xl text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-200 bg-fuchsia-50 dark:bg-fuchsia-950/60 hover:bg-fuchsia-100 shadow-2xs transition-all"
+                  >
+                    <Images className="w-3.5 h-3.5 text-fuchsia-600" />
+                    <span>{logoLightPreview ? 'Change Light Logo (মিডিয়া / আপলোড)' : 'Choose Light Logo (মিডিয়া / আপলোড)'}</span>
+                  </button>
 
                   <button
                     type="button"
@@ -477,16 +500,14 @@ export const HotelInformationTab: React.FC<HotelInformationTabProps> = ({
 
               <div className="mt-3.5 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-2xs transition-all">
-                    <Upload className="w-3.5 h-3.5 text-fuchsia-400" />
-                    <span>{logoDarkPreview ? 'Change Dark Logo' : 'Upload Dark Logo'}</span>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                      onChange={handleDarkLogoChange}
-                      className="hidden"
-                    />
-                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setPickerTarget('logoDark')}
+                    className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 border border-fuchsia-300 dark:border-fuchsia-700 rounded-xl text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-200 bg-fuchsia-50 dark:bg-fuchsia-950/60 hover:bg-fuchsia-100 shadow-2xs transition-all"
+                  >
+                    <Images className="w-3.5 h-3.5 text-fuchsia-400" />
+                    <span>{logoDarkPreview ? 'Change Dark Logo (মিডিয়া / আপলোড)' : 'Choose Dark Logo (মিডিয়া / আপলোড)'}</span>
+                  </button>
 
                   <button
                     type="button"
@@ -877,18 +898,16 @@ export const HotelInformationTab: React.FC<HotelInformationTabProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Upload from Device (.svg, .png, .ico, .jpg)
+                  Choose Favicon Image (মিডিয়া লাইব্রেরি / লোকাল আপলোড)
                 </label>
-                <label className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl cursor-pointer text-xs font-semibold text-slate-700 shadow-2xs transition-colors">
-                  <Upload className="w-4 h-4 text-indigo-600" />
-                  <span>Choose Favicon File</span>
-                  <input
-                    type="file"
-                    accept="image/svg+xml,image/png,image/x-icon,image/vnd.microsoft.icon,image/jpeg,image/webp"
-                    onChange={handleFaviconFileUpload}
-                    className="hidden"
-                  />
-                </label>
+                <button
+                  type="button"
+                  onClick={() => setPickerTarget('favicon')}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-fuchsia-50 dark:bg-fuchsia-950/60 hover:bg-fuchsia-100 border border-fuchsia-300 dark:border-fuchsia-700 rounded-xl cursor-pointer text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-200 shadow-2xs transition-colors"
+                >
+                  <Images className="w-4 h-4 text-fuchsia-600" />
+                  <span>Choose Favicon (গ্যালারি / লোকাল ফাইল)</span>
+                </button>
               </div>
 
               <div>
@@ -1360,6 +1379,28 @@ export const HotelInformationTab: React.FC<HotelInformationTabProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Media Library & Local File Picker Modal for Branding */}
+      <MediaPickerModal
+        isOpen={pickerTarget !== null}
+        onClose={() => setPickerTarget(null)}
+        onSelect={handlePickerSelect}
+        title={
+          pickerTarget === 'logoLight'
+            ? 'Light Mode Hotel Logo (লাইট মোড লোগো)'
+            : pickerTarget === 'logoDark'
+            ? 'Dark Mode Hotel Logo (ডার্ক মোড লোগো)'
+            : 'Hotel Favicon & Mini Emblem (ফেভিকন আইকন)'
+        }
+        description="মিডিয়া লাইব্রেরি থেকে পূর্বে আপলোডকৃত যেকোনো ছবি সিলেক্ট করুন অথবা কম্পিউটার থেকে সরাসরি নতুন ফাইল আপলোড করুন।"
+        currentValue={
+          pickerTarget === 'logoLight'
+            ? logoLightPreview
+            : pickerTarget === 'logoDark'
+            ? logoDarkPreview
+            : faviconPreview
+        }
+      />
     </form>
   );
 };

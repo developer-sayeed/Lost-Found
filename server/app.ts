@@ -67,6 +67,7 @@ import staffRoutes from './modules/staff/staff.routes.ts';
 import userRoutes from './modules/users/user.routes.ts';
 import itemsRoutes from './modules/items/items.routes.ts';
 import certificatesRoutes from './modules/certificates/certificates.routes.ts';
+import mediaRoutes from './modules/media/media.routes.ts';
 
 export async function createApp() {
   ensureDatabaseAuthIntegrity();
@@ -96,13 +97,14 @@ export async function createApp() {
   app.use('/api/user', userRoutes);
   app.use('/api/items', itemsRoutes);
   app.use('/api/certificates', certificatesRoutes);
+  app.use('/api/media', mediaRoutes);
 
   // Vite Integration (Dev middleware or Static Dist Serving)
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
-        hmr: process.env.DISABLE_HMR === 'true' ? false : undefined,
+        hmr: false,
       },
       appType: 'spa',
     });
@@ -120,10 +122,26 @@ export async function createApp() {
 
 export async function startServer() {
   const app = await createApp();
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Warwick Hotel Baha L&F Server running on http://localhost:${PORT}`);
     // Clear notifications on boot
     db.notifications = [];
     saveDatabase();
   });
+
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`[Server] Port ${PORT} currently occupied, retrying in 1s...`);
+      setTimeout(() => {
+        try {
+          server.close();
+        } catch {}
+        server.listen(PORT, '0.0.0.0');
+      }, 1000);
+    } else {
+      console.error('[Server] Server listen error:', err);
+    }
+  });
+
+  return server;
 }

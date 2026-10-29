@@ -14,32 +14,7 @@ import {
   StaffFormData
 } from '../../lib/validationSchema';
 
-const PERMISSION_GROUPS: {
-  category: PermissionCategory;
-  title: string;
-  icon: string;
-}[] = [
-  {
-    category: 'Items',
-    title: 'ITEM OPERATIONS',
-    icon: '📦'
-  },
-  {
-    category: 'Operations',
-    title: 'GUEST & WORKFLOW ACTIONS',
-    icon: '🔄'
-  },
-  {
-    category: 'Certificates',
-    title: 'CERTIFICATES & AWARDS (PERMISSION-CONTROLLED)',
-    icon: '📜'
-  },
-  {
-    category: 'Administration',
-    title: 'ADMINISTRATION (STAFF & SYSTEM)',
-    icon: '⚙️'
-  }
-];
+import { PERMISSION_GROUPS } from '../../features/staff/utils/staffRoleHelper';
 
 export const StaffModal: React.FC = () => {
   const { isStaffModalOpen, setIsStaffModalOpen, editingStaff, setEditingStaff, addStaff, updateStaff, getValidationMessage, staff, settings } = useApp();
@@ -307,7 +282,8 @@ export const StaffModal: React.FC = () => {
           position: position.trim(),
           emergencyContact: emergencyContact.trim(),
           notes: notes.trim(),
-          permissions: selectedPermissions
+          permissions: selectedPermissions,
+          isCustomPermissions: isCustomPermissions
         });
       } else {
         await addStaff({
@@ -326,9 +302,11 @@ export const StaffModal: React.FC = () => {
           position: position.trim(),
           emergencyContact: emergencyContact.trim(),
           notes: notes.trim(),
-          permissions: selectedPermissions
+          permissions: selectedPermissions,
+          isCustomPermissions: isCustomPermissions
         });
       }
+      window.dispatchEvent(new CustomEvent('warwick_permissions_updated'));
       setIsStaffModalOpen(false);
       setEditingStaff(null);
       setServerDuplicates({});

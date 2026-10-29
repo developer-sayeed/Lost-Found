@@ -13,25 +13,31 @@ export interface SupportedLanguage {
   name: string;
   nativeName: string;
   flag: string;
+  googleCode?: string;
+  badge?: string;
 }
 
 export const POPULAR_LANGUAGES: SupportedLanguage[] = [
-  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
-  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩' },
-  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
-  { code: 'tl', name: 'Tagalog (Filipino)', nativeName: 'Filipino', flag: '🇵🇭' },
-  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
-  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
-  { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
-  { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹' },
-  { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
-  { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia', flag: '🇮🇩' },
-  { code: 'ms', name: 'Malay', nativeName: 'Bahasa Melayu', flag: '🇲🇾' },
-  { code: 'zh-CN', name: 'Chinese (Simplified)', nativeName: '简体中文', flag: '🇨🇳' },
-  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
-  { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
-  { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷' },
-  { code: 'sw', name: 'Swahili', nativeName: 'Kiswahili', flag: '🇰🇪' }
+  { code: 'en', name: 'English (UK / US)', nativeName: 'English', flag: '🇬🇧', googleCode: 'en' },
+  { code: 'ar-SA', name: 'Arabic (Saudi Arabia)', nativeName: 'العربية (السعودية)', flag: '🇸🇦', googleCode: 'ar', badge: 'Saudi' },
+  { code: 'ar-EG', name: 'Arabic (Egypt)', nativeName: 'العربية (مصر)', flag: '🇪🇬', googleCode: 'ar', badge: 'Egypt' },
+  { code: 'ar-AE', name: 'Arabic (UAE)', nativeName: 'العربية (الإمارات)', flag: '🇦🇪', googleCode: 'ar', badge: 'UAE' },
+  { code: 'ar', name: 'Arabic (Standard)', nativeName: 'العربية (الفصحى)', flag: '🌐', googleCode: 'ar', badge: 'Standard' },
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩', googleCode: 'bn' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', googleCode: 'hi' },
+  { code: 'tl', name: 'Tagalog (Filipino)', nativeName: 'Filipino', flag: '🇵🇭', googleCode: 'tl' },
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷', googleCode: 'fr' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸', googleCode: 'es' },
+  { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪', googleCode: 'de' },
+  { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹', googleCode: 'it' },
+  { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷', googleCode: 'tr' },
+  { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia', flag: '🇮🇩', googleCode: 'id' },
+  { code: 'ms', name: 'Malay', nativeName: 'Bahasa Melayu', flag: '🇲🇾', googleCode: 'ms' },
+  { code: 'zh-CN', name: 'Chinese (Simplified)', nativeName: '简体中文', flag: '🇨🇳', googleCode: 'zh-CN' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺', googleCode: 'ru' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵', googleCode: 'ja' },
+  { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷', googleCode: 'ko' },
+  { code: 'sw', name: 'Swahili', nativeName: 'Kiswahili', flag: '🇰🇪', googleCode: 'sw' }
 ];
 
 interface GoogleTranslateBarProps {
@@ -50,8 +56,10 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
 
   // Initialize Google Translate Script
   useEffect(() => {
-    // Check saved language cookie/localStorage
-    const savedLang = localStorage.getItem('warwick_preferred_language') || 'en';
+    // Check saved language from cookie or localStorage
+    const cookieMatch = document.cookie.match(/googtrans=\/en\/([a-zA-Z_-]+)/);
+    const cookieLang = cookieMatch ? cookieMatch[1] : null;
+    const savedLang = localStorage.getItem('warwick_preferred_language') || cookieLang || 'en';
     setCurrentLang(savedLang);
 
     // Setup global callback for Google Translate Element Init
@@ -59,10 +67,14 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
       window.googleTranslateElementInit = () => {
         try {
           if (window.google?.translate?.TranslateElement) {
+            const uniqueIncluded = Array.from(
+              new Set(POPULAR_LANGUAGES.map(l => l.googleCode || l.code))
+            ).join(',');
+
             new window.google.translate.TranslateElement(
               {
                 pageLanguage: 'en',
-                includedLanguages: POPULAR_LANGUAGES.map(l => l.code).join(','),
+                includedLanguages: uniqueIncluded,
                 autoDisplay: false,
                 multilanguagePage: true
               },
@@ -123,22 +135,33 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
     setIsOpen(false);
     setIsTranslating(true);
 
+    const targetObj = POPULAR_LANGUAGES.find(l => l.code === langCode);
+    const targetGoogleCode = targetObj?.googleCode || (langCode.startsWith('ar') ? 'ar' : langCode);
+
     // 1. Direct googtrans cookie manipulation (Standard Google Translate Client Engine Protocol)
     const hostname = window.location.hostname;
-    const cookieVal = `/en/${langCode}`;
-    
-    // Set for current domain and root path
-    document.cookie = `googtrans=${cookieVal}; path=/;`;
-    if (hostname !== 'localhost') {
-      document.cookie = `googtrans=${cookieVal}; path=/; domain=.${hostname};`;
-      document.cookie = `googtrans=${cookieVal}; path=/; domain=${hostname};`;
+
+    if (targetGoogleCode === 'en') {
+      // Clear cookie to restore English original
+      document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+      if (hostname !== 'localhost') {
+        document.cookie = `googtrans=; path=/; domain=.${hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+        document.cookie = `googtrans=; path=/; domain=${hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+      }
+    } else {
+      const cookieVal = `/en/${targetGoogleCode}`;
+      document.cookie = `googtrans=${cookieVal}; path=/;`;
+      if (hostname !== 'localhost') {
+        document.cookie = `googtrans=${cookieVal}; path=/; domain=.${hostname};`;
+        document.cookie = `googtrans=${cookieVal}; path=/; domain=${hostname};`;
+      }
     }
 
     // 2. Trigger Google Translate dropdown element if rendered in DOM
     try {
       const selectEl = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
       if (selectEl) {
-        selectEl.value = langCode;
+        selectEl.value = targetGoogleCode;
         selectEl.dispatchEvent(new Event('change'));
       }
     } catch {}
@@ -146,15 +169,17 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
     // 3. Fallback reload if needed to force immediate full-page translation
     setTimeout(() => {
       setIsTranslating(false);
-      // If combo wasn't ready yet or page wasn't translated, reload with googtrans cookie active
       const selectEl = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-      if (!selectEl && langCode !== 'en') {
+      if (!selectEl && targetGoogleCode !== 'en') {
         window.location.reload();
       }
     }, 600);
   };
 
-  const currentObj = POPULAR_LANGUAGES.find(l => l.code === currentLang) || POPULAR_LANGUAGES[0];
+  const currentObj =
+    POPULAR_LANGUAGES.find(l => l.code === currentLang) ||
+    (currentLang.startsWith('ar') ? POPULAR_LANGUAGES.find(l => l.code === 'ar-SA' || l.code === 'ar') : null) ||
+    POPULAR_LANGUAGES[0];
 
   return (
     <div className={`relative inline-block text-left ${className}`} ref={dropdownRef}>
@@ -262,9 +287,16 @@ export const GoogleTranslateBar: React.FC<GoogleTranslateBarProps> = ({
                     <div className="flex items-center space-x-3">
                       <span className="text-xl select-none leading-none drop-shadow-2xs">{lang.flag}</span>
                       <div className="text-left">
-                        <span className="block font-semibold text-slate-900 dark:text-slate-100 text-xs sm:text-sm leading-tight">
-                          {lang.nativeName}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs sm:text-sm leading-tight">
+                            {lang.nativeName}
+                          </span>
+                          {lang.badge && (
+                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-fuchsia-100 dark:bg-fuchsia-950/70 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-800/40">
+                              {lang.badge}
+                            </span>
+                          )}
+                        </div>
                         <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-normal">
                           {lang.name}
                         </span>

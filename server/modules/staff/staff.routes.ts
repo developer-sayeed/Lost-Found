@@ -6,6 +6,7 @@ import { parseUserAgentInfo } from '../../utils/device.utils.ts';
 import { actorHasPermission } from '../../middleware/permission.middleware.ts';
 import { DEFAULT_ROLE_PERMISSIONS } from '../../../src/types.ts';
 import { StaffMember, User } from '../../../src/types.ts';
+import { cloudinaryService } from '../media/cloudinary.service.ts';
 
 const router = Router();
 
@@ -357,6 +358,20 @@ router.put('/:id', async (req, res) => {
     });
   }
 
+  // Automatic Cloudinary Upload for Avatar Photo
+  if (body.avatar && typeof body.avatar === 'string' && body.avatar.startsWith('data:') && cloudinaryService.isConfigured()) {
+    try {
+      const cloudRes = await cloudinaryService.upload(body.avatar, {
+        folder: 'warwick_avatars',
+        resourceType: 'image',
+        publicId: `avatar_${id}_${Date.now()}`
+      });
+      body.avatar = cloudRes.secureUrl;
+    } catch (err: any) {
+      console.warn('[Cloudinary] Failed to upload avatar to Cloudinary:', err.message);
+    }
+  }
+
   const currentStaffId = (index >= 0 ? db.staff[index].id : id);
 
   const targetStaffId = (body.staffId !== undefined ? body.staffId : '').trim();
@@ -432,8 +447,15 @@ router.put('/:id', async (req, res) => {
       ...db.staff[index],
       ...body
     };
+    if (Array.isArray(body.permissions)) {
+      const roleDefault = DEFAULT_ROLE_PERMISSIONS[db.staff[index].role] || [];
+      const isDiff = body.permissions.length !== roleDefault.length || body.permissions.some(p => !roleDefault.includes(p));
+      db.staff[index].isCustomPermissions = body.isCustomPermissions !== undefined ? Boolean(body.isCustomPermissions) : isDiff;
+    }
     updatedStaff = db.staff[index];
   } else {
+    const roleDefault = DEFAULT_ROLE_PERMISSIONS[body.role || 'Employee'] || [];
+    const isDiff = Array.isArray(body.permissions) && (body.permissions.length !== roleDefault.length || body.permissions.some(p => !roleDefault.includes(p)));
     updatedStaff = {
       id,
       serial: db.staff.length + 1,
@@ -445,6 +467,7 @@ router.put('/:id', async (req, res) => {
       role: body.role || 'Employee',
       status: body.status || 'Active',
       permissions: body.permissions || (body.role ? DEFAULT_ROLE_PERMISSIONS[body.role] : []),
+      isCustomPermissions: body.isCustomPermissions !== undefined ? Boolean(body.isCustomPermissions) : isDiff,
       password: body.password || 'Warwick#2026',
       dateOfBirth: body.dateOfBirth || '',
       iqamaNumber: body.iqamaNumber || '',
@@ -463,7 +486,10 @@ router.put('/:id', async (req, res) => {
 
   if (mongoService.isLive) {
     try {
-      await mongoService.updateStaff(id, body);
+      await mongoService.updateStaff(id, {
+        ...body,
+        isCustomPermissions: updatedStaff.isCustomPermissions
+      });
     } catch (e: any) {
       console.warn('Mongo updateStaff error:', e.message);
     }
@@ -474,7 +500,10 @@ router.put('/:id', async (req, res) => {
   );
   if (matchingUser) {
     if (body.role) matchingUser.role = body.role;
-    if (body.permissions) matchingUser.permissions = body.permissions;
+    if (body.permissions) {
+      matchingUser.permissions = body.permissions;
+      (matchingUser as any).isCustomPermissions = updatedStaff.isCustomPermissions;
+    }
     if (body.name) matchingUser.name = body.name;
     if (body.department) matchingUser.department = body.department;
     if (body.phone) matchingUser.phone = body.phone;
@@ -482,6 +511,7 @@ router.put('/:id', async (req, res) => {
     if (body.iqamaNumber) matchingUser.iqamaNumber = body.iqamaNumber;
     if (body.staffId) matchingUser.staffId = body.staffId;
     if (body.workplace) matchingUser.workplace = body.workplace;
+    if (body.avatar) matchingUser.avatar = updatedStaff.avatar;
   }
 
   db.activeSessions.forEach(sess => {
