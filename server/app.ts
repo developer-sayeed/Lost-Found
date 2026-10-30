@@ -13,13 +13,14 @@ export async function syncLiveMongoData() {
     await mongoService.init();
     if (mongoService.isLive) {
       console.log('[Startup] MongoDB connected. Synchronizing collections from MongoDB Atlas ("hotel")...');
-      const [liveItems, liveStaff, liveUsers, liveSettings, liveCerts, liveLogs] = await Promise.all([
+      const [liveItems, liveStaff, liveUsers, liveSettings, liveCerts, liveLogs, liveMedia] = await Promise.all([
         mongoService.getItems().catch(err => { console.warn('[Startup] Items load warning:', err.message); return []; }),
         mongoService.getStaff().catch(err => { console.warn('[Startup] Staff load warning:', err.message); return []; }),
         mongoService.getUsers().catch(err => { console.warn('[Startup] Users load warning:', err.message); return []; }),
         mongoService.getSettings().catch(err => { console.warn('[Startup] Settings load warning:', err.message); return null; }),
         mongoService.getCertificates().catch(err => { console.warn('[Startup] Certs load warning:', err.message); return []; }),
-        mongoService.getAuditLogs({}, 500).catch(err => { console.warn('[Startup] Audit logs load warning:', err.message); return []; })
+        mongoService.getAuditLogs({}, 500).catch(err => { console.warn('[Startup] Audit logs load warning:', err.message); return []; }),
+        mongoService.getMedia().catch(err => { console.warn('[Startup] Media load warning:', err.message); return []; })
       ]);
 
       if (liveItems && liveItems.length > 0) {
@@ -43,6 +44,14 @@ export async function syncLiveMongoData() {
       }
       if (liveLogs && liveLogs.length > 0) {
         db.auditLogs = liveLogs;
+      }
+      if (liveMedia && liveMedia.length > 0) {
+        db.media = liveMedia;
+        console.log(`[Startup] Synchronized ${liveMedia.length} media assets from MongoDB Atlas.`);
+      } else if (Array.isArray(db.media) && db.media.length > 0) {
+        // If local has initial media but MongoDB collection 'media' is empty, persist to MongoDB Atlas
+        await mongoService.bulkUpsertMedia(db.media).catch(err => console.warn('[Startup] Media seed error:', err.message));
+        console.log(`[Startup] Seeded ${db.media.length} media assets into MongoDB Atlas.`);
       }
       saveDatabase();
       console.log('[Startup] MongoDB Atlas live synchronization finished successfully.');

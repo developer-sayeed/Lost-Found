@@ -4,6 +4,7 @@ import { addAudit } from '../../utils/audit.helper.ts';
 import { resolveActorPermissions, actorHasPermission } from '../../middleware/permission.middleware.ts';
 import { MediaItem, MediaStorageStats, MediaType } from '../../../src/types.ts';
 import { cloudinaryService } from './cloudinary.service.ts';
+import { mongoService } from '../../mongodb.ts';
 
 const router = Router();
 
@@ -29,10 +30,10 @@ export function formatBytes(bytes: number, decimals = 1): string {
 }
 
 // Automatically harvest media from existing items (e.g. lost item photos)
-function autoHarvestExistingMedia() {
+export function autoHarvestExistingMedia() {
   if (!Array.isArray(db.media)) db.media = [];
   const existingUrls = new Set(db.media.map(m => m.url));
-  let added = false;
+  const newlyHarvested: MediaItem[] = [];
 
   if (Array.isArray(db.items)) {
     for (const rawItem of db.items) {
@@ -49,7 +50,7 @@ function autoHarvestExistingMedia() {
         const safeCode = item.code || item.itemCode || 'ITEM';
         const safeName = (item.itemName || 'Photo').replace(/[^a-zA-Z0-9_-]/g, '_');
 
-        db.media.push({
+        const harvestedMedia: MediaItem = {
           id: `media-item-${item.id || safeCode || Math.random().toString(36).substring(2, 9)}`,
           name: `${safeCode}_${safeName}.jpg`,
           title: item.itemName ? `${item.itemName} (${safeCode})` : 'Lost & Found Proof Photo',
@@ -72,14 +73,59 @@ function autoHarvestExistingMedia() {
             label: item.itemName
           },
           tags: [item.category || 'General', 'Proof Photo', item.status || 'Active']
-        });
-        added = true;
+        };
+
+        db.media.push(harvestedMedia);
+        newlyHarvested.push(harvestedMedia);
       }
     }
   }
 
-  if (added) {
+  // Harvest Hotel Brand Identity Assets
+  if (db.settings) {
+    const brandings = [
+      { key: 'logoUrl', name: 'Warwick Hotel Primary Logo', defaultName: 'hotel_logo.svg' },
+      { key: 'logoLightUrl', name: 'Warwick Hotel Light Logo', defaultName: 'hotel_logo_light.svg' },
+      { key: 'logoDarkUrl', name: 'Warwick Hotel Dark Logo', defaultName: 'hotel_logo_dark.svg' },
+      { key: 'faviconUrl', name: 'Warwick Hotel Favicon', defaultName: 'favicon.ico' }
+    ];
+    for (const b of brandings) {
+      const url = (db.settings as any)[b.key];
+      if (typeof url === 'string' && url.trim().length > 20 && !existingUrls.has(url.trim())) {
+        existingUrls.add(url.trim());
+        let size = 95000;
+        if (url.startsWith('data:')) size = Math.round((url.length * 3) / 4);
+
+        const brandMedia: MediaItem = {
+          id: `media-brand-${b.key}`,
+          name: b.defaultName,
+          title: b.name,
+          caption: 'Warwick Hotel Official Brand Identity Asset',
+          url: url.trim(),
+          type: 'image',
+          mimeType: url.includes('svg') ? 'image/svg+xml' : 'image/png',
+          size: size,
+          formattedSize: formatBytes(size),
+          uploadedAt: new Date().toISOString(),
+          uploadedBy: {
+            name: 'MD ABU SAYEED RIDAY',
+            role: 'Super Admin',
+            department: 'Administration'
+          },
+          associatedTo: { type: 'general', label: 'Hotel Brand Identity' },
+          tags: ['Branding', 'Logo', 'Official']
+        };
+        db.media.push(brandMedia);
+        newlyHarvested.push(brandMedia);
+      }
+    }
+  }
+
+  if (newlyHarvested.length > 0) {
     saveDatabase();
+    if (mongoService.isLive) {
+      mongoService.bulkUpsertMedia(newlyHarvested).catch(err => console.warn('[Media] Harvest MongoDB sync error:', err.message));
+    }
   }
 }
 
@@ -338,6 +384,15 @@ router.post('/cloudinary/migrate', requireSuperAdmin, async (req: Request, res: 
 
   saveDatabase();
 
+  if (mongoService.isLive) {
+    if (Array.isArray(db.media) && db.media.length > 0) {
+      mongoService.bulkUpsertMedia(db.media).catch(e => console.warn('[Cloudinary Migrate] Mongo media sync error:', e.message));
+    }
+    if (db.settings) {
+      mongoService.updateSettings(db.settings).catch(e => console.warn('[Cloudinary Migrate] Mongo settings sync error:', e.message));
+    }
+  }
+
   return res.json({
     success: true,
     message: `Migrated ${migratedCount} media file(s) to Cloudinary CDN!`,
@@ -483,6 +538,10 @@ router.post('/', requireMediaUpload, async (req: Request, res: Response) => {
     db.media.unshift(newMedia);
     saveDatabase();
 
+    if (mongoService.isLive) {
+      mongoService.insertMedia(newMedia).catch(err => console.warn('[Media] Mongo insert warning:', err.message));
+    }
+
     addAudit(
       'create',
       'item',
@@ -526,6 +585,10 @@ router.put('/:id', requireMediaEdit, (req: Request, res: Response) => {
     db.media[itemIndex] = current;
     saveDatabase();
 
+    if (mongoService.isLive) {
+      mongoService.updateMedia(id, current).catch(err => console.warn('[Media] Mongo update warning:', err.message));
+    }
+
     const { name: actorName, role: actorRole } = resolveActorPermissions(req);
     addAudit(
       'update',
@@ -561,6 +624,10 @@ router.delete('/:id', requireMediaDelete, (req: Request, res: Response) => {
 
     const removedItem = db.media.splice(itemIndex, 1)[0];
     saveDatabase();
+
+    if (mongoService.isLive) {
+      mongoService.deleteMedia(id).catch(err => console.warn('[Media] Mongo delete warning:', err.message));
+    }
 
     if (removedItem.cloudinaryPublicId) {
       cloudinaryService.delete(removedItem.cloudinaryPublicId, removedItem.type === 'video' ? 'video' : 'image').catch(() => {});

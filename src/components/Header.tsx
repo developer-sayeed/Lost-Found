@@ -595,12 +595,14 @@ export const Header: React.FC = () => {
           </div>
         )}
 
-        {/* User Profile Info (Hidden on mobile per user specification, available via bottom nav) */}
+        {/* User Profile Info (Visible on mobile and desktop) */}
         <button
           type="button"
+          id="btn-header-user-profile"
           onClick={() => openStaffProfile(null)}
-          className="hidden sm:flex items-center space-x-2.5 pl-2 sm:pl-3 border-l border-slate-200 dark:border-slate-800 hover:opacity-80 transition-opacity text-left group"
+          className="flex items-center space-x-2 sm:space-x-2.5 pl-2 sm:pl-3 border-l border-slate-200 dark:border-slate-800 hover:opacity-80 transition-opacity text-left group cursor-pointer"
           title={t.myProfile}
+          aria-label={t.myProfile || "My Profile"}
         >
           <div className="text-right hidden sm:block">
             <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-fuchsia-400 transition-colors leading-tight truncate max-w-[170px]">
@@ -614,7 +616,7 @@ export const Header: React.FC = () => {
             name={user?.name || 'MD ABU SAYEED RIDAY'}
             avatarUrl={user?.avatar}
             sizeClassName="w-8 h-8 sm:w-9 sm:h-9"
-            className="group-hover:ring-2 group-hover:ring-indigo-400 transition-all border border-indigo-100"
+            className="group-hover:ring-2 group-hover:ring-indigo-400 dark:group-hover:ring-fuchsia-400 transition-all border border-indigo-100 dark:border-slate-700 shadow-2xs"
           />
         </button>
       </div>

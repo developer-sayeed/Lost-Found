@@ -100,7 +100,8 @@ router.post('/mongodb/seed', async (req, res) => {
       staff: db.staff,
       users: db.users,
       settings: db.settings,
-      auditLogs: db.auditLogs
+      auditLogs: db.auditLogs,
+      media: db.media
     });
 
     await addAudit('MongoDB Seeded', 'settings', 'Synchronized all local data to MongoDB collections', actor, role);
@@ -147,6 +148,7 @@ router.post(['/database/restore-initial', '/mongodb/restore-initial'], async (re
     db.auditLogs = freshDb.auditLogs;
     db.notifications = freshDb.notifications;
     db.certificates = freshDb.certificates;
+    db.media = freshDb.media || [];
     saveDatabase();
 
     let mongoStatus = null;
@@ -156,7 +158,8 @@ router.post(['/database/restore-initial', '/mongodb/restore-initial'], async (re
         staff: freshDb.staff,
         users: freshDb.users,
         settings: freshDb.settings,
-        auditLogs: freshDb.auditLogs
+        auditLogs: freshDb.auditLogs,
+        media: freshDb.media
       });
     }
 

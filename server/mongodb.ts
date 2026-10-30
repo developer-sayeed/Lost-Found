@@ -1,7 +1,7 @@
 import { MongoClient, Db, Collection, ObjectId } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
-import { LostItem, StaffMember, HotelSettings, User, AuditLog, AppNotification, Certificate, GuestInquiry } from '../src/types.ts';
+import { LostItem, StaffMember, HotelSettings, User, AuditLog, AppNotification, Certificate, GuestInquiry, MediaItem } from '../src/types.ts';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -26,6 +26,7 @@ export interface MongoStatusInfo {
     settingsCount: number;
     categoriesCount?: number;
     sessionsCount?: number;
+    mediaCount?: number;
   };
 }
 
@@ -275,6 +276,11 @@ class MongoService {
       const certsCol = this.db.collection('certificates');
       await certsCol.createIndex({ id: 1 }, { unique: true, sparse: true });
       await certsCol.createIndex({ certificateNumber: 1 }, { sparse: true });
+
+      const mediaCol = this.db.collection('media');
+      await mediaCol.createIndex({ id: 1 }, { unique: true, sparse: true });
+      await mediaCol.createIndex({ uploadedAt: -1 });
+      await mediaCol.createIndex({ type: 1 });
     } catch (err) {
       console.warn('[MongoDB] Index creation:', err);
     }
@@ -283,7 +289,7 @@ class MongoService {
   // Scans collections and repairs any legacy document that has _id: null causing E11000 duplicate key errors
   public async repairNullIdDocuments(): Promise<void> {
     if (!this.db) return;
-    const collections = ['certificates', 'items', 'staff_members', 'users', 'hotel_settings', 'audit_logs', 'notifications'];
+    const collections = ['certificates', 'items', 'staff_members', 'users', 'hotel_settings', 'audit_logs', 'notifications', 'media'];
     for (const colName of collections) {
       try {
         const col = this.db.collection(colName);
@@ -312,6 +318,7 @@ class MongoService {
     let settingsCount = 0;
     let categoriesCount = 0;
     let sessionsCount = 0;
+    let mediaCount = 0;
     let host = 'Local File System';
 
     if (this.isConnected && this.db) {
@@ -330,6 +337,12 @@ class MongoService {
         auditLogsCount = await this.db.collection('audit_logs').countDocuments();
         settingsCount = await this.db.collection('hotel_settings').countDocuments();
         
+        try {
+          mediaCount = await this.db.collection('media').countDocuments();
+        } catch {
+          mediaCount = 0;
+        }
+
         try {
           categoriesCount = await this.db.collection('categories').countDocuments();
         } catch {
@@ -368,7 +381,8 @@ class MongoService {
         auditLogsCount,
         settingsCount,
         categoriesCount,
-        sessionsCount
+        sessionsCount,
+        mediaCount
       }
     };
   }
@@ -603,12 +617,13 @@ class MongoService {
     users: User[];
     settings: HotelSettings;
     auditLogs: AuditLog[];
+    media?: MediaItem[];
   }) {
     if (!this.isConnected || !this.db) {
       throw new Error('Cannot seed: MongoDB is not connected.');
     }
 
-    console.log('[MongoDB] Migrating and syncing data to MongoDB collections (items, staff_members, hotel_settings, audit_logs)...');
+    console.log('[MongoDB] Migrating and syncing data to MongoDB collections (items, staff_members, hotel_settings, audit_logs, media)...');
 
     // 1. Items (stored in collection 'items')
     const itemsCol = this.db.collection('items');
@@ -646,6 +661,13 @@ class MongoService {
     await auditCol.deleteMany({}).catch(() => {});
     if (Array.isArray(data.auditLogs) && data.auditLogs.length > 0) {
       await auditCol.insertMany(data.auditLogs.map((l: any) => stripMongoId(l))).catch(() => {});
+    }
+
+    // 6. Media
+    if (Array.isArray(data.media) && data.media.length > 0) {
+      const mediaCol = this.db.collection('media');
+      await mediaCol.deleteMany({}).catch(() => {});
+      await mediaCol.insertMany(data.media.map((m: any) => stripMongoId(m))).catch(() => {});
     }
 
     console.log('[MongoDB] Migration to MongoDB complete!');
@@ -1374,6 +1396,122 @@ class MongoService {
       await col.deleteMany({});
     } catch (e: any) {
       console.warn('[MongoDB] clearAuditLogs error:', e.message);
+    }
+  }
+
+  // ==========================================
+  // CRUD: MEDIA ASSETS (Collection 'media')
+  // ==========================================
+  private normalizeMediaItem(doc: any): MediaItem {
+    if (!doc) return {} as MediaItem;
+    const rawId = doc.id || (doc._id ? doc._id.toString() : `media-${Date.now()}`);
+    return {
+      id: String(rawId),
+      name: doc.name || 'file.jpg',
+      title: doc.title || doc.name || 'Media Asset',
+      caption: doc.caption || '',
+      url: doc.url || '',
+      thumbnailUrl: doc.thumbnailUrl,
+      type: doc.type || 'image',
+      mimeType: doc.mimeType || 'image/jpeg',
+      size: Number(doc.size) || 0,
+      formattedSize: doc.formattedSize || '0 KB',
+      dimensions: doc.dimensions,
+      duration: doc.duration,
+      uploadedAt: doc.uploadedAt || new Date().toISOString(),
+      uploadedBy: doc.uploadedBy || {
+        id: 'usr-1',
+        name: 'MD ABU SAYEED RIDAY',
+        role: 'Super Admin',
+        department: 'Administration'
+      },
+      associatedTo: doc.associatedTo || { type: 'general' },
+      tags: Array.isArray(doc.tags) ? doc.tags : [],
+      cloudinaryPublicId: doc.cloudinaryPublicId,
+      isCloudinary: Boolean(doc.isCloudinary || (doc.url && doc.url.includes('cloudinary.com')))
+    };
+  }
+
+  public async getMedia(query: any = {}): Promise<MediaItem[]> {
+    if (!this.isLive && this.hasConfig) {
+      await this.init().catch(() => {});
+    }
+    if (!this.isLive) return [];
+    try {
+      const col = this.db!.collection('media');
+      const docs = await col.find(query).sort({ uploadedAt: -1, _id: -1 }).toArray();
+      return docs.map(d => this.normalizeMediaItem(d));
+    } catch (e: any) {
+      console.warn('[MongoDB] getMedia error:', e.message);
+      return [];
+    }
+  }
+
+  public async insertMedia(item: MediaItem): Promise<MediaItem> {
+    if (!this.isLive) return item;
+    try {
+      const col = this.db!.collection('media');
+      const clean = { ...item };
+      delete (clean as any)._id;
+      await col.updateOne(
+        { id: item.id },
+        { $set: clean },
+        { upsert: true }
+      );
+      return item;
+    } catch (e: any) {
+      console.warn('[MongoDB] insertMedia error:', e.message);
+      return item;
+    }
+  }
+
+  public async updateMedia(id: string, updates: Partial<MediaItem>): Promise<MediaItem | null> {
+    if (!this.isLive) return null;
+    try {
+      const col = this.db!.collection('media');
+      const clean = { ...updates };
+      delete (clean as any)._id;
+      await col.updateOne({ id }, { $set: clean });
+      const updatedDoc = await col.findOne({ id });
+      return updatedDoc ? this.normalizeMediaItem(updatedDoc) : null;
+    } catch (e: any) {
+      console.warn('[MongoDB] updateMedia error:', e.message);
+      return null;
+    }
+  }
+
+  public async deleteMedia(id: string): Promise<boolean> {
+    if (!this.isLive) return false;
+    try {
+      const col = this.db!.collection('media');
+      const res = await col.deleteOne({ id });
+      return (res.deletedCount || 0) > 0;
+    } catch (e: any) {
+      console.warn('[MongoDB] deleteMedia error:', e.message);
+      return false;
+    }
+  }
+
+  public async bulkUpsertMedia(items: MediaItem[]): Promise<number> {
+    if (!this.isLive || !items || items.length === 0) return 0;
+    try {
+      const col = this.db!.collection('media');
+      const ops = items.map(m => {
+        const clean = { ...m };
+        delete (clean as any)._id;
+        return {
+          updateOne: {
+            filter: { id: m.id },
+            update: { $set: clean },
+            upsert: true
+          }
+        };
+      });
+      const res = await col.bulkWrite(ops, { ordered: false });
+      return (res.upsertedCount || 0) + (res.modifiedCount || 0);
+    } catch (e: any) {
+      console.warn('[MongoDB] bulkUpsertMedia error:', e.message);
+      return 0;
     }
   }
 }
