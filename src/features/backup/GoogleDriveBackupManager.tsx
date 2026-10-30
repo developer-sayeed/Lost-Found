@@ -299,8 +299,15 @@ export const GoogleDriveBackupManager: React.FC = () => {
       if (err?.code === 'auth/popup-closed-by-user' || err?.isUserCancelled) {
         setStatusMessage({
           type: 'info',
-          text: 'Google Sign-in popup was closed. Click "Connect Google Account" whenever you are ready.'
+          text: 'Google Sign-in popup was closed. Click "Sign in with Google Drive" whenever you are ready.'
         });
+      } else if (err?.code === 'auth/popup-blocked' || err?.message?.includes('popup') || err?.message?.includes('block')) {
+        setStatusMessage({
+          type: 'error',
+          text: 'The sign-in popup window was blocked by your browser.'
+        });
+        setAuthError(err.message || 'The sign-in popup was blocked by your browser. Please allow popups for this site in your browser URL bar, or connect immediately using an Access Token below.');
+        setShowTokenInput(true);
       } else {
         console.warn('Google Drive sign-in notice:', err?.message || err);
         setAuthError(err.message || 'Failed to authenticate with Google Drive.');

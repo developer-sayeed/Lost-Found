@@ -164,15 +164,18 @@ if (typeof window !== 'undefined') {
     } catch {}
   }, 150);
 
-  // Background token refresh scheduler: checks every 10 minutes, silently renews before 1-hour expiration
+  // Preload Google Identity Services script so it is ready synchronously on user click
+  loadGisScript().catch(() => {});
+
+  // Background session sync scheduler: checks every 10 minutes to verify backend session
   setInterval(async () => {
     if (!isPersistentConnected) return;
-    const now = Date.now();
-    // If token expires in less than 8 minutes or has expired, refresh in background
-    if (!cachedTokenExpiresAt || now >= cachedTokenExpiresAt - 8 * 60 * 1000) {
-      console.log('[Google Drive Auth] Background token refresh check triggering renewal...');
-      await refreshDriveAccessToken().catch(() => {});
-    }
+    try {
+      const serverSession = await backupApi.getDriveSession();
+      if (serverSession && serverSession.isConnected) {
+        if (serverSession.user) cachedUserProfile = serverSession.user;
+      }
+    } catch {}
   }, 10 * 60 * 1000);
 }
 
@@ -258,7 +261,7 @@ export const fetchGoogleUserProfile = async (accessToken: string) => {
 /**
  * Dynamically loads Google Identity Services (GIS) client script if not already present
  */
-export const loadGisScript = (): Promise<boolean> => {
+export function loadGisScript(): Promise<boolean> {
   if (typeof window === 'undefined') return Promise.resolve(false);
   if ((window as any).google?.accounts?.oauth2) return Promise.resolve(true);
 
@@ -283,6 +286,11 @@ export const loadGisScript = (): Promise<boolean> => {
  * Request Google Drive access token directly via Google Identity Services
  */
 export const requestAccessTokenViaGis = async (silent = false): Promise<{ user: any; accessToken: string }> => {
+  // Never attempt silent popups; browsers block window.open without direct user gesture
+  if (silent) {
+    throw new Error('Silent GIS token requests are not allowed without direct user gesture.');
+  }
+
   await loadGisScript();
   const google = (window as any).google;
   if (!google?.accounts?.oauth2) {
@@ -301,6 +309,18 @@ export const requestAccessTokenViaGis = async (silent = false): Promise<{ user: 
         scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
         callback: async (response: any) => {
           if (response.error) {
+            if (response.error === 'popup_closed_by_user') {
+              const err: any = new Error('Sign-in cancelled: popup was closed before authorization.');
+              err.code = 'auth/popup-closed-by-user';
+              reject(err);
+              return;
+            }
+            if (response.error === 'popup_blocked_by_browser' || response.error.includes('popup')) {
+              const err: any = new Error('The Google sign-in popup was blocked by your browser. Please allow popups for this site in your browser URL bar, or connect using an Access Token.');
+              err.code = 'auth/popup-blocked';
+              reject(err);
+              return;
+            }
             reject(new Error(response.error_description || response.error));
             return;
           }
@@ -316,16 +336,28 @@ export const requestAccessTokenViaGis = async (silent = false): Promise<{ user: 
           } catch (profileErr) {
             reject(profileErr);
           }
+        },
+        error_callback: (nonOAuthErr: any) => {
+          console.warn('[Google Drive Auth] GIS error callback:', nonOAuthErr);
+          if (nonOAuthErr?.type === 'popup_failed_to_open') {
+            const err: any = new Error('The Google sign-in popup was blocked by your browser. Please allow popups for this site in your browser URL bar, or click "Connect via Token" below.');
+            err.code = 'auth/popup-blocked';
+            reject(err);
+          } else {
+            reject(new Error(nonOAuthErr?.message || 'Failed to open Google authorization popup.'));
+          }
         }
       });
 
-      if (silent) {
-        gisTokenClient.requestAccessToken({ prompt: '' });
+      gisTokenClient.requestAccessToken({ prompt: 'consent' });
+    } catch (err: any) {
+      if (err?.message?.includes('popup') || err?.message?.includes('block')) {
+        const popupErr: any = new Error('The sign-in popup was blocked by your browser. Please allow popups for this site in your browser URL bar.');
+        popupErr.code = 'auth/popup-blocked';
+        reject(popupErr);
       } else {
-        gisTokenClient.requestAccessToken({ prompt: 'consent' });
+        reject(err);
       }
-    } catch (err) {
-      reject(err);
     }
   });
 };
@@ -351,8 +383,8 @@ export const connectWithDirectToken = async (token: string): Promise<{ user: any
 };
 
 /**
- * Silently refreshes the Google Drive access token using GIS or backend session.
- * Never drops the persistent connection state on refresh failures.
+ * Silently refreshes the Google Drive access token using backend session or existing cache.
+ * Never attempts unauthorized programmatic popups that trigger browser popup blockers.
  */
 export const refreshDriveAccessToken = async (force = false): Promise<string | null> => {
   if (isRefreshingToken && refreshPromise) {
@@ -362,20 +394,7 @@ export const refreshDriveAccessToken = async (force = false): Promise<string | n
   isRefreshingToken = true;
   refreshPromise = (async () => {
     try {
-      // 1. Try silent renewal via Google Identity Services
-      if (firebaseConfig.oAuthClientId && typeof window !== 'undefined') {
-        try {
-          const gisResult = await requestAccessTokenViaGis(true);
-          if (gisResult?.accessToken) {
-            console.log('[Google Drive Auth] Token silently renewed via GIS.');
-            return gisResult.accessToken;
-          }
-        } catch (gisErr: any) {
-          console.warn('[Google Drive Auth] Silent GIS refresh notice:', gisErr?.message || gisErr);
-        }
-      }
-
-      // 2. Try fetching updated token from backend database session
+      // Try fetching updated token from backend database session (no popups)
       try {
         const session = await backupApi.getDriveSession();
         if (session && session.isConnected) {
@@ -387,7 +406,7 @@ export const refreshDriveAccessToken = async (force = false): Promise<string | n
         }
       } catch {}
 
-      // 3. Fallback to existing cached token
+      // Fallback to existing cached token
       return cachedAccessToken;
     } finally {
       isRefreshingToken = false;
@@ -464,40 +483,56 @@ export const signInWithGoogleDrive = async (): Promise<{
   const currentHost = typeof window !== 'undefined' ? window.location.hostname || 'localhost' : 'localhost';
 
   try {
-    // Attempt 1: Google Identity Services token client using configured OAuth Client ID
-    if (firebaseConfig.oAuthClientId) {
-      try {
-        const gisResult = await requestAccessTokenViaGis(false);
-        return gisResult;
-      } catch (gisErr: any) {
-        if (gisErr?.code === 'auth/popup-closed-by-user' || gisErr?.message?.includes('popup_closed_by_user')) {
-          throw gisErr;
-        }
-        console.warn('[Google Drive Auth] Primary GIS token client failed, attempting Firebase popup:', gisErr?.message || gisErr);
+    // Attempt 1: Standard Firebase Auth popup (Recommended by Workspace integration guidelines)
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+
+      if (!credential?.accessToken) {
+        throw new Error('Google Drive access token was not returned by Google Authentication.');
       }
+
+      storeDriveAccessToken(credential.accessToken, result.user, 3500);
+      notifyAuthListeners(result.user, cachedAccessToken);
+
+      return {
+        user: result.user,
+        accessToken: cachedAccessToken!
+      };
+    } catch (fbErr: any) {
+      const fbCode = fbErr?.code || '';
+      const fbMsg = fbErr?.message || '';
+
+      if (fbCode === 'auth/popup-closed-by-user' || fbMsg.includes('popup-closed-by-user')) {
+        throw fbErr;
+      }
+
+      if (fbCode === 'auth/popup-blocked' || fbMsg.includes('popup-blocked')) {
+        throw fbErr;
+      }
+
+      // Fallback to GIS with OAuth Client ID if Firebase unauthorized-domain or similar occurs
+      if (firebaseConfig.oAuthClientId) {
+        console.warn(`[Google Drive Auth] Firebase Auth notice (${fbCode || fbMsg}), attempting GIS fallback...`);
+        try {
+          const gisResult = await requestAccessTokenViaGis(false);
+          return gisResult;
+        } catch (gisErr: any) {
+          if (gisErr?.code === 'auth/popup-closed-by-user' || gisErr?.code === 'auth/popup-blocked') {
+            throw gisErr;
+          }
+          console.warn('[Google Drive Auth] GIS fallback notice:', gisErr);
+        }
+      }
+
+      throw fbErr;
     }
-
-    // Attempt 2: Standard Firebase Auth popup
-    const result = await signInWithPopup(auth, provider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-
-    if (!credential?.accessToken) {
-      throw new Error('Google Drive access token was not returned by Google Authentication.');
-    }
-
-    storeDriveAccessToken(credential.accessToken, result.user, 3500);
-    notifyAuthListeners(result.user, cachedAccessToken);
-
-    return {
-      user: result.user,
-      accessToken: cachedAccessToken!
-    };
   } catch (error: any) {
     const errorCode = error?.code || '';
     const errorMsg = error?.message || '';
 
     // Handle user closing popup window gracefully
-    if (errorCode === 'auth/popup-closed-by-user' || errorMsg.includes('popup-closed-by-user')) {
+    if (errorCode === 'auth/popup-closed-by-user' || errorMsg.includes('popup-closed-by-user') || errorMsg.includes('popup_closed_by_user')) {
       const userClosedErr: any = new Error(
         'Sign-in was cancelled because the Google sign-in window was closed before completing authorization.'
       );
@@ -507,30 +542,12 @@ export const signInWithGoogleDrive = async (): Promise<{
     }
 
     // Handle popup blocked by browser
-    if (errorCode === 'auth/popup-blocked' || errorMsg.includes('popup-blocked')) {
+    if (errorCode === 'auth/popup-blocked' || errorMsg.includes('popup-blocked') || errorMsg.includes('popup_blocked') || errorMsg.includes('blocked by the browser')) {
       const popupBlockedErr: any = new Error(
-        'The sign-in popup was blocked by your browser. Please allow popups for this site and try again.'
+        'The sign-in popup was blocked by your browser. Please allow popups for this site in your browser URL bar or connect using an Access Token.'
       );
       popupBlockedErr.code = 'auth/popup-blocked';
       throw popupBlockedErr;
-    }
-
-    // If unauthorized-domain occurs
-    if (errorCode === 'auth/unauthorized-domain' || errorMsg.includes('unauthorized-domain')) {
-      console.warn(`[Google Drive Auth] Firebase domain authorization needed for "${currentHost}". Trying GIS fallback...`);
-
-      try {
-        const gisResult = await requestAccessTokenViaGis(false);
-        return gisResult;
-      } catch (gisError: any) {
-        console.warn('[Google Drive Auth] GIS fallback encountered:', gisError);
-        const detailedError: any = new Error(
-          `Firebase: Error (auth/unauthorized-domain). The current domain "${currentHost}" is not authorized in Firebase Console. You can connect directly using an Access Token or GIS client.`
-        );
-        detailedError.code = 'auth/unauthorized-domain';
-        detailedError.currentHost = currentHost;
-        throw detailedError;
-      }
     }
 
     console.warn('[Google Drive Auth] Sign in notice:', error?.message || error);

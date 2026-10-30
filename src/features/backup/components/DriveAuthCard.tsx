@@ -186,6 +186,8 @@ export const DriveAuthCard: React.FC<DriveAuthCardProps> = ({
                 <p className="font-bold text-rose-900 dark:text-rose-200">
                   {authError.includes('unauthorized-domain')
                     ? 'Firebase Domain Authorization Required (auth/unauthorized-domain)'
+                    : authError.includes('popup') || authError.includes('blocked')
+                    ? 'Popup Window Blocked by Browser'
                     : 'Google Drive Authentication Notice'}
                 </p>
                 <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
@@ -193,6 +195,17 @@ export const DriveAuthCard: React.FC<DriveAuthCardProps> = ({
                 </p>
               </div>
             </div>
+
+            {(authError.includes('popup') || authError.includes('blocked')) && !authError.includes('unauthorized-domain') && (
+              <div className="p-3.5 bg-white dark:bg-[#180F1A] rounded-xl border border-rose-200/90 dark:border-rose-900/40 space-y-2 text-xs text-slate-700 dark:text-slate-300 shadow-2xs">
+                <p className="font-semibold text-slate-900 dark:text-white">How to allow Google Sign-in popup:</p>
+                <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  <li>Look for the <strong>Pop-up blocked</strong> icon in your browser URL / address bar (right side).</li>
+                  <li>Click it and select <strong>"Always allow pop-ups and redirects"</strong>, then click Done.</li>
+                  <li>Or click the <strong>"Connect via Token"</strong> button above to connect directly without any popups.</li>
+                </ul>
+              </div>
+            )}
 
             {authError.includes('unauthorized-domain') && (
               <div className="p-3.5 bg-white dark:bg-[#180F1A] rounded-xl border border-rose-200/90 dark:border-rose-900/40 space-y-3 text-xs text-slate-700 dark:text-slate-300 shadow-2xs">
